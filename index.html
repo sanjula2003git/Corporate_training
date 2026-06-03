@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<!-- Landing page for GitHub Pages — links to all three versions. -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Corporate Training Portal — HTML / CSS / React</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: "Segoe UI", Roboto, Arial, sans-serif;
+        background: linear-gradient(135deg, #1e3a8a, #2563eb);
+        color: #1f2937; min-height: 100vh;
+        display: flex; align-items: center; justify-content: center; padding: 2rem;
+      }
+      .wrap { max-width: 760px; width: 100%; }
+      header { text-align: center; color: #fff; margin-bottom: 2rem; }
+      header h1 { font-size: 2rem; }
+      header p { opacity: .9; margin-top: .5rem; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; }
+      .card {
+        background: #fff; border-radius: 14px; padding: 1.5rem;
+        box-shadow: 0 12px 30px rgba(0,0,0,.2); text-decoration: none; color: inherit;
+        display: flex; flex-direction: column; gap: .5rem; transition: transform .15s;
+      }
+      .card:hover { transform: translateY(-4px); }
+      .badge { font-size: .8rem; font-weight: 700; color: #2563eb; }
+      .card h2 { font-size: 1.15rem; }
+      .card p { font-size: .9rem; color: #6b7280; }
+      .open { margin-top: auto; font-weight: 600; color: #1d4ed8; }
+      footer { text-align: center; color: #dbeafe; margin-top: 2rem; font-size: .85rem; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>Corporate Training Portal</h1>
+        <p>Frontend evolution demo — the same app built three ways</p>
+      </header>
+
+      <div class="grid">
+        <a class="card" href="./01-HTML-Version/index.html">
+          <span class="badge">STEP 1</span>
+          <h2>HTML Version</h2>
+          <p>Plain semantic HTML only. No styling, no interactivity.</p>
+          <span class="open">Open →</span>
+        </a>
+
+        <a class="card" href="./02-CSS-Styled-Version/index.html">
+          <span class="badge">STEP 2</span>
+          <h2>CSS Styled Version</h2>
+          <p>Same app, now with a professional responsive UI via one stylesheet.</p>
+          <span class="open">Open →</span>
+        </a>
+
+        <a class="card" href="./03-React-Version/index.html">
+          <span class="badge">STEP 3</span>
+          <h2>React Version</h2>
+          <p>Component-based SPA with routing, state, and real interactivity.</p>
+          <span class="open">Open →</span>
+        </a>
+      </div>
+
+      <footer>ABC Learning Solutions · Educational SDLC training material</footer>
+    </div>
+  </body>
+</html>
