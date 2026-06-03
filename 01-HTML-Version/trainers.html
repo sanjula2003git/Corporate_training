@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<!-- PHASE 1 — PLAIN HTML — Trainer Management. -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trainer Management | Training Management Portal</title>
+  </head>
+  <body>
+    <header><h1>Trainer Management</h1></header>
+
+    <nav aria-label="Main navigation">
+      <ul>
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="students.html">Students</a></li>
+        <li><a href="trainers.html">Trainers</a></li>
+        <li><a href="courses.html">Courses</a></li>
+        <li><a href="attendance.html">Attendance</a></li>
+        <li><a href="certificates.html">Certificates</a></li>
+        <li><a href="reports.html">Reports</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <section aria-label="Trainer list">
+        <h2>Trainers</h2>
+        <table border="1">
+          <caption>Active Trainers</caption>
+          <thead>
+            <tr>
+              <th scope="col">Trainer ID</th>
+              <th scope="col">Trainer Name</th>
+              <th scope="col">Expertise</th>
+              <th scope="col">Assigned Courses</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>TRN-001</td>
+              <td>Anita Sharma</td>
+              <td>Java, Spring Boot</td>
+              <td>Java Backend, Microservices</td>
+              <td><a href="#">Edit</a> | <a href="#">Delete</a></td>
+            </tr>
+            <tr>
+              <td>TRN-002</td>
+              <td>Suresh Rao</td>
+              <td>React, JavaScript</td>
+              <td>React Fundamentals</td>
+              <td><a href="#">Edit</a> | <a href="#">Delete</a></td>
+            </tr>
+            <tr>
+              <td>TRN-003</td>
+              <td>Priya Menon</td>
+              <td>Python, Data Science</td>
+              <td>Python Basics, ML 101</td>
+              <td><a href="#">Edit</a> | <a href="#">Delete</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section aria-label="Add trainer">
+        <h2>Add Trainer</h2>
+        <form action="trainers.html" method="post">
+          <p><label for="tname">Trainer Name</label>
+             <input type="text" id="tname" name="tname" required /></p>
+          <p><label for="expertise">Expertise</label>
+             <input type="text" id="expertise" name="expertise" /></p>
+          <p><label for="assigned">Assigned Courses</label>
+             <input type="text" id="assigned" name="assigned" /></p>
+          <p><button type="submit">Add Trainer</button></p>
+        </form>
+      </section>
+    </main>
+
+    <footer><p><a href="index.html">Home</a></p></footer>
+  </body>
+</html>

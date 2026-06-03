@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<!-- PHASE 2 — HTML + CSS — Trainer Management. -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trainers | Training Management Portal</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">ABC Learning</div>
+        <nav>
+          <ul>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="students.html">Students</a></li>
+            <li><a class="active" href="trainers.html">Trainers</a></li>
+            <li><a href="courses.html">Courses</a></li>
+            <li><a href="attendance.html">Attendance</a></li>
+            <li><a href="certificates.html">Certificates</a></li>
+            <li><a href="reports.html">Reports</a></li>
+            <li><a href="index.html">Logout</a></li>
+          </ul>
+        </nav>
+      </aside>
+
+      <div class="main">
+        <header class="navbar">
+          <h1>Trainer Management</h1>
+          <span class="user">Welcome, Admin</span>
+        </header>
+
+        <div class="content">
+          <div class="toolbar">
+            <form class="search">
+              <input type="search" placeholder="Search trainer..." />
+              <button class="btn" type="submit">Search</button>
+            </form>
+            <button class="btn">+ Add Trainer</button>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Trainer ID</th><th>Trainer Name</th><th>Expertise</th><th>Assigned Courses</th><th>Actions</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>TRN-001</td><td>Anita Sharma</td><td>Java, Spring Boot</td><td>Java Backend, Microservices</td>
+                  <td><button class="btn btn-sm btn-secondary">Edit</button><button class="btn btn-sm btn-danger">Delete</button></td>
+                </tr>
+                <tr>
+                  <td>TRN-002</td><td>Suresh Rao</td><td>React, JavaScript</td><td>React Fundamentals</td>
+                  <td><button class="btn btn-sm btn-secondary">Edit</button><button class="btn btn-sm btn-danger">Delete</button></td>
+                </tr>
+                <tr>
+                  <td>TRN-003</td><td>Priya Menon</td><td>Python, Data Science</td><td>Python Basics, ML 101</td>
+                  <td><button class="btn btn-sm btn-secondary">Edit</button><button class="btn btn-sm btn-danger">Delete</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="panel" style="margin-top:1.5rem">
+            <h2>Add Trainer</h2>
+            <form class="form-grid">
+              <div class="field"><label>Trainer Name</label><input type="text" /></div>
+              <div class="field"><label>Expertise</label><input type="text" /></div>
+              <div class="field"><label>Assigned Courses</label><input type="text" /></div>
+              <div class="field" style="justify-content:flex-end">
+                <label>&nbsp;</label><button class="btn" type="submit">Save Trainer</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

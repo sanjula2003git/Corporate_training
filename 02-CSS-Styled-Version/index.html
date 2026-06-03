@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<!-- PHASE 2 — HTML + CSS — Login (entry page). Styling lives entirely in styles.css. -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login | Training Management Portal</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="login-page">
+      <form class="login-card" action="dashboard.html" method="get">
+        <h1>ABC Learning Solutions</h1>
+        <p class="sub">Training Management Portal</p>
+
+        <div class="field">
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" placeholder="admin" required />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="••••••••" required />
+        </div>
+
+        <button type="submit" class="btn">Login</button>
+      </form>
+    </div>
+  </body>
+</html>

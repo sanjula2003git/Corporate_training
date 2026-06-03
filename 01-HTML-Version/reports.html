@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<!-- PHASE 1 — PLAIN HTML — Reports Dashboard. -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reports Dashboard | Training Management Portal</title>
+  </head>
+  <body>
+    <header><h1>Reports Dashboard</h1></header>
+
+    <nav aria-label="Main navigation">
+      <ul>
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="students.html">Students</a></li>
+        <li><a href="trainers.html">Trainers</a></li>
+        <li><a href="courses.html">Courses</a></li>
+        <li><a href="attendance.html">Attendance</a></li>
+        <li><a href="certificates.html">Certificates</a></li>
+        <li><a href="reports.html">Reports</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <section aria-label="Report cards">
+        <h2>Key Metrics</h2>
+        <article>
+          <h3>Total Students</h3>
+          <p>248</p>
+        </article>
+        <article>
+          <h3>Course Completion Rate</h3>
+          <p>74%</p>
+        </article>
+        <article>
+          <h3>Attendance Statistics</h3>
+          <p>Average 87% across all batches</p>
+        </article>
+        <article>
+          <h3>Certification Statistics</h3>
+          <p>183 certificates issued</p>
+        </article>
+      </section>
+
+      <section aria-label="Detailed report">
+        <h2>Completion by Course</h2>
+        <table border="1">
+          <thead>
+            <tr>
+              <th scope="col">Course</th>
+              <th scope="col">Enrolled</th>
+              <th scope="col">Completed</th>
+              <th scope="col">Completion Rate</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>React Fundamentals</td><td>60</td><td>42</td><td>70%</td></tr>
+            <tr><td>Java Backend</td><td>55</td><td>44</td><td>80%</td></tr>
+            <tr><td>Python Basics</td><td>48</td><td>40</td><td>83%</td></tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+
+    <footer><p><a href="index.html">Home</a></p></footer>
+  </body>
+</html>

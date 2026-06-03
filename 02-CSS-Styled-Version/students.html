@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<!-- PHASE 2 — HTML + CSS — Student Management. -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Students | Training Management Portal</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">ABC Learning</div>
+        <nav>
+          <ul>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a class="active" href="students.html">Students</a></li>
+            <li><a href="trainers.html">Trainers</a></li>
+            <li><a href="courses.html">Courses</a></li>
+            <li><a href="attendance.html">Attendance</a></li>
+            <li><a href="certificates.html">Certificates</a></li>
+            <li><a href="reports.html">Reports</a></li>
+            <li><a href="index.html">Logout</a></li>
+          </ul>
+        </nav>
+      </aside>
+
+      <div class="main">
+        <header class="navbar">
+          <h1>Student Management</h1>
+          <span class="user">Welcome, Admin</span>
+        </header>
+
+        <div class="content">
+          <div class="toolbar">
+            <form class="search">
+              <input type="search" placeholder="Search student..." />
+              <button class="btn" type="submit">Search</button>
+            </form>
+            <button class="btn">+ Add Student</button>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Student ID</th><th>Student Name</th><th>Email</th>
+                  <th>Course</th><th>Status</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>STU-001</td><td>Ravi Kumar</td><td>ravi.kumar@example.com</td>
+                  <td>React Fundamentals</td>
+                  <td><span class="badge badge-success">Active</span></td>
+                  <td><button class="btn btn-sm btn-secondary">Edit</button>
+                      <button class="btn btn-sm btn-danger">Delete</button></td>
+                </tr>
+                <tr>
+                  <td>STU-002</td><td>Meera Nair</td><td>meera.nair@example.com</td>
+                  <td>Python Basics</td>
+                  <td><span class="badge badge-success">Active</span></td>
+                  <td><button class="btn btn-sm btn-secondary">Edit</button>
+                      <button class="btn btn-sm btn-danger">Delete</button></td>
+                </tr>
+                <tr>
+                  <td>STU-003</td><td>John Mathew</td><td>john.mathew@example.com</td>
+                  <td>Java Backend</td>
+                  <td><span class="badge badge-muted">Inactive</span></td>
+                  <td><button class="btn btn-sm btn-secondary">Edit</button>
+                      <button class="btn btn-sm btn-danger">Delete</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="panel" style="margin-top:1.5rem">
+            <h2>Add Student</h2>
+            <form class="form-grid">
+              <div class="field"><label>Student Name</label><input type="text" /></div>
+              <div class="field"><label>Email</label><input type="email" /></div>
+              <div class="field"><label>Course</label>
+                <select><option>React Fundamentals</option><option>Java Backend</option><option>Python Basics</option></select>
+              </div>
+              <div class="field"><label>Status</label>
+                <select><option>Active</option><option>Inactive</option></select>
+              </div>
+              <div class="field" style="justify-content:flex-end">
+                <label>&nbsp;</label><button class="btn" type="submit">Save Student</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<!-- PHASE 1 — PLAIN HTML — Login Page. Semantic <form> only, no styling. -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login | Training Management Portal</title>
+  </head>
+  <body>
+    <header>
+      <h1>Training Management Portal</h1>
+      <p>Please sign in to continue</p>
+    </header>
+
+    <main>
+      <section>
+        <h2>Login</h2>
+        <!-- action="dashboard.html" simulates a successful login navigation -->
+        <form action="dashboard.html" method="get">
+          <p>
+            <label for="username">Username</label><br />
+            <input type="text" id="username" name="username" required />
+          </p>
+          <p>
+            <label for="password">Password</label><br />
+            <input type="password" id="password" name="password" required />
+          </p>
+          <p>
+            <button type="submit">Login</button>
+          </p>
+        </form>
+      </section>
+    </main>
+
+    <footer>
+      <p><a href="index.html">Back to Home</a></p>
+    </footer>
+  </body>
+</html>

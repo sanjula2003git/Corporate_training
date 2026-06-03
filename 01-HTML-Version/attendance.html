@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<!-- PHASE 1 — PLAIN HTML — Attendance Management. -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Attendance Management | Training Management Portal</title>
+  </head>
+  <body>
+    <header><h1>Attendance Management</h1></header>
+
+    <nav aria-label="Main navigation">
+      <ul>
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="students.html">Students</a></li>
+        <li><a href="trainers.html">Trainers</a></li>
+        <li><a href="courses.html">Courses</a></li>
+        <li><a href="attendance.html">Attendance</a></li>
+        <li><a href="certificates.html">Certificates</a></li>
+        <li><a href="reports.html">Reports</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <section aria-label="Mark attendance">
+        <h2>Mark Attendance</h2>
+        <form action="attendance.html" method="post">
+          <p>
+            <label for="course">Course</label>
+            <select id="course" name="course">
+              <option>React Fundamentals</option>
+              <option>Java Backend</option>
+              <option>Python Basics</option>
+            </select>
+          </p>
+          <p>
+            <label for="date">Date</label>
+            <input type="date" id="date" name="date" />
+          </p>
+
+          <fieldset>
+            <legend>Student List</legend>
+            <table border="1">
+              <thead>
+                <tr>
+                  <th scope="col">Student Name</th>
+                  <th scope="col">Present</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><label for="p1">Ravi Kumar</label></td>
+                  <td><input type="checkbox" id="p1" name="present" value="STU-001" /></td>
+                </tr>
+                <tr>
+                  <td><label for="p2">Meera Nair</label></td>
+                  <td><input type="checkbox" id="p2" name="present" value="STU-002" /></td>
+                </tr>
+                <tr>
+                  <td><label for="p3">John Mathew</label></td>
+                  <td><input type="checkbox" id="p3" name="present" value="STU-003" /></td>
+                </tr>
+              </tbody>
+            </table>
+          </fieldset>
+
+          <p><button type="submit">Save Attendance</button></p>
+        </form>
+      </section>
+    </main>
+
+    <footer><p><a href="index.html">Home</a></p></footer>
+  </body>
+</html>

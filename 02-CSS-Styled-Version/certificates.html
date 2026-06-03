@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<!-- PHASE 2 — HTML + CSS — Certificate Management. -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Certificates | Training Management Portal</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">ABC Learning</div>
+        <nav>
+          <ul>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="students.html">Students</a></li>
+            <li><a href="trainers.html">Trainers</a></li>
+            <li><a href="courses.html">Courses</a></li>
+            <li><a href="attendance.html">Attendance</a></li>
+            <li><a class="active" href="certificates.html">Certificates</a></li>
+            <li><a href="reports.html">Reports</a></li>
+            <li><a href="index.html">Logout</a></li>
+          </ul>
+        </nav>
+      </aside>
+
+      <div class="main">
+        <header class="navbar">
+          <h1>Certificate Management</h1>
+          <span class="user">Welcome, Admin</span>
+        </header>
+
+        <div class="content">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Student Name</th><th>Course Name</th><th>Completion Status</th><th>Actions</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Meera Nair</td><td>Python Basics</td>
+                  <td><span class="badge badge-success">Completed</span></td>
+                  <td><button class="btn btn-sm">Generate</button>
+                      <button class="btn btn-sm btn-secondary">Download</button></td>
+                </tr>
+                <tr>
+                  <td>Ravi Kumar</td><td>React Fundamentals</td>
+                  <td><span class="badge badge-warning">In Progress</span></td>
+                  <td><button class="btn btn-sm" disabled>Generate</button>
+                      <button class="btn btn-sm btn-secondary" disabled>Download</button></td>
+                </tr>
+                <tr>
+                  <td>John Mathew</td><td>Java Backend</td>
+                  <td><span class="badge badge-success">Completed</span></td>
+                  <td><button class="btn btn-sm">Generate</button>
+                      <button class="btn btn-sm btn-secondary">Download</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

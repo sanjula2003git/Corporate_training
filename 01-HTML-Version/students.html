@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<!-- PHASE 1 — PLAIN HTML — Student Management. Table + a plain form for "Add". -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Management | Training Management Portal</title>
+  </head>
+  <body>
+    <header>
+      <h1>Student Management</h1>
+    </header>
+
+    <nav aria-label="Main navigation">
+      <ul>
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="students.html">Students</a></li>
+        <li><a href="trainers.html">Trainers</a></li>
+        <li><a href="courses.html">Courses</a></li>
+        <li><a href="attendance.html">Attendance</a></li>
+        <li><a href="certificates.html">Certificates</a></li>
+        <li><a href="reports.html">Reports</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <section aria-label="Search students">
+        <h2>Search</h2>
+        <form action="students.html" method="get">
+          <label for="search">Search Student</label>
+          <input type="search" id="search" name="search" />
+          <button type="submit">Search</button>
+        </form>
+      </section>
+
+      <section aria-label="Student list">
+        <h2>Students</h2>
+        <table border="1">
+          <caption>Enrolled Students</caption>
+          <thead>
+            <tr>
+              <th scope="col">Student ID</th>
+              <th scope="col">Student Name</th>
+              <th scope="col">Email</th>
+              <th scope="col">Course</th>
+              <th scope="col">Status</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>STU-001</td>
+              <td>Ravi Kumar</td>
+              <td>ravi.kumar@example.com</td>
+              <td>React Fundamentals</td>
+              <td>Active</td>
+              <td><a href="#">Edit</a> | <a href="#">Delete</a></td>
+            </tr>
+            <tr>
+              <td>STU-002</td>
+              <td>Meera Nair</td>
+              <td>meera.nair@example.com</td>
+              <td>Python Basics</td>
+              <td>Active</td>
+              <td><a href="#">Edit</a> | <a href="#">Delete</a></td>
+            </tr>
+            <tr>
+              <td>STU-003</td>
+              <td>John Mathew</td>
+              <td>john.mathew@example.com</td>
+              <td>Java Backend</td>
+              <td>Inactive</td>
+              <td><a href="#">Edit</a> | <a href="#">Delete</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section aria-label="Add student">
+        <h2>Add Student</h2>
+        <form action="students.html" method="post">
+          <p><label for="name">Student Name</label>
+             <input type="text" id="name" name="name" required /></p>
+          <p><label for="email">Email</label>
+             <input type="email" id="email" name="email" required /></p>
+          <p><label for="course">Course</label>
+             <input type="text" id="course" name="course" /></p>
+          <p><label for="status">Status</label>
+             <select id="status" name="status">
+               <option>Active</option>
+               <option>Inactive</option>
+             </select></p>
+          <p><button type="submit">Add Student</button></p>
+        </form>
+      </section>
+    </main>
+
+    <footer><p><a href="index.html">Home</a></p></footer>
+  </body>
+</html>

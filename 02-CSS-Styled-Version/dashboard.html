@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<!-- PHASE 2 — HTML + CSS — Dashboard. -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard | Training Management Portal</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <!-- Sidebar is repeated per page (still the main limitation vs React) -->
+      <aside class="sidebar">
+        <div class="brand">ABC Learning</div>
+        <nav>
+          <ul>
+            <li><a class="active" href="dashboard.html">Dashboard</a></li>
+            <li><a href="students.html">Students</a></li>
+            <li><a href="trainers.html">Trainers</a></li>
+            <li><a href="courses.html">Courses</a></li>
+            <li><a href="attendance.html">Attendance</a></li>
+            <li><a href="certificates.html">Certificates</a></li>
+            <li><a href="reports.html">Reports</a></li>
+            <li><a href="index.html">Logout</a></li>
+          </ul>
+        </nav>
+      </aside>
+
+      <div class="main">
+        <header class="navbar">
+          <h1>Dashboard</h1>
+          <span class="user">Welcome, Admin</span>
+        </header>
+
+        <div class="content">
+          <!-- Summary cards -->
+          <section class="card-grid">
+            <div class="card"><h3>Total Students</h3><div class="value">248</div></div>
+            <div class="card"><h3>Total Trainers</h3><div class="value">18</div></div>
+            <div class="card"><h3>Total Courses</h3><div class="value">32</div></div>
+            <div class="card"><h3>Average Attendance</h3><div class="value">87%</div></div>
+          </section>
+
+          <!-- Two-column: recent activity + chart -->
+          <section class="panel-grid">
+            <div class="panel">
+              <h2>Recent Activities</h2>
+              <ul class="activity-list">
+                <li>New student <strong>Ravi Kumar</strong> enrolled in React Fundamentals.</li>
+                <li>Trainer <strong>Anita Sharma</strong> assigned to Java Backend.</li>
+                <li>Attendance saved for <strong>Python Basics</strong> (Batch 12).</li>
+                <li>Certificate generated for <strong>Meera Nair</strong>.</li>
+              </ul>
+            </div>
+
+            <div class="panel">
+              <h2>Attendance Overview</h2>
+              <div class="chart">
+                <div class="bar" style="height: 80%"><span>Mon</span></div>
+                <div class="bar" style="height: 90%"><span>Tue</span></div>
+                <div class="bar" style="height: 85%"><span>Wed</span></div>
+                <div class="bar" style="height: 92%"><span>Thu</span></div>
+                <div class="bar" style="height: 78%"><span>Fri</span></div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
