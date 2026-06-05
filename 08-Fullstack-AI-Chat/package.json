@@ -1,0 +1,21 @@
+{
+  "name": "training-portal-ai-chat",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Phase 2 — Training portal where the support chat is answered by an LLM (Claude)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.4.8"
+  }
+}

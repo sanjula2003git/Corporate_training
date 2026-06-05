@@ -1,0 +1,175 @@
+/* =====================================================================
+   PHASE 3 — REACT — global.css
+   Same visual language as Phase 2, but now there is exactly ONE copy of
+   the sidebar/navbar markup (in components), not one per page.
+   ===================================================================== */
+:root {
+  --color-primary: #1d4ed8;
+  --color-primary-dark: #1e3a8a;
+  --color-bg: #f4f6fb;
+  --color-surface: #ffffff;
+  --color-text: #1f2937;
+  --color-muted: #6b7280;
+  --color-border: #e5e7eb;
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-danger: #dc2626;
+  --sidebar-width: 240px;
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.05);
+  --font: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: var(--font); background: var(--color-bg); color: var(--color-text); line-height: 1.5; }
+a { color: var(--color-primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.app { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: var(--sidebar-width); background: var(--color-primary-dark);
+  color: #dbeafe; flex-shrink: 0; padding: 1.25rem 0;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+}
+.sidebar .brand { padding: 0 1.25rem 1rem; font-size: 1.1rem; font-weight: 700; color: #fff; border-bottom: 1px solid rgba(255,255,255,.15); }
+.sidebar nav ul { list-style: none; margin-top: .75rem; }
+.sidebar nav a { display: block; color: #dbeafe; padding: .7rem 1.25rem; font-size: .95rem; }
+.sidebar nav a:hover, .sidebar nav a.active {
+  background: rgba(255,255,255,.12); color: #fff; text-decoration: none; border-left: 3px solid #60a5fa;
+}
+
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+.navbar {
+  background: var(--color-surface); border-bottom: 1px solid var(--color-border);
+  padding: .9rem 1.5rem; display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 10;
+}
+.navbar h1 { font-size: 1.25rem; }
+.navbar .user { color: var(--color-muted); font-size: .9rem; display: flex; gap: 1rem; align-items: center; }
+
+.content { padding: 1.5rem; }
+
+.card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
+.card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.25rem; }
+.card h3 { font-size: .85rem; font-weight: 600; color: var(--color-muted); text-transform: uppercase; letter-spacing: .04em; }
+.card .value { font-size: 2rem; font-weight: 700; margin-top: .4rem; color: var(--color-primary-dark); }
+
+.panel-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.25rem; }
+.panel { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.25rem; }
+.panel h2 { font-size: 1.05rem; margin-bottom: .75rem; }
+
+.activity-list { list-style: none; }
+.activity-list li { padding: .6rem 0; border-bottom: 1px solid var(--color-border); font-size: .92rem; }
+.activity-list li:last-child { border-bottom: none; }
+
+.chart { display: flex; align-items: flex-end; gap: .75rem; height: 160px; padding-top: .5rem; }
+.chart .bar { flex: 1; background: linear-gradient(var(--color-primary), #60a5fa); border-radius: 6px 6px 0 0; position: relative; min-width: 24px; }
+.chart .bar span { position: absolute; bottom: -1.4rem; left: 0; right: 0; text-align: center; font-size: .75rem; color: var(--color-muted); }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.toolbar .search { display: flex; gap: .5rem; flex: 1; max-width: 360px; }
+
+.btn { display: inline-block; background: var(--color-primary); color: #fff; border: none; padding: .55rem 1rem; border-radius: 8px; font-size: .9rem; cursor: pointer; }
+.btn:hover { background: var(--color-primary-dark); text-decoration: none; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn-sm { padding: .35rem .7rem; font-size: .82rem; }
+.btn-secondary { background: #e5e7eb; color: var(--color-text); }
+.btn-danger { background: var(--color-danger); }
+
+.table-wrap { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); box-shadow: var(--shadow); overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+thead th { text-align: left; background: #f1f5f9; color: var(--color-muted); text-transform: uppercase; font-size: .75rem; letter-spacing: .04em; padding: .75rem 1rem; border-bottom: 1px solid var(--color-border); }
+tbody td { padding: .75rem 1rem; border-bottom: 1px solid var(--color-border); }
+tbody tr:hover { background: #f8fafc; }
+
+.badge { display: inline-block; padding: .15rem .6rem; border-radius: 999px; font-size: .75rem; font-weight: 600; }
+.badge-success { background: #dcfce7; color: var(--color-success); }
+.badge-warning { background: #fef3c7; color: var(--color-warning); }
+.badge-muted { background: #e5e7eb; color: var(--color-muted); }
+
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 1rem; }
+.field { display: flex; flex-direction: column; gap: .35rem; }
+.field label { font-size: .85rem; font-weight: 600; color: var(--color-muted); }
+.field input, .field select { padding: .55rem .7rem; border: 1px solid var(--color-border); border-radius: 8px; font-size: .9rem; font-family: inherit; }
+.field input:focus, .field select:focus { outline: 2px solid #93c5fd; border-color: var(--color-primary); }
+
+.login-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, var(--color-primary-dark), #2563eb); }
+.login-card { background: var(--color-surface); width: 100%; max-width: 380px; padding: 2rem; border-radius: 14px; box-shadow: 0 20px 40px rgba(0,0,0,.25); }
+.login-card h1 { font-size: 1.4rem; text-align: center; color: var(--color-primary-dark); }
+.login-card p.sub { text-align: center; color: var(--color-muted); margin-bottom: 1.5rem; font-size: .9rem; }
+.login-card .field { margin-bottom: 1rem; }
+.login-card .btn { width: 100%; }
+
+/* --- Full-stack (connected) additions --- */
+.form-error { background: #fee2e2; color: var(--color-danger); border: 1px solid #fecaca; padding: .6rem .8rem; border-radius: 8px; font-size: .88rem; margin-bottom: 1rem; }
+.login-hint { margin-top: 1rem; font-size: .78rem; color: var(--color-muted); text-align: center; line-height: 1.5; }
+.live-badge { background: #dcfce7; color: var(--color-success); font-weight: 700; font-size: .72rem; padding: .2rem .6rem; border-radius: 999px; }
+
+/* --- Role-based portal additions (Stage 6+) --- */
+.role-chip { display: inline-block; margin-left: .5rem; background: rgba(255,255,255,.18); color: #fff; font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: .12rem .45rem; border-radius: 999px; vertical-align: middle; }
+.page-head { display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem; }
+.page-head h2 { font-size: 1.2rem; }
+.muted-line { color: var(--color-muted); font-size: .82rem; }
+
+/* percentage bar (attendance / progress) */
+.progress { background: #eef2f7; border-radius: 999px; height: 18px; overflow: hidden; width: 100%; }
+.progress-bar { height: 100%; color: #fff; font-size: .7rem; font-weight: 700; text-align: center; line-height: 18px; min-width: 24px; transition: width .3s; }
+.progress-success { background: var(--color-success); }
+.progress-warning { background: var(--color-warning); }
+.progress-danger  { background: var(--color-danger); }
+
+.material-card { display: flex; flex-direction: column; }
+
+/* assignment submissions / grading */
+.review-list { margin-top: 1rem; display: flex; flex-direction: column; gap: .9rem; }
+.submission-row { border: 1px solid var(--color-border); border-radius: var(--radius); padding: .9rem; background: #fafbfc; }
+.submission-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+.submission-content { font-size: .9rem; margin: .5rem 0; white-space: pre-wrap; }
+.grade-form { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-top: .6rem; }
+.graded-box { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: .6rem .8rem; font-size: .88rem; margin: .5rem 0; }
+
+textarea { padding: .55rem .7rem; border: 1px solid var(--color-border); border-radius: 8px; font-size: .9rem; font-family: inherit; resize: vertical; }
+textarea:focus, input[type="number"]:focus { outline: 2px solid #93c5fd; border-color: var(--color-primary); }
+input[type="number"], .grade-form input { padding: .45rem .6rem; border: 1px solid var(--color-border); border-radius: 8px; font-size: .9rem; font-family: inherit; }
+
+/* --- Support chat (floating widget for students/trainers) --- */
+.badge-danger-soft { background: #fee2e2; color: var(--color-danger); }
+.chat-fab { position: fixed; right: 1.5rem; bottom: 1.5rem; width: 56px; height: 56px; border-radius: 50%; border: none; background: var(--color-primary); color: #fff; font-size: 1.6rem; cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,.25); z-index: 50; }
+.chat-fab:hover { background: var(--color-primary-dark); }
+.chat-panel { position: fixed; right: 1.5rem; bottom: 1.5rem; width: 340px; max-width: calc(100vw - 2rem); height: 460px; max-height: calc(100vh - 3rem); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 14px; box-shadow: 0 16px 40px rgba(0,0,0,.28); display: flex; flex-direction: column; overflow: hidden; z-index: 50; }
+.chat-header { background: var(--color-primary-dark); color: #fff; padding: .7rem .9rem; display: flex; align-items: center; justify-content: space-between; font-weight: 600; font-size: .92rem; }
+.chat-close { background: none; border: none; color: #fff; font-size: 1.3rem; cursor: pointer; line-height: 1; }
+.chat-body { flex: 1; overflow-y: auto; padding: .8rem; display: flex; flex-direction: column; gap: .6rem; background: var(--color-bg); }
+.chat-body-tall { min-height: 320px; border-radius: 8px; }
+.chat-empty { color: var(--color-muted); font-size: .85rem; text-align: center; margin: auto; }
+.chat-msg { display: flex; flex-direction: column; max-width: 85%; }
+.chat-msg.from-me { align-self: flex-end; align-items: flex-end; }
+.chat-msg.from-admin { align-self: flex-start; align-items: flex-start; }
+.chat-bubble { padding: .5rem .75rem; border-radius: 12px; font-size: .88rem; word-break: break-word; }
+.from-me .chat-bubble { background: var(--color-primary); color: #fff; border-bottom-right-radius: 3px; }
+.from-admin .chat-bubble { background: #fff; border: 1px solid var(--color-border); border-bottom-left-radius: 3px; }
+.chat-meta { font-size: .68rem; color: var(--color-muted); margin-top: .15rem; }
+.chat-typing { font-style: italic; color: var(--color-muted); }
+.chat-input { display: flex; gap: .4rem; padding: .6rem; border-top: 1px solid var(--color-border); background: var(--color-surface); }
+.chat-input input { flex: 1; padding: .5rem .7rem; border: 1px solid var(--color-border); border-radius: 8px; font-size: .88rem; font-family: inherit; }
+
+/* --- Admin inbox (Messages page) --- */
+.inbox { display: grid; grid-template-columns: 320px 1fr; gap: 1.25rem; align-items: start; }
+.inbox-list { max-height: 70vh; overflow-y: auto; }
+.inbox-item { display: block; width: 100%; text-align: left; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 10px; padding: .65rem .75rem; margin-bottom: .6rem; cursor: pointer; }
+.inbox-item:hover { background: #eef2f7; }
+.inbox-item.active { border-color: var(--color-primary); background: #eff6ff; }
+.inbox-item-top { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.inbox-preview { font-size: .82rem; color: var(--color-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: .25rem 0; }
+.inbox-item-bottom { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.inbox-convo { display: flex; flex-direction: column; }
+
+@media (max-width: 900px) { .panel-grid { grid-template-columns: 1fr; } .inbox { grid-template-columns: 1fr; } }
+@media (max-width: 720px) {
+  .app { flex-direction: column; }
+  .sidebar { width: 100%; height: auto; position: static; padding: .75rem 0; }
+  .sidebar nav ul { display: flex; flex-wrap: wrap; }
+  .sidebar nav a { padding: .5rem .9rem; }
+  .sidebar nav a.active { border-left: none; border-bottom: 3px solid #60a5fa; }
+}

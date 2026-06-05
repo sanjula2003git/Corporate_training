@@ -1,0 +1,7 @@
+# The database file is generated at runtime — don't commit it.
+training.db
+__pycache__/
+*.pyc
+
+# Secrets — never commit the real API key.
+.env

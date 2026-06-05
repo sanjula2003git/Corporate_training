@@ -1,0 +1,6 @@
+# Backend dependencies — install with:  python -m pip install -r requirements.txt
+fastapi            # the web framework (builds the API + auto /docs page)
+uvicorn[standard]  # the server that runs the app
+PyJWT              # creates & verifies login tokens (the "access pass")
+bcrypt             # securely scrambles (hashes) passwords
+python-multipart   # lets the login form send username/password

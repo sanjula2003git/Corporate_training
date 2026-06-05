@@ -1,0 +1,12 @@
+# Backend + Database dependencies (Phase 2: AI chat)
+fastapi            # web framework + auto /docs
+uvicorn[standard]  # the server
+PyJWT              # login tokens (access pass)
+bcrypt             # password hashing
+python-multipart   # login form support
+sqlmodel           # the database toolkit (SQLAlchemy + Pydantic) — talks to SQLite
+
+# --- Phase 2 (AI chat) extras ---
+python-dotenv      # loads GEMINI_API_KEY / ANTHROPIC_API_KEY from a .env file
+# Google Gemini (recommended, free tier) is called over plain REST — NO package needed.
+anthropic          # ONLY needed if you choose Anthropic Claude instead of Gemini

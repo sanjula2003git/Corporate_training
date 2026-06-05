@@ -1,0 +1,7 @@
+# Backend + Database dependencies
+fastapi            # web framework + auto /docs
+uvicorn[standard]  # the server
+PyJWT              # login tokens (access pass)
+bcrypt             # password hashing
+python-multipart   # login form support
+sqlmodel           # the database toolkit (SQLAlchemy + Pydantic) — talks to SQLite
