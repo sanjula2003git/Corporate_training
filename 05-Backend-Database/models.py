@@ -28,19 +28,33 @@ class UserDB(SQLModel, table=True):
     ref_id: Optional[str] = None
 
 
+# =====================================================================
+# ⚡ PERFORMANCE — DATABASE INDEXING  (index=True below)
+#
+# BUSINESS LEVEL: An index is like the index at the back of a textbook. Without
+#   it, to find "all students taking React" the database must read EVERY row
+#   (a "full table scan"). With an index on that column, it jumps straight to
+#   the matching rows — much faster once you have thousands of records.
+#
+# CODE LEVEL: `Field(index=True)` tells the database to build & maintain a
+#   sorted lookup structure (a B-tree) for that column. We index the columns we
+#   actually SEARCH or FILTER by (name, email, course, student_id, ...).
+#   Trade-off: indexes speed up reads but slightly slow writes and use disk —
+#   so you index searched columns, not every column.
+# =====================================================================
 class StudentDB(SQLModel, table=True):
     __tablename__ = "students"
-    id: str = Field(primary_key=True)
-    name: str
-    email: str
-    course: str
+    id: str = Field(primary_key=True)             # primary keys are auto-indexed
+    name: str = Field(index=True)                 # we search students by name
+    email: str = Field(index=True)                # ...and by email
+    course: str = Field(index=True)               # ...and filter by course
     status: str = "Active"
 
 
 class TrainerDB(SQLModel, table=True):
     __tablename__ = "trainers"
     id: str = Field(primary_key=True)
-    name: str
+    name: str = Field(index=True)                 # searched by name
     expertise: str
     courses: str
 
@@ -48,7 +62,7 @@ class TrainerDB(SQLModel, table=True):
 class CourseDB(SQLModel, table=True):
     __tablename__ = "courses"
     id: str = Field(primary_key=True)
-    name: str
+    name: str = Field(index=True)                 # searched by name
     trainer: str
     duration: str
     status: str = "Upcoming"
@@ -68,9 +82,9 @@ class CertificateDB(SQLModel, table=True):
 class AttendanceDB(SQLModel, table=True):
     __tablename__ = "attendance"
     id: Optional[int] = Field(default=None, primary_key=True)
-    student_id: str
+    student_id: str = Field(index=True)    # each student looks up THEIR own rows
     student_name: str
-    course: str
+    course: str = Field(index=True)        # admins filter attendance by course
     date: str
     status: str            # "Present" / "Absent"
     marked_by: str
@@ -104,8 +118,8 @@ class AssignmentDB(SQLModel, table=True):
 class SubmissionDB(SQLModel, table=True):
     __tablename__ = "submissions"
     id: Optional[int] = Field(default=None, primary_key=True)
-    assignment_id: int
-    student_id: str
+    assignment_id: int = Field(index=True)   # "show all submissions for this assignment"
+    student_id: str = Field(index=True)      # "show all of this student's submissions"
     student_name: str
     content: str = ""          # the student's typed answer
     link: str = ""             # optional link (e.g. GitHub / Google Doc)
