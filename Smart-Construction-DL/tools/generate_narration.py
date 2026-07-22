@@ -1,0 +1,476 @@
+"""
+Generate voice narration for every stage of the Smart Construction Site app.
+Uses edge-tts (free, neural voices). Run once; the app just plays the mp3s.
+
+    pip install edge-tts
+    python tools/generate_narration.py
+"""
+import asyncio, json, os
+import edge_tts
+
+VOICE = "en-US-AriaNeural"      # clear, teacherly. Alternatives: en-US-GuyNeural, en-GB-SoniaNeural
+RATE = "-8%"                    # slightly slower for teaching
+
+OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "audio")
+os.makedirs(OUT, exist_ok=True)
+
+NARRATION = {
+# ============================ ACT 1 — why AI exists at all ============================
+"site":
+ "It is Tuesday morning. Watch the timeline. Four things are going wrong on this site, and they do not "
+ "have the courtesy to happen one at a time. Gas is seeping in the tunnel. A dust cloud rolls across the "
+ "yard. A worker drifts within a metre of a swinging excavator. And somebody, on a hot afternoon, has taken "
+ "their helmet off. Now watch the white circle. That is your supervisor. A real, competent, experienced "
+ "person. And notice what they can do: they can look at exactly one of those four rows at a time. Every red "
+ "ring you see appearing is a hazard that happened while they were looking somewhere else. By the end of "
+ "this single shift, look at that number. Those are not moments of negligence. That supervisor was doing "
+ "their job properly the entire time. They were simply in one place, looking at one thing, because they are "
+ "one person. So let me ask you the only question that matters in this entire course. Can one human being "
+ "watch all of this? Every minute. Every worker. All four hazards. For nine hours. And you already know the "
+ "answer, and it is no. Not because they are bad at their job. Because of arithmetic. That, and nothing "
+ "else, is why artificial intelligence belongs on a construction site.",
+
+"enter-ai":
+ "Same shift. Same four hazards. Same site. Nothing has changed except one thing: something is now watching "
+ "every row at once. Not cleverly. Not thoughtfully. Just constantly. The AI does not get tired. It does "
+ "not blink. It does not turn around to answer a question. It cannot be distracted by a delivery arriving "
+ "at the gate. That is the entire list of things it is better at than your supervisor. Now let me be very "
+ "careful here, because this is where people go wrong about AI. This system cannot decide what an "
+ "acceptable risk is. It cannot talk a frightened worker down off a scaffold. It does not know that the "
+ "scaffold was signed off this morning. It cannot be held accountable when somebody dies. And it does not "
+ "understand a single thing it is looking at. Your supervisor can do all of that, and the machine never "
+ "will. So the AI's job is not to decide. Its job is to watch everything, and hand the supervisor the three "
+ "things that actually matter right now, so that a human being can make the call. This is human plus AI. It "
+ "is never human versus AI. The supervisor has not been replaced. They have been given eyes everywhere.",
+
+"inspection":
+ "Before we touch any AI, you need to understand one thing, and most people never do. The AI will never see "
+ "your construction site. Never. Walk through the morning with me. A worker badges in and walks into the "
+ "tunnel. Gas is seeping. It is thirty eight degrees. An excavator swings a metre behind him. That is the "
+ "real world, and it is rich, and messy, and full of context. Now watch what actually reaches the computer. "
+ "The gas sensor reports a number. The thermometer reports a number. The proximity sensor reports a number. "
+ "The camera reports a grid of brightness values. And that is all. No context. No meaning. No worker. What "
+ "arrives at the far end is one row of numbers, and one image. And this is the part I want you to remember "
+ "for the rest of your career: that row is the entire universe as far as the AI is concerned. If the row is "
+ "wrong, the AI is wrong, and here is the frightening part, it will never know it is wrong. It cannot walk "
+ "outside and check. Which is exactly why the next four stages are not about artificial intelligence at "
+ "all. They are about the data. Because in a real project, that is where you will spend most of your time, "
+ "and it is where systems succeed or fail.",
+
+"two-worlds":
+ "Look at what this site produces, because it produces two completely different kinds of data, and the "
+ "difference between them is the reason this entire course exists. World one is numbers. Gas. Dust. "
+ "Temperature. Humidity. Noise. Acceleration. Proximity. Seven tidy columns. And notice something crucial: "
+ "a human being already named every one of those columns. A human decided that gas matters and gave it a "
+ "name and a unit. When you read gas equals four hundred and twenty, that number already means something "
+ "before any AI touches it. World two is images. Workers, helmets, safety vests, machinery. One hundred and "
+ "fifty thousand numbers per frame. Not one of them is named. Not one of them means anything on its own. "
+ "So here is the one question that decides everything that follows. Can one kind of AI handle both of these "
+ "worlds? Hold on to that question, because we are going to answer it the honest way. Not by me telling "
+ "you. By trying it, and watching one of them fail in front of you.",
+
+# ============================ ACT 3 — the wall ============================
+"pixel-problem":
+ "Look at the photograph. You see a worker, wearing a hard hat. It took you no effort at all. You did not "
+ "think about it. Now look at what the computer receives. Two hundred and twenty four across, two hundred "
+ "and twenty four down, three colour channels. One hundred and fifty thousand, five hundred and twenty "
+ "eight numbers. And the number of those labelled helmet is zero. Zoom in anywhere you like. Look at the "
+ "actual values in that patch. One hundred and thirty seven. One hundred and forty two. Ninety one. That is "
+ "what is really in there. So let me ask you the question that breaks the whole thing open. Which of those "
+ "one hundred and fifty thousand numbers is the helmet? Point at it. You cannot. And not one of them is, "
+ "because there is no helmet number, no helmet column, no helmet anywhere in this data. Helmet is not "
+ "inside any single pixel. It only exists in the relationship between thousands of them, all at once. Now "
+ "remember what machine learning needs. It needs columns. Somebody has to hand it helmet colour, helmet "
+ "shape, helmet area. So let us do exactly that. Let us build those columns by hand, the way engineers did "
+ "for forty years, and see how far we get.",
+
+"handmade-features":
+ "No AI on this page. Just you, and your engineering judgement. Here is your rule, and it is a perfectly "
+ "sensible one. Helmets are yellow. So count the yellow pixels, and if there are enough of them, call it a "
+ "helmet. Drag the threshold. Tune it as carefully as you like. Take your time. Now look at the table, "
+ "because every single frame in it contains a helmet. And your rule finds the yellow ones beautifully. But "
+ "frame zero two is a red helmet, worn on a worker's head, and frame zero four is a white one. Your rule is "
+ "completely blind to both of them. And there is no threshold, anywhere on that slider, that fixes it. So "
+ "fix it properly. Add a rule for red. Now it flags the red toolbox, the red hoarding, and a worker's red "
+ "jacket. Add a rule for white. Now it flags the sky, the vans, and every painted wall on the site. Add a "
+ "rule that it must be round. Now you need edge detection, and contour fitting, and a size threshold, and "
+ "it still flags wheels and buckets and drums and the top of every bollard. Do you feel that? Every rule "
+ "you add to catch one case creates two new false alarms. Engineers spent decades trapped exactly here. And "
+ "you have not even started on dusty helmets, or helmets at night, or helmets seen from behind, or helmets "
+ "in shadow, or helmets half hidden behind scaffolding. So here is the realisation, and I want you to sit "
+ "with it. You cannot hand write helmet. Not because you are not clever enough. Because helmet is not a "
+ "colour, or a shape, or an area. It is a pattern made of thousands of relationships, and no human being "
+ "can write them all down. So stop trying to write the features. Get the machine to find them.",
+
+"why-dl":
+ "You did not need me to tell you this. You proved it yourself, two pages ago. On numbers, where a human "
+ "had already named every column, machine learning worked beautifully. On pixels, where you had to invent "
+ "the columns yourself, your rule broke on the second image. So here is the one idea this entire course "
+ "exists to deliver. Machine learning learns from columns that humans manually define. It is only ever as "
+ "good as the columns you were clever enough to invent. Deep learning learns useful features directly from "
+ "raw data. Nobody names anything. It digs the features out by itself. And now you understand something "
+ "most people who use these tools never do. Deep learning was not invented because it is fashionable, or "
+ "because it is powerful, or because somebody wanted a bigger computer. It was invented because of the "
+ "exact wall you just hit. That moment when a problem has no columns, and no human on earth can write them. "
+ "That is the whole reason it exists. Everything from here is detail.",
+
+# ============================ ACT 4 — how machines learn ============================
+"supervisor-brain":
+ "Forget artificial intelligence completely for a moment. I want you to watch a human think. A supervisor "
+ "walks up to a location, and in about two seconds they ask themselves a handful of questions. Is the gas "
+ "high? Is the noise bad? Is that worker too near the excavator? Is it dangerously hot today? But here is "
+ "the thing they do not do. They do not count those equally. Gas terrifies them. Noise, honestly, less so. "
+ "Each observation carries a different amount of worry. So they add up the worry, all of it, and they "
+ "compare that total against some private threshold they have built over twenty years on sites. If the "
+ "worry clears the threshold, they stop the work. If it does not, they carry on. Drag those sliders and "
+ "watch it happen. Now look at what you just built. The things they notice, we call inputs. How much each "
+ "one worries them, we call weights. The threshold before they act, we call the bias. Adding up the worry "
+ "is the weighted sum. And the decision to stop or carry on is the activation. You did not just build "
+ "something like a neuron. You built a neuron. That is all a neuron has ever been: a supervisor who only "
+ "ever looks at numbers, and never gets tired. So the mathematics on the next page is not new. It is this "
+ "page, written down.",
+
+"learning-loop":
+ "No mathematics on this page at all. Just one idea. A brand new supervisor, on their first day, has no "
+ "idea how much gas should worry them. Nobody is born knowing that. So how does anybody ever learn it? Like "
+ "this. You make a guess. You are wrong. You measure how wrong you were. You adjust, a little, not a lot. "
+ "You guess again. And you are slightly less wrong. And then you do it again, and again, and again. Watch "
+ "the curve. That is it. That is learning. That is genuinely all of it. A child learning to catch a ball "
+ "does this. You did this the first time you reversed a truck into a tight gate. Nothing about that loop is "
+ "artificial or intelligent. Now, and only now, let me give you four words that terrify people. How wrong "
+ "were we? That is called the loss function. Which way should I adjust? That is gradient descent. How big "
+ "an adjustment should I make? That is the learning rate. And what is the smartest way to make that "
+ "adjustment? That is the optimizer. Four intimidating words. One simple loop. And you understood the loop "
+ "first. That was the entire point.",
+
+# ============================ ACT 6 — the product ============================
+"audit":
+ "Forget metrics. Forget accuracy, precision and recall. We are going to audit this AI exactly the way you "
+ "would audit a subcontractor who claimed they had done the work. One hundred shifts happened on this site. "
+ "We know what really happened on every single one, because we have the incident log. The AI made a call on "
+ "every single one. Let us just line them up and see. First box. The AI said safe, and it was safe. Nothing "
+ "happened, nothing was predicted. Good. Second box. The AI said risk, and there was an incident. The AI "
+ "called it, a supervisor was sent, and that is the win. That is why we built this. Third box. The AI said "
+ "risk, but nothing happened. A false alarm. Your supervisor walked across the site for nothing and is "
+ "mildly annoyed with you. The cost is ten minutes. And now the fourth box. The AI said safe, and somebody "
+ "got hurt. Nobody was sent. Nobody was watching. The cost of that box is not ten minutes. The cost of that "
+ "box is a person. Now put those four boxes in a square. That is the confusion matrix. You did not learn "
+ "it, you just built it, by auditing a site. And here is the rule I want you to carry out of this room. "
+ "Never quote accuracy on its own for a safety system. A model that simply says safe to everything will "
+ "score extremely well on accuracy, and it will get somebody killed. The only number on that page that "
+ "truly matters is the red one.",
+
+"fusion-engine":
+ "This is the part that is actually the product. Everything before this was a component. No single model "
+ "runs a safe site, and this is the thing nobody tells students. Watch each model report in, alone, and "
+ "blind to all the others. The camera, through the CNN, says the helmet is missing. On its own, so what? He "
+ "might be standing in the site office. The gas sensor, through the neural network, says forty five parts "
+ "per million. On its own, so what? There may be nobody within fifty metres of it. GPS says Tunnel Zone. On "
+ "its own, so what? He might be perfectly kitted out. Every one of those signals, by itself, is very nearly "
+ "useless. Now fuse them. Worker eighteen, identified by his RFID tag, is in the Tunnel Zone, which is a "
+ "confined space, with no helmet, breathing forty five parts per million of toxic gas. That is not four "
+ "weak signals any more. That is an emergency, with a name attached to it. Get him out. Now. And this is "
+ "what an AI engineer actually builds. Not a neural network. A system. Several models, several sensors, one "
+ "decision, and one human being who acts on it. Almost every commercial AI system you will ever meet works "
+ "exactly like this.",
+
+"pipeline":
+ "Let us look at what you actually learned, because it was never really about neural networks. Start at the "
+ "top. A construction site, with real workers, real hazards, and one overwhelmed supervisor. We instrument "
+ "it with sensors and cameras. Reality becomes rows of data, and the AI never sees the site itself, only "
+ "those rows. We clean the data, throwing out the damaged bricks. We prepare it, standardising the "
+ "materials and separating practice work from the final inspection. Machine learning handles the columns a "
+ "human named. Deep learning takes over the moment there are no columns to name. A fusion engine combines "
+ "every model and every sensor into a single call. That becomes a risk prediction, which becomes an alert, "
+ "which reaches a human supervisor, who acts. And somebody goes home tonight who might not have. Now count "
+ "the boxes in that pipeline. The neural network is one of them. One. Everything on either side of it, the "
+ "sensors, the cleaning, the preparation, the fusion, and the human being at the end, is where real systems "
+ "are won and lost. So this is what I want you to leave with. Artificial intelligence is an engineering "
+ "pipeline. It is not a neural network. And if you remember only one sentence from this entire course, make "
+ "it this one. Deep learning exists because of the wall you hit, with your own hands, trying to hand write "
+ "the word helmet. That is the whole reason. Everything else is detail.",
+
+"overview":
+ "This is a real construction site. A building stripped back to its brickwork, wrapped in scaffolding, with "
+ "hoarding around the base and warning signs on every face of it. Look at it the way a safety manager has to. "
+ "Somewhere in that scaffolding the air might be going bad. Somewhere a worker is standing too close to "
+ "moving machinery. And somewhere, someone has taken their helmet off because it is a hot afternoon. You "
+ "cannot see any of that just by looking, and neither can one supervisor. So we instrument it. The sensors "
+ "are hidden right now, exactly as they would be in real life. Move your cursor across the site, or tap it on "
+ "a screen, and they will light up where they are mounted. There are seven environmental sensors glowing "
+ "blue: gas, dust, temperature, humidity, an accelerometer for sudden impacts, a proximity sensor watching "
+ "the gap between a worker and a machine, and a noise meter. Those seven feed the machine learning stage, "
+ "which predicts accident risk from numbers alone. The amber one is the helmet camera, and you will find it "
+ "on the CCTV pole standing in the middle of the shot. That camera feeds the deep learning stage. It sees "
+ "nothing but raw pixels, and from those pixels alone it decides whether a worker is wearing a helmet. And in "
+ "green, the GPS and RFID tags, which tell us which worker, and exactly where they are standing. Seven "
+ "numbers, one camera, and a position. That is the whole site, and everything else we build rests on it.",
+
+"load":
+ "This is the raw data exported by the site's monitoring system. Each row is one work shift, with the seven "
+ "sensor readings, and whether a safety incident was recorded that day. But look closely, because this data is "
+ "far from perfect. Every value highlighted in red is a problem: blank cells where a sensor dropped out, "
+ "impossible values from broken hardware, and shifts that were accidentally logged twice. This is what real "
+ "sensor data looks like, and we cannot feed it to a model yet.",
+
+"inspect":
+ "Before we clean anything, we diagnose. The first chart counts the missing readings for each sensor. Around "
+ "six percent simply never arrived, because a device lost power or dropped a packet. The second chart counts "
+ "impossible values. A gas sensor reporting nine thousand nine hundred and ninety nine parts per million. A "
+ "thermometer claiming one hundred and fifty degrees. A negative distance to machinery. None of these are real "
+ "measurements. They are broken hardware. And finally we count the duplicate rows, where the same shift was "
+ "written to the log twice.",
+
+"clean":
+ "Now watch what cleaning actually does. First, we drop the duplicate shifts, because a shift counted twice "
+ "would quietly bias the model. Second, we take those impossible values, the nine thousand gas reading, the "
+ "hundred and fifty degree temperature, the negative distance, and we mark them as missing. They are not "
+ "extreme data, they are broken sensors, and keeping them would distort every calculation. Third, we fill "
+ "every gap with that sensor's median, the middle value. We deliberately use the median rather than the "
+ "average, because the average would be dragged upward by those faulty spikes. Watch the histogram change. "
+ "The long tail of impossible values disappears, and the distribution settles back into the realistic range "
+ "the site actually operates in.",
+
+"normalize":
+ "Our sensors speak different languages. Gas is measured in parts per million, in the tens. Acceleration is "
+ "measured in g, around one. Distance is a handful of metres. If we hand those raw numbers to a model, it will "
+ "assume gas matters far more than acceleration, purely because its numbers are bigger. That is wrong. "
+ "Normalisation fixes it. Watch the distribution squash. Every sensor is rescaled into the same zero to one "
+ "range, so each one gets a fair say, and the model can learn which sensors truly matter.",
+
+"split":
+ "To trust a model, we must test it on shifts it has never seen. Watch the data divide. Seventy percent becomes "
+ "the training set, the shifts the model learns from. Fifteen percent becomes validation, which we peek at "
+ "during training to catch overfitting. And fifteen percent becomes the test set, locked away until the very "
+ "end. Notice the red incident portion stays proportional across all three. That is stratification. Without it, "
+ "the test set might contain almost no incidents at all, and the final score would be meaningless.",
+
+"compare":
+ "Here is the promise we are making. Machine learning needs a human to choose the features. We hand it the "
+ "columns: gas, dust, temperature. Deep learning learns the features itself, straight from raw data. On our "
+ "tidy sensor table, both will do well. But only deep learning can look at a raw camera photograph and decide "
+ "there is no helmet, because nobody can hand write a helmet column. We will come back and prove this at the end.",
+
+"ml-baseline":
+ "This is machine learning doing its job, and doing it well. A random forest builds many decision trees over "
+ "our sensor columns and lets them vote. This chart shows which sensors it leaned on most. Notice what it can "
+ "do: rank the features we gave it. And notice what it can never do: invent a new one. Every single feature on "
+ "this chart was named by a human being.",
+
+"what-is-dl":
+ "Watch what actually happens inside the network. On the left, the seven sensor readings enter. Now look "
+ "carefully, because this is the part that matters. Every single input travels to every single neuron in the "
+ "next layer, and each connection scales it by its own weight. Each neuron then adds all of those arriving "
+ "signals together, along with its bias, and pushes that total through its activation function. That is one "
+ "neuron firing. Layer one can only spot simple patterns. Is the gas high. Was there a big jolt. But layer two "
+ "does not see the raw sensors at all. It sees layer one's answers, and it combines them into something far "
+ "richer: the gas is high, and the worker is close to machinery, and there was a sudden jolt. That is the whole "
+ "idea of depth. Each layer builds on the patterns the layer before it discovered, so the deeper you go, the "
+ "more abstract the recognised pattern becomes. On the camera it is exactly the same story: first edges, then "
+ "parts, then the whole helmet. And nobody programmed a single one of those patterns. The network found them "
+ "all by itself.",
+
+"neuron":
+ "This is the smallest piece of the entire machine: a single neuron. On the left are one shift's seven sensor "
+ "readings. Each one travels along a connection, and the thickness of that connection is its weight, how much "
+ "the neuron trusts that sensor. Blue is a positive weight, orange is negative. They all arrive at the centre, "
+ "where they are added together along with the bias, producing the weighted sum, z. That z passes through the "
+ "activation function, and out comes a single number between zero and one: the probability that this shift is "
+ "risky. Drag any weight, and watch the whole neuron respond.",
+
+"activation":
+ "The activation function is the neuron's decision switch, and it adds the one thing without which none of "
+ "this works: non-linearity. Stack a hundred layers with no activation, and the whole thing collapses back "
+ "into a single straight line formula. It could never learn a rule like: danger only when gas is high, and the "
+ "worker is close to machinery, and there is a sudden jolt. Try each function and watch the curve. Sigmoid "
+ "squashes anything, however large, into the range zero to one. Tanh does the same but centres it around zero. "
+ "ReLU is brutally simple: negatives become zero, positives pass straight through. Leaky ReLU keeps a small "
+ "slope for the negatives so a neuron can never get permanently stuck at zero. Now, which is best for our "
+ "site? We did not guess. We retrained the same network on the same shifts, changing only the hidden "
+ "activation, and ReLU wins. Here is why. Sigmoid and Tanh both flatten out at their edges, and where they "
+ "flatten, the gradient nearly vanishes, so those neurons stop learning. ReLU never flattens on the positive "
+ "side, so gradients flow, and the network actually discovers those gas-plus-proximity combinations. But look "
+ "carefully at our output neuron: it is still Sigmoid, deliberately. We need a number between zero and one, "
+ "because we are asking for the probability that this shift ends in an incident. ReLU could hand us seventeen "
+ "point four, and seventeen point four is not a probability.",
+
+"loss":
+ "The loss function answers one question. How wrong were we? Drag the prediction and watch the curve. When the "
+ "model is right, the loss sits near zero. But as it becomes confidently wrong, the loss does not rise gently, "
+ "it explodes, climbing toward infinity. That steepness is a deliberate design choice, and on a safety system "
+ "it is the whole point. Now compare the two curves below. Imagine the model looked at a shift, announced one "
+ "percent risk, and that shift put a worker in hospital. Mean squared error looks at that catastrophe and "
+ "returns a loss of about one. That is its maximum. It genuinely cannot be more upset than that. Cross entropy "
+ "looks at the same catastrophe and returns four point six, and it keeps climbing the more confident and wrong "
+ "you get. Which of those two would you rather have training the model that decides whether to pull a worker "
+ "off your site? That is why we use binary cross entropy. Mean squared error is the right tool when you are "
+ "predicting a quantity, like the exact gas concentration in parts per million. Cross entropy is the right "
+ "tool when you are making a yes or no call, like whether this shift is about to go badly wrong.",
+
+"gradient-descent":
+ "Think of the loss as a valley. High ground means bad weights, the bottom means good ones. The gradient is the "
+ "slope under our feet, and it always points uphill, so we step the opposite way, downhill. Watch the ball "
+ "roll. Every step re-tunes how much the network trusts each sensor, and every step means a few fewer wrong "
+ "safety calls. How far we move on each step is called the learning rate.",
+
+"learning-rate":
+ "The learning rate decides how big a step we take, and it is the single most important knob in training. Watch "
+ "all three balls at once. Too low, in red, and it barely crawls. Just right, in green, and it descends "
+ "smoothly and settles at the bottom. Too high, in amber, and it overshoots, bouncing across the valley, "
+ "sometimes flying out entirely and never settling at all. But that valley is a toy, so look at the second "
+ "chart, where we retrained the real network on the real shifts at four different rates. At zero point zero "
+ "zero zero one, the loss barely moves. The network would need an enormous number of epochs just to work out "
+ "that high gas plus close proximity means danger. At zero point one, the steps are so violent that the loss "
+ "jumps around and never settles into a reliable risk detector. Zero point zero zero one drops fast and stays "
+ "down, and that is exactly why it is our choice, and why it is Adam's default. And here is the practical "
+ "trick used in real projects: you do not have to keep it fixed. Start it larger to learn the big obvious "
+ "patterns quickly, then shrink it as you go, to fine tune without overshooting. That is called a learning "
+ "rate schedule.",
+
+"optimizer":
+ "Plain gradient descent takes the same cautious step everywhere, for every weight, forever. Optimizers are "
+ "smarter than that. Momentum carries velocity from previous steps, so it rolls straight through small bumps "
+ "instead of getting stuck in them. RMSprop adapts the step size for each individual weight, based on how "
+ "wildly that weight's gradient has been swinging recently. And Adam combines both ideas: momentum, plus per "
+ "weight adaptation. Watch the race, and watch Adam reach the bottom fastest and steadiest. Then look at the "
+ "second chart, because that one is not a toy. That is the real training loss of our network, on our site's "
+ "shifts, with only the optimizer swapped. Adam drops the loss faster and settles lower, and it does it "
+ "without us hand tuning anything. And there is a reason that matters here specifically. Our sensor data is "
+ "noisy. A jolt on the accelerometer here, a gas spike there, a dust reading that swings with the wind. Adam's "
+ "per weight adaptive steps ride straight through that noise. Plain S G D uses one single step size for every "
+ "weight in the network, so it takes far longer to find the same danger patterns.",
+
+"network":
+ "Look at the numbers in the table. These are one real shift's readings from our site: a gas level, a dust "
+ "level, a temperature, a jolt from the accelerometer, and how many metres the worker was standing from moving "
+ "machinery. Seven plain numbers. Now watch what the network does with them. Every one of those seven numbers "
+ "is sent to every single neuron in the first hidden layer. Not some of them. Every one. Along the way, each "
+ "connection multiplies the number by its own weight, and a weight is simply how much that neuron has learned "
+ "to trust that particular sensor. A large positive weight on gas means: when gas climbs, this neuron should "
+ "get excited. A negative weight on proximity means the opposite: the closer the worker gets to the machine, "
+ "the harder this neuron fires. The neuron then adds all seven weighted numbers together, and adds one more "
+ "thing, its bias. The bias matters more than people think. It is the neuron's private threshold. Without a "
+ "bias, every neuron would be forced to make its decision around zero. With it, a neuron can say: I will only "
+ "fire when the weighted sum clears this bar. That total is called z, and z is pushed through the activation "
+ "function. What comes out the other side is the neuron's deduction. A single number saying how strongly it "
+ "recognised its own pattern. Now here is the important part. Layer one can only deduce simple things. Is the "
+ "gas high. Was the jolt big. But layer two never sees the sensors at all. It only sees layer one's "
+ "deductions, and it multiplies those by fresh weights and adds fresh biases. So layer two can deduce "
+ "something layer one never could: the gas is high, and the worker is close to the machinery, and there was a "
+ "sudden jolt, all at the same time. That is exactly what depth buys you. Add more neurons to a layer, and "
+ "that level can hunt for more patterns side by side. Add more layers, and patterns get stacked on top of "
+ "patterns. But be careful. On seven tidy sensor columns there is only so much to find. Pile on too much depth "
+ "and the network begins memorising the training shifts instead of learning real danger. That is overfitting. "
+ "Deep learning truly earns its keep on pixels, not on seven columns. "
+ "Now let me kill the biggest myth in this entire subject. People will tell you a neuron is like a brain cell, "
+ "that it thinks, that it understands. Look again at what you just watched inside that neuron. It multiplied "
+ "seven numbers by seven weights. It added them up. It added a bias. It pushed the total through one simple "
+ "function. That is the whole neuron. There is no thinking in there. There is no understanding. It is "
+ "arithmetic, and a network is just millions of that same arithmetic wired together. The word neuron is a "
+ "historical accident from the nineteen forties. It is not a description. "
+ "And here is the second myth. People say the network learns from its mistakes, as if it reflects on them. "
+ "Watch the error walk backwards. The network predicted a number. Reality was a different number. Subtract "
+ "them, and you have the error. Backpropagation takes that single error and asks, layer by layer, going "
+ "right to left: how much did each individual weight contribute to this? That question is answered by the "
+ "chain rule from calculus. Nothing more mystical than that. Then every weight moves a tiny fraction against "
+ "its own gradient. You can see the actual table: current weight, its gradient, the change, the new weight. "
+ "That is learning. Not insight. Not intuition. That table, repeated millions of times. "
+ "One last myth worth killing. Nobody set these weights. They started as random numbers. Every single value "
+ "in this network was found by that backwards walk, and no engineer on earth could have told you in advance "
+ "what any of them should be.",
+
+"training":
+ "This is the network learning, epoch by epoch. An epoch is one full pass through all the training shifts. "
+ "Watch the loss fall. That is the network becoming less wrong every round, adjusting thousands of weights by "
+ "tiny amounts each time. When the curve flattens out, it has found the danger patterns, and there is little "
+ "left to squeeze out of the data.",
+
+"cnn-input":
+ "Here is where deep learning does something machine learning simply cannot. This is a frame from the site's "
+ "helmet camera. There is no gas value here. No temperature. Just pixels. And be precise about what the "
+ "network actually receives: not a photograph, not a scene, not a worker. A grid of numbers. Two hundred and "
+ "twenty four, by two hundred and twenty four, by three colour channels. One hundred and fifty thousand five "
+ "hundred and twenty eight numbers. That is the input. Everything the network does from here is arithmetic on "
+ "that grid. And yet a real V G G sixteen network, looking at nothing but those numbers, gives us its top "
+ "guesses. On the frames where a worker is genuinely wearing a hard hat, it answers: crash helmet. "
+ "Now, I want you to look at the failures too, because they teach you more than the successes. Browse to the "
+ "frame of two perfectly clear yellow hard hats, sitting on a floor. Any child would name them instantly. The "
+ "network calls it a bobsled. And a hard hat resting on a toolbox comes back as a mousetrap. So what happened? "
+ "The network never learned what a helmet is. It learned pixel patterns that correlate with the word helmet in "
+ "the photographs it was trained on, and in those photographs, helmets were on people's heads. Take the helmet "
+ "off the head, and the correlation collapses, and so does the answer. Remember that the next time somebody "
+ "tells you the model understands what it is looking at.",
+
+"feature-maps":
+ "Now we look inside the network. This is the same photograph, seen at three different depths. In the early "
+ "layers, each tile is a filter responding to edges: the outline of the worker, the blade of the saw, the rim "
+ "of the helmet. In the middle layers, those edges have been combined into textures and parts. And in the deep "
+ "layers, the picture becomes abstract. Nobody programmed the word edge, or the word helmet. The network "
+ "discovered every one of these filters by itself. "
+ "But let us kill the mystery, because the word filter makes people imagine something clever. A first layer "
+ "filter is nine numbers per colour channel. Twenty seven numbers in total. That is the whole thing. Watch "
+ "the animation. We lay those twenty seven numbers over twenty seven pixels, we multiply each pair, we add "
+ "them all up, we add a bias, and if the total is negative, ReLU throws it away. And what did all that effort "
+ "produce? One pixel. A single pixel of one feature map. Slide that same little grid across every position in "
+ "the image and you get one complete tile. Do that with all sixty four filters, and then do it again, thirteen "
+ "times over, with ever bigger stacks. That is a convolutional neural network. It is this arithmetic, "
+ "repeated roughly fifteen billion times for a single photograph. "
+ "Now here is a myth almost everybody carries, and the numbers on this page disprove it. People assume that as "
+ "you go deeper, the network sees more detail. The opposite is true. Look at the sizes. The early layer holds "
+ "two hundred and twenty four by two hundred and twenty four. The middle, fifty six by fifty six. The deepest, "
+ "just fourteen by fourteen. Detail is being destroyed, deliberately, at every step. Meanwhile the number of "
+ "filters climbs from sixty four, to two hundred and fifty six, to five hundred and twelve. The network is "
+ "trading away where something is, in exchange for what it is. By the deepest layer it barely knows where "
+ "anything sits in the frame, but it has a very rich opinion about what is present. And one more. No single "
+ "filter owns the concept of a helmet. Early filters fire on edges, and they would fire just the same on a cup "
+ "or a road sign. Helmet only exists as a combination spread across hundreds of filters, deep in the stack.",
+
+"gradcam":
+ "Feature maps show what the network extracted. Grad-CAM shows where it looked. Here is how this heatmap is "
+ "actually built, because it is not magic. We run the photo forward and take the score for one single class. "
+ "Then we ask backpropagation a question: how much would that score change if each of the five hundred and "
+ "twelve deep feature maps changed a little? The answer is a gradient for each map. We use those gradients as "
+ "weights, add all five hundred and twelve maps together, keep the positive part, and we are left with a "
+ "fourteen by fourteen grid. We stretch that grid up to two hundred and twenty four and lay it over the photo. "
+ "Now look at where the heat sits. Directly on the helmet. The network built its own helmet locating feature, "
+ "from nothing but pixels and examples. "
+ "But be careful how you read this, because there are myths here too. That blur is not the network being "
+ "vague. It is a fourteen by fourteen image blown up sixteen times. Every blob is about sixteen pixels wide by "
+ "construction. It points at a region. It will never give you an outline. And the bigger myth: this does not "
+ "show you what the network was thinking. It shows you where, and it never shows you why. It is a sensitivity "
+ "map, not an explanation. A model can look at exactly the right region and still be using a shortcut. The "
+ "orange of a hi-vis jacket. The sky behind a head. The shape of a shoulder. Grad-CAM narrows your suspicion. "
+ "It does not settle the question.",
+
+"evaluate":
+ "Now the honest exam, on shifts that neither model has ever seen. Both do well on the sensor table. But look "
+ "at the confusion matrix, not just the accuracy number. The dangerous cell is the bottom left: shifts we "
+ "predicted safe, that actually had an incident. Those are false negatives, a missed accident. On a safety "
+ "system, a false alarm is merely annoying. A false negative can cost someone their life.",
+
+"compare-proof":
+ "Here is the proof. On the sensor table, machine learning and deep learning are neck and neck, and for "
+ "structured data like this, machine learning is often the smarter and cheaper choice. But look at the second "
+ "row. Given a raw photograph, machine learning cannot even begin, because it has no hand made helmet feature "
+ "to weigh. Deep learning went from raw pixels, to edges, to parts, to no helmet, entirely on its own. That is "
+ "what digging deeper actually means.",
+
+"fusion":
+ "No single model runs a safe site. AI fusion combines them. The sensor risk from the neural network tells us "
+ "the environment is dangerous. The helmet check from the CNN tells us the worker is unprotected. GPS and RFID "
+ "tell us exactly who, and exactly where. Alone, each one is only a warning. Together, risky conditions and no "
+ "helmet, it becomes critical, and someone gets pulled off that site before an accident ever happens.",
+}
+
+
+async def main():
+    for stage, text in NARRATION.items():
+        path = os.path.join(OUT, f"{stage}.mp3")
+        await edge_tts.Communicate(text, VOICE, rate=RATE).save(path)
+        print(f"  {stage:18s} {os.path.getsize(path)//1024:4d} KB")
+    with open(os.path.join(OUT, "narration.json"), "w", encoding="utf-8") as f:
+        json.dump(NARRATION, f, indent=1)
+    print(f"\nWrote {len(NARRATION)} clips + narration.json to {OUT}")
+
+if __name__ == "__main__":
+    asyncio.run(main())

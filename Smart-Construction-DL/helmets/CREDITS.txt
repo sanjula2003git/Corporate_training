@@ -1,0 +1,11 @@
+Helmet / hard-hat images for the Smart Construction Site notebook
+Source: Wikimedia Commons (freely licensed). See each file's page for the exact license/author.
+
+helmet_00.jpg  <- "Builders hard hats.jpg"
+helmet_01.jpg  <- "Builders toolbox and hard hat.jpg"
+helmet_02.jpg  <- "Avondale Shipyard worker wearing ear muffs (NARA 546041).jpg"  (worker wearing helmet)
+helmet_03.jpg  <- "Woman with chop saw and hard hat (3401747795).jpg"           (worker wearing helmet)
+helmet_04.jpg  <- "Airstream Helmet.jpg"                                          (person wearing helmet)
+
+These are used for educational feature-map / Grad-CAM illustration only.
+To use your own site photos, just drop .jpg files into this folder (the notebook loads helmets/*.jpg).

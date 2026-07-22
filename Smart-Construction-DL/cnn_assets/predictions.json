@@ -1,0 +1,72 @@
+{
+  "helmet_00": [
+    [
+      "bobsled",
+      0.384
+    ],
+    [
+      "ladybug",
+      0.158
+    ],
+    [
+      "leafhopper",
+      0.065
+    ]
+  ],
+  "helmet_01": [
+    [
+      "mousetrap",
+      0.539
+    ],
+    [
+      "ping-pong ball",
+      0.088
+    ],
+    [
+      "spotlight",
+      0.084
+    ]
+  ],
+  "helmet_02": [
+    [
+      "ballplayer",
+      0.586
+    ],
+    [
+      "football helmet",
+      0.156
+    ],
+    [
+      "crash helmet",
+      0.115
+    ]
+  ],
+  "helmet_03": [
+    [
+      "crash helmet",
+      0.215
+    ],
+    [
+      "chain saw",
+      0.101
+    ],
+    [
+      "power drill",
+      0.092
+    ]
+  ],
+  "helmet_04": [
+    [
+      "crash helmet",
+      0.46
+    ],
+    [
+      "football helmet",
+      0.266
+    ],
+    [
+      "gasmask",
+      0.158
+    ]
+  ]
+}
