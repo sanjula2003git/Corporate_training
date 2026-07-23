@@ -1106,18 +1106,18 @@ def render_quiz(stage):
 def mind_map(style):
     fig = go.Figure()
     n = len(PHASES)
-    ROW_H = 1.35                       # vertical spacing between phase rows
+    ROW_H = 2.05                       # vertical spacing between phase rows
     ys = {i: (n - 1 - i) * ROW_H for i in range(n)}
 
     # left spine: short amber arrows linking one phase down to the next
     for i in range(n - 1):
-        fig.add_annotation(x=0, y=ys[i + 1] + 0.52, ax=0, ay=ys[i] - 0.52,
+        fig.add_annotation(x=0, y=ys[i + 1] + 0.72, ax=0, ay=ys[i] - 0.72,
                            xref="x", yref="y", axref="x", ayref="y",
                            showarrow=True, arrowhead=2, arrowsize=1.1,
                            arrowwidth=2, arrowcolor=CIVIL, text="")
 
-    GAP = 3.4                          # horizontal spacing between step nodes
-    X0 = 2.8                           # x of the first node in every row
+    GAP = 3.9                          # horizontal spacing between step nodes
+    X0 = 3.4                           # x of the first node in every row
     maxk = max(len(_phase_steps(pi)) for pi in range(n))
 
     sx, sy, stext, scustom, shover = [], [], [], [], []
@@ -1125,14 +1125,14 @@ def mind_map(style):
         kids = _phase_steps(pi)
         # one connector line from the badge out to the last node in the row
         last_x = X0 + (len(kids) - 1) * GAP
-        fig.add_shape(type="line", x0=0.35, y0=ys[pi], x1=last_x, y1=ys[pi],
+        fig.add_shape(type="line", x0=0.45, y0=ys[pi], x1=last_x, y1=ys[pi],
                       line=dict(color="#2b323c", width=1.5), layer="below")
         fig.add_annotation(x=0, y=ys[pi], text=f"<b>{pi+1}</b>", showarrow=False,
                            font=dict(size=13, color=BG),
                            bgcolor=CIVIL, bordercolor=CIVIL, borderpad=6, borderwidth=2)
-        fig.add_annotation(x=-0.45, y=ys[pi], text=f"<b>{pname}</b>", showarrow=False,
+        fig.add_annotation(x=-0.7, y=ys[pi] + 0.22, text=f"<b>{pname}</b>", showarrow=False,
                            xanchor="right", font=dict(size=13, color=CIVIL))
-        fig.add_annotation(x=-0.45, y=ys[pi] - 0.36, text=_wrap(pdesc, 28), showarrow=False,
+        fig.add_annotation(x=-0.7, y=ys[pi] - 0.42, text=_wrap(pdesc, 26), showarrow=False,
                            xanchor="right", align="right", font=dict(size=10, color=MUTED))
         for k, s in enumerate(kids):
             sx.append(X0 + k * GAP)
@@ -1148,12 +1148,13 @@ def mind_map(style):
         textfont=dict(size=10, color=TEXT), customdata=scustom,
         marker=dict(size=18, color=PANEL, line=dict(color=AISIDE, width=2),
                     symbol="circle"),
+        cliponaxis=False,
         hovertemplate="%{hovertext}<extra></extra>", hovertext=shover,
         showlegend=False))
 
-    fig.update_xaxes(visible=False, range=[-6.4, X0 + (maxk - 1) * GAP + 2.2])
-    fig.update_yaxes(visible=False, range=[-1.0, (n - 1) * ROW_H + 1.1])
-    return style(fig, h=1180)
+    fig.update_xaxes(visible=False, range=[-7.0, X0 + (maxk - 1) * GAP + 2.4])
+    fig.update_yaxes(visible=False, range=[-1.2, (n - 1) * ROW_H + 1.3])
+    return style(fig, h=1620)
 
 
 # ============================================================================
