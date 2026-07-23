@@ -33,7 +33,7 @@ sys.path.insert(0, BASE)
 import bridge  # noqa: E402  - the single source of truth for all teaching content
 
 NB = os.path.join(BASE, "Smart_Construction_Site_DL.ipynb")
-APP = "https://smartsite-dl.streamlit.app"   # placeholder host; swapped after deploy
+APP = "https://manmanagementdilemma-mtwoqgtdc23e7zb5fbwyp2.streamlit.app"   # live deployed host
 
 # ----------------------------------------------------------------------------
 # THE SPEC
