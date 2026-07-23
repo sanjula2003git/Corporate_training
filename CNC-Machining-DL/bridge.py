@@ -1223,16 +1223,17 @@ def render_quiz(stage):
 def mind_map(style):
     fig = go.Figure()
     n = len(PHASES)
-    ys = {i: (n - 1 - i) * 1.0 for i in range(n)}
+    ROW = 1.9          # vertical distance between phases — was 1.0 (rows collided)
+    ys = {i: (n - 1 - i) * ROW for i in range(n)}
 
     for i in range(n - 1):
-        fig.add_annotation(x=0, y=ys[i + 1] + 0.42, ax=0, ay=ys[i] - 0.42,
+        fig.add_annotation(x=0, y=ys[i + 1] + 0.55, ax=0, ay=ys[i] - 0.75,
                            xref="x", yref="y", axref="x", ayref="y",
                            showarrow=True, arrowhead=2, arrowsize=1.1,
                            arrowwidth=2, arrowcolor=CIVIL, text="")
 
-    GAP = 2.35
-    X0 = 1.4
+    GAP = 3.6          # horizontal distance between hex nodes — was 2.35 (labels overlapped)
+    X0 = 1.8
 
     sx, sy, stext, scustom, shover = [], [], [], [], []
     for pi, (pname, pdesc) in enumerate(PHASES):
@@ -1243,9 +1244,9 @@ def mind_map(style):
         fig.add_annotation(x=0, y=ys[pi], text=f"<b>OP {pi+1:02d}</b>", showarrow=False,
                            font=dict(size=11, color=BG, family=MONOF),
                            bgcolor=CIVIL, bordercolor=CIVIL, borderpad=5, borderwidth=2)
-        fig.add_annotation(x=-0.45, y=ys[pi], text=f"<b>{pname}</b>", showarrow=False,
+        fig.add_annotation(x=-0.7, y=ys[pi], text=f"<b>{pname}</b>", showarrow=False,
                            xanchor="right", font=dict(size=13, color=CIVIL))
-        fig.add_annotation(x=-0.45, y=ys[pi] - 0.30, text=_wrap(pdesc, 30),
+        fig.add_annotation(x=-0.7, y=ys[pi] - 0.42, text=_wrap(pdesc, 30),
                            showarrow=False, xanchor="right", yanchor="top",
                            align="right", font=dict(size=10, color=MUTED))
         for k, s in enumerate(kids):
@@ -1265,9 +1266,9 @@ def mind_map(style):
         hovertemplate="%{hovertext}<extra></extra>", hovertext=shover,
         showlegend=False))
 
-    fig.update_xaxes(visible=False, range=[-5.9, X0 + 6 * GAP + 1.5])
-    fig.update_yaxes(visible=False, range=[-0.8, n - 0.05])
-    return style(fig, h=1040)
+    fig.update_xaxes(visible=False, range=[-6.4, X0 + 2 * GAP + 2.4])
+    fig.update_yaxes(visible=False, range=[-1.4, (n - 1) * ROW + 1.1])
+    return style(fig, h=int(n * ROW * 78))
 
 
 # ============================================================================

@@ -156,10 +156,6 @@ def render_enter_ai(style, animate):
     c1.metric("Missed — supervisor alone", missed, delta_color="inverse")
     c2.metric("Missed — supervisor + AI", 0, f"-{missed}")
 
-    st.success("**AI does not get tired, blink, or turn around.** It watches all four tracks, "
-               "every minute, so nothing slips through while the supervisor is dealing with one area. "
-               "That repetitive watching is the one job it takes off the supervisor's plate.")
-
     st.markdown("### Human **+** AI. Never human *vs* AI.")
     a, b = st.columns(2)
     a.markdown("**The supervisor stays in charge of**\n\n- deciding what is acceptable risk\n- talking a "
@@ -168,9 +164,6 @@ def render_enter_ai(style, animate):
     b.markdown("**Where one person needs a hand**\n\n- covering 4 areas at the same time\n- keeping an eye "
                "on 40 workers\n- staying alert for 9 hours straight\n- reading gas at 45 ppm\n- watching "
                "without a break")
-    st.info("The AI's job is not to decide. Its job is to hand the supervisor **the three things that "
-            "matter right now**, so a person can make the call. The human is superior — AI just eases the "
-            "load one pair of eyes cannot carry.")
 
 
 # ---------------------------------------------------------------- morning inspection
@@ -362,13 +355,6 @@ def render_handmade(cnn_meta, asset, style):
                 "Engineers spent *decades* here. And you still have to write rules for: dusty helmets, "
                 "helmets at night, helmets from behind, helmets in shadow, helmets at 30°, "
                 "helmets half-hidden by scaffolding…")
-
-    st.markdown("### The realisation")
-    st.success("You cannot hand-write **“helmet”**. Not because you're not clever enough — because "
-               "“helmet” is not a color, or a shape, or an area. It is a *pattern* made of thousands "
-               "of relationships between pixels, and no human can enumerate it.\n\n"
-               "**So stop trying to write the features. Get the machine to find them.**")
-    st.caption("That single sentence is what Deep Learning is. Everything after this is detail. →")
 
 
 def render_why_dl(style):
