@@ -21,7 +21,8 @@ APP: set this to the deployed Streamlit URL to switch on the per-step
 import nbformat as nbf
 from nbformat.v4 import new_notebook, new_markdown_cell, new_code_cell
 
-APP = ""          # e.g. "https://load-forecasting.streamlit.app"
+# The deployed Streamlit companion app. NO trailing slash - link() appends "/?stage=<id>".
+APP = "https://loadforecasting-bnjvsvyuey3uojy32qeeq2.streamlit.app"
 
 cells = []
 def md(t):  cells.append(new_markdown_cell(t.strip("\n")))

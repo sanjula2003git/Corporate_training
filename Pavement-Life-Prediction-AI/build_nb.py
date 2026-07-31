@@ -26,7 +26,8 @@ NOTE for future editors:
 import nbformat as nbf
 from nbformat.v4 import new_notebook, new_markdown_cell, new_code_cell
 
-APP = ""
+# The deployed illustration app. No trailing slash — links are built as f"{APP}/?stage=<id>".
+APP = "https://pavementlifeprediction-3veds8kg3jnsxvydcparpw.streamlit.app"
 
 cells = []
 def md(t):  cells.append(new_markdown_cell(t.strip("\n")))
