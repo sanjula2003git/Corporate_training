@@ -29,7 +29,7 @@ the notebook is built with no links at all, rather than dead ones.
 import nbformat as nbf
 from nbformat.v4 import new_notebook, new_markdown_cell, new_code_cell
 
-APP = ""          # e.g. "https://transformer-hotspot.streamlit.app"
+APP = "https://transformer-hotspot-ai.streamlit.app"          # e.g. "https://transformer-hotspot.streamlit.app"
 
 cells = []
 def md(t):  cells.append(new_markdown_cell(t.strip("\n")))
