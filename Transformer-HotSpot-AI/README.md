@@ -13,7 +13,15 @@ because a real power-systems problem required it — not because it is on a syll
 
 They tell the same educational story and are **completely independent**: the app imports nothing from the
 notebook and reads none of its files. Both reproduce the same IEEE C57.91 engineering from scratch, which
-is why their numbers agree to two decimal places.
+is why their numbers agree — the baseline (3.18 °C), the best model (1.35 °C), the 58 % headline, the
+error bands, the ageing concentration and the hold-out biases are all identical.
+
+Two deliberate differences, both so the app stays inside a 1 GB Streamlit Cloud container:
+
+- The app's Random Forest uses **150 trees with `min_samples_leaf=4`** against the notebook's 300 and 2.
+  That reads **1.55 °C** instead of 1.53 °C, and cuts the fitted forest from 207 MB to 72 MB.
+- The app substitutes `HistGradientBoostingRegressor` for the notebook's `GradientBoostingRegressor`.
+  Same algorithm, binned — it lands at 1.347 °C against the notebook's 1.348 °C.
 
 Structurally the notebook follows the **Smart Construction / Building Energy** layout: one intro block
 (problem → what we build → workflow → Engineering-to-AI map), then 30 steps, each written as the same five

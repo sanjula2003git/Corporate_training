@@ -832,7 +832,8 @@ def render_forest():
         a.metric("Trees", len(rf.estimators_))
         b.metric("Mean depth", f"{np.mean([t.get_depth() for t in rf.estimators_]):.0f}")
     with c2:
-        n = st.slider("How many trees are averaged?", 1, 200, 200, key="rf_n")
+        n = st.slider("How many trees are averaged?", 1, story.RF_TREES,
+                      story.RF_TREES, key="rf_n")
         Xte = story.get_features().loc[m["test_mask"], story.ENG_FEATURES]
         preds = np.mean([t.predict(Xte.values) for t in rf.estimators_[:n]], axis=0)
         mae = float(np.abs(preds - m["y_test"]).mean())
