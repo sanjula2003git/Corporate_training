@@ -35,10 +35,11 @@ jobs:
 
       - name: Assemble site (HTML + CSS + built React + landing page)
         run: |
-          mkdir -p _site/01-HTML-Version _site/02-CSS-Styled-Version _site/03-React-Version
+          mkdir -p _site/01-HTML-Version _site/02-CSS-Styled-Version _site/03-React-Version _site/qp-spin-3parts
           cp index.html _site/index.html
           cp -r 01-HTML-Version/. _site/01-HTML-Version/
           cp -r 02-CSS-Styled-Version/. _site/02-CSS-Styled-Version/
+          cp -r qp-spin-3parts/. _site/qp-spin-3parts/
           cp -r 03-React-Version/dist/. _site/03-React-Version/
 
       - name: Configure Pages
