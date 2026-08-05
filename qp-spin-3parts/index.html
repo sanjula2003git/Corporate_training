@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<title>Pandas Assessment · Spin Reveal (3 parts)</title>
+<link rel="stylesheet" href="assessment-v2.css?v=dark-1" />
+<style>
+  /* ---------------------------------------------------------------------------
+     Standalone "3 spinning parts" slide.
+     Same PowerPoint look as the exam viewer (dotted green ground, Calibri
+     bold-italic black text) but in plain letters — the question is cut into
+     exactly THREE bands stacked down the slide, and each one turns
+     horizontally, non-stop, the opposite way to its neighbour.
+       Ctrl+A  holds part 1        Ctrl+D  holds part 2        Ctrl+Q  holds part 3
+     A key stops its band DEAD where it stands. It does not turn back to face
+     you, so a band caught mirrored is the student's own timing.
+     --------------------------------------------------------------------------- */
+  :root {
+    --ink: #1f2430;
+    --muted: #6b7280;
+    --accent: #dc2626;
+    --accent-2: #b91c1c;
+    --line: rgba(31, 36, 48, .12);
+    --slide-w: 1280px;
+    --slide-h: 720px;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    color: var(--ink);
+    background: #f6f7f9;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    -webkit-user-select: none; user-select: none;
+  }
+
+  /* ---------- chrome ---------- */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 10px 18px; background: #fff; border-bottom: 1px solid var(--line);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .04);
+  }
+  .brand { display: flex; align-items: center; gap: 11px; }
+  .logo {
+    width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center;
+    background: linear-gradient(150deg, var(--accent), var(--accent-2));
+  }
+  .brand h1 { font-size: 15px; margin: 0; letter-spacing: .2px; }
+  .subtitle { font-size: 11.5px; color: var(--muted); }
+  .actions { display: flex; align-items: center; gap: 8px; }
+  .pill {
+    font-size: 11.5px; padding: 5px 10px; border-radius: 999px;
+    background: rgba(220, 38, 38, .08); color: var(--accent-2); font-weight: 600;
+  }
+  .btn {
+    font: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+    padding: 6px 11px; border-radius: 8px; border: 1px solid var(--line);
+    background: #fff; color: var(--ink);
+  }
+  .btn:hover { border-color: rgba(220, 38, 38, .45); color: var(--accent-2); }
+  .btn:disabled { opacity: .4; cursor: default; }
+
+  /* ---------- stage ---------- */
+  .stagewrap { flex: 1; min-height: 0; position: relative; display: grid; place-items: center; padding: 16px; }
+  .scaler { position: relative; }
+  .slide {
+    position: absolute; top: 0; left: 0;
+    width: var(--slide-w); height: var(--slide-h);
+    transform-origin: top left;
+    overflow: hidden; border-radius: 8px;
+    /* gentle depth — the bands are 1168px wide, so a short perspective would
+       throw the far edge halfway across the slide */
+    perspective: 2600px;
+    background-color: #A3CD86;                 /* PPT accent6 lighter-40% */
+    background-image: radial-gradient(circle, rgba(255,255,255,.8) .85px, transparent 1.15px);
+    background-size: 7px 7px;
+    box-shadow: 0 34px 90px rgba(0,0,0,.28), inset 0 0 0 1px rgba(0,0,0,.06);
+  }
+
+  /* one full-width band on the slide — part 1 over part 2 over part 3, the way
+     the brief draws them. The band inside turns about its own centre. */
+  .slot { position: absolute; display: flex; align-items: center; }
+
+  .part {
+    transform-origin: 50% 50%;
+    will-change: transform, filter, opacity;
+    font-family: Calibri, "Segoe UI", system-ui, sans-serif;
+    font-style: italic; font-weight: 700;
+    color: #000; text-align: left; width: 100%;
+    /* opacity + blur are written per frame: a part sharpens as it swings through
+       upright and dissolves as it turns away, so timing the key is fair. */
+  }
+  .part.steady {
+    /* a white halo, not a box — lifts the held text off whatever turns behind it */
+    text-shadow:
+      0 0 15px rgba(255,255,255,.98), 0 0 8px rgba(255,255,255,.98),
+      0 0 3px rgba(255,255,255,1), 0 1px 0 rgba(255,255,255,.9);
+  }
+  .partkey {
+    display: block; margin-bottom: 3px;
+    font-size: 11px; font-style: normal; font-weight: 800; letter-spacing: .9px;
+    color: var(--accent-2);
+    text-shadow: 0 0 6px #fff, 0 0 3px #fff;
+  }
+  .ptitle { font-size: 1.05em; text-decoration: underline; margin-bottom: .35em; display: block; }
+  /* a real table, so every row shares the same column widths and nothing has to
+     be clipped — the header names out of the paper are long (DAYS_PRESENT) */
+  .ptable { border-collapse: collapse; width: 100%; font: inherit; }
+  .ptable th, .ptable td { text-align: left; padding: 0 .5em 0 0; white-space: nowrap; }
+  .ptable th { border-bottom: 2px solid rgba(0,0,0,.55); padding-bottom: 1px; }
+  .ptable td { padding-top: .12em; }
+  .pline { display: block; }
+  .pline + .pline { margin-top: .3em; }
+
+  /* ---------- dock ---------- */
+  .hud {
+    position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 14px; z-index: 40;
+    padding: 9px 13px; border-radius: 14px;
+    background: rgba(255,255,255,.92); border: 1px solid var(--line);
+    box-shadow: 0 10px 30px rgba(0,0,0,.16); backdrop-filter: blur(6px);
+  }
+  .keypad { display: flex; gap: 8px; }
+  .keybtn {
+    font: inherit; cursor: pointer; min-width: 96px;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    padding: 7px 10px; border-radius: 10px; border: 1px solid var(--line);
+    background: #fff; color: var(--ink);
+  }
+  .keybtn b { font-size: 12.5px; letter-spacing: .3px; }
+  .keybtn span { font-size: 10px; color: var(--muted); letter-spacing: .4px; text-transform: uppercase; }
+  .keybtn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .keybtn.active span { color: rgba(255,255,255,.85); }
+  .dockinfo { font-size: 11.5px; color: var(--muted); max-width: 250px; line-height: 1.35; }
+  .dockinfo b { color: var(--ink); }
+
+  .foot {
+    display: flex; justify-content: space-between; gap: 14px;
+    padding: 8px 18px; font-size: 11.5px; color: var(--muted);
+    background: #fff; border-top: 1px solid var(--line);
+  }
+  kbd {
+    font: inherit; font-size: 10.5px; padding: 1px 5px; border-radius: 4px;
+    border: 1px solid var(--line); background: #f3f4f6; color: var(--ink);
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">
+      <svg viewBox="0 0 24 24" width="18" height="18">
+        <path d="M2 12 C5 6,19 6,22 12 C19 18,5 18,2 12 Z" fill="none" stroke="#fff" stroke-width="2"/>
+        <circle cx="12" cy="12" r="3.4" fill="#fff"/>
+      </svg>
+    </span>
+    <div>
+      <h1>Pandas Assessment</h1>
+      <div class="subtitle">Spin Reveal · 3 parts · <span id="qlabel">Question 1 of 12</span></div>
+    </div>
+  </div>
+  <div class="actions">
+    <span class="pill" id="heldpill">0 of 3 held</span>
+    <button class="btn" id="pptbtn">Open PPT…</button>
+    <input type="file" id="pptfile" accept=".pptx" hidden />
+    <button class="btn" id="prevq">‹ Prev</button>
+    <button class="btn" id="nextq">Next ›</button>
+    <button class="btn" id="fsbtn">Fullscreen</button>
+  </div>
+</header>
+
+<main class="stagewrap" id="stage">
+  <div class="scaler" id="scaler">
+    <div class="slide" id="slide"></div>
+    <div class="hud">
+      <div class="keypad" id="keypad"></div>
+      <div class="dockinfo" id="dockinfo"></div>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  <span>
+    Three bands turning horizontally, neighbours opposite ways · <b>Ctrl+A</b> holds part 1 ·
+    <b>Ctrl+D</b> holds part 2 · <b>Ctrl+Q</b> holds part 3 · press again to let it turn on
+  </span>
+  <span>A held band stops exactly where it is — it does <b>not</b> turn back to face you ·
+    drop a <b>.pptx</b> on the page to run it off your own deck · <kbd>Ctrl</kbd>+<kbd>F</kbd> fullscreen</span>
+</footer>
+
+<script type="text/plain" id="legacy-assessment-source">
+/* ===========================================================================
+   1 · The question, straight out of "pandas aug 30.docx"
+   =========================================================================== */
+
+// Both DataFrames the paper puts above the task list.
+const STUDENTS = {
+  title: '1. Students DataFrame',
+  cols: ['Student_ID', 'Name', 'Class', 'Score'],
+  rows: [
+    [1, 'Rohan',  '10A', 85],
+    [2, 'Ananya', '10A', 90],
+    [3, 'Kabir',  '10B', 78],
+    [4, 'Meera',  '10B', 88],
+  ],
+};
+const ATTENDANCE = {
+  title: '2. Attendance DataFrame',
+  cols: ['Student_ID', 'Days_Present', 'Days_Total'],
+  rows: [
+    [1, 180, 200],
+    [2, 175, 200],
+    [3, 160, 200],
+    [4, 170, 200],
+  ],
+};
+
+// "Write the code for the following:" — all twelve tasks, verbatim.
+const TASKS = [
+  'create the above dataframes',
+  'Find the average score of students in each class.',
+  'Create a pivot table showing Class as rows and average Score as values.',
+  'Create a MultiIndex by grouping students by Class and Name, then get the mean score.',
+  'Merge students and attendance on Student_ID.',
+  'Concatenate the students DataFrame with a new DataFrame of two new students.',
+  'Set Student_ID as index in both DataFrames and join them.',
+  'Add a new column Grade by applying a function:  •  Score ≥ 85 → "A"   •  Score < 85 → "B"',
+  'Create a dictionary { "10A": "Science", "10B": "Commerce" } and map it to a new column Stream.',
+  'Use query() to find students with Score > 85.',
+  'Create a date range for 6 months of attendance records and resample monthly to find average attendance.',
+  'Write a function that normalizes the Score column and apply it using .pipe().',
+];
+
+/* Plain letters. The old deck scrambled A/I/T into ☆◉◇; the text now reads as
+   written, and the turning is the only thing hiding it. */
+const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+
+/* The whole paper laid out over TWO slides, three parts each, in order — part 1
+   is the first band on the slide, part 2 the second, part 3 the third:
+
+     slide 1   1 · Students DataFrame
+               2 · Attendance DataFrame
+               3 · "Write the code for the following:" + tasks 1-3
+     slide 2   1 · tasks 4-6
+               2 · tasks 7-9
+               3 · tasks 10-12
+
+   This is the built-in copy. Open a real .pptx and the parts come off its
+   slides instead (see section 1b).                                           */
+const task = (n) => n + '. ' + TASKS[n - 1];          // 1-based, as the paper numbers them
+const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => task(a + i));
+
+const BUILT_IN = [
+  {
+    label: 'Data',
+    parts: [
+      { kind: 'table', data: STUDENTS },
+      { kind: 'table', data: ATTENDANCE },
+      { kind: 'task', lines: ['Write the code for the following:', ...range(1, 3)] },
+    ],
+  },
+  {
+    label: 'Tasks',
+    parts: [
+      { kind: 'task', lines: range(4, 6) },
+      { kind: 'task', lines: range(7, 9) },
+      { kind: 'task', lines: range(10, 12) },
+    ],
+  },
+];
+
+/* ===========================================================================
+   1b · Taking the questions out of a normal PowerPoint
+   ===========================================================================
+   The paper is meant to live in an ordinary .pptx — one question per slide.
+   "Open PPT…" (or dropping the file on the page) reads it here in the browser:
+   a .pptx is a zip, and the browser can inflate it natively, so there is still
+   no build step and no library.
+
+   Each slide's text boxes become the three bands. Author a slide with exactly
+   three boxes and they map straight across; any other number is packed into
+   three groups in reading order, so an ordinary slide still works.            */
+
+let deck = null;    // [{ label, parts:[{kind:'lines',lines:[]}×3] }] once a PPT is open
+
+// --- the smallest zip reader that will do ---------------------------------
+function u16(v, o) { return v.getUint16(o, true); }
+function u32(v, o) { return v.getUint32(o, true); }
+
+function zipEntries(buf) {
+  const v = new DataView(buf);
+  let eocd = -1;
+  for (let i = buf.byteLength - 22; i >= 0 && i > buf.byteLength - 66000; i--) {
+    if (u32(v, i) === 0x06054b50) { eocd = i; break; }
+  }
+  if (eocd < 0) throw new Error('not a zip file');
+  let p = u32(v, eocd + 16);
+  const n = u16(v, eocd + 10);
+  const out = new Map();
+  for (let i = 0; i < n; i++) {
+    if (u32(v, p) !== 0x02014b50) break;
+    const method = u16(v, p + 10);
+    const csize = u32(v, p + 20);
+    const nameLen = u16(v, p + 28), extraLen = u16(v, p + 30), cmtLen = u16(v, p + 32);
+    const local = u32(v, p + 42);
+    const name = new TextDecoder().decode(new Uint8Array(buf, p + 46, nameLen));
+    out.set(name, { method, csize, local });
+    p += 46 + nameLen + extraLen + cmtLen;
+  }
+  return out;
+}
+
+async function zipRead(buf, e) {
+  const v = new DataView(buf);
+  const start = e.local + 30 + u16(v, e.local + 26) + u16(v, e.local + 28);
+  const raw = new Uint8Array(buf, start, e.csize);
+  if (e.method === 0) return new TextDecoder().decode(raw);
+  // stored deflate — the browser inflates it for us, no library needed
+  const ds = new DecompressionStream('deflate-raw');
+  const blob = await new Response(new Blob([raw]).stream().pipeThrough(ds)).arrayBuffer();
+  return new TextDecoder().decode(blob);
+}
+
+// --- slide XML -> the text of each shape, in reading order -----------------
+function shapesOf(xml) {
+  const doc = new DOMParser().parseFromString(xml, 'application/xml');
+  const shapes = [];
+  for (const sp of doc.getElementsByTagName('p:sp')) {
+    const paras = [];
+    for (const para of sp.getElementsByTagName('a:p')) {
+      const s = Array.from(para.getElementsByTagName('a:t')).map((t) => t.textContent).join('').trim();
+      if (s) paras.push(s);
+    }
+    // a slide-number or page-count placeholder is not part of the question
+    if (!paras.length || paras.every((s) => /^\d+$/.test(s))) continue;
+    // where the box sits on the slide, so the parts come out in reading order
+    const off = sp.getElementsByTagName('a:off')[0];
+    shapes.push({
+      paras,
+      y: off ? +off.getAttribute('y') : 0,
+      x: off ? +off.getAttribute('x') : 0,
+    });
+  }
+  // XML order is the z-order PowerPoint happened to create the boxes in — the
+  // first band must be the box highest on the slide, not the one drawn first
+  shapes.sort((a, b) => (a.y - b.y) || (a.x - b.x));
+  return shapes.map((s) => s.paras);
+}
+
+/* Three bands out of however many boxes the slide happens to have: three boxes
+   map one-to-one, more are packed into three groups of roughly equal length,
+   fewer are split paragraph by paragraph. */
+function toThree(shapes) {
+  if (shapes.length === 3) return shapes.map((lines) => ({ kind: 'lines', lines }));
+  const flat = shapes.length >= 3 ? shapes : [shapes.flat()];
+  const units = shapes.length >= 3 ? flat : flat[0].map((l) => [l]);
+  const total = units.reduce((a, u) => a + u.join(' ').length, 0);
+  const groups = [[], [], []];
+  let g = 0, run = 0;
+  units.forEach((u, i) => {
+    groups[g].push(...(Array.isArray(u) ? u : [u]));
+    run += (Array.isArray(u) ? u.join(' ') : u).length;
+    const left = units.length - i - 1;
+    if (g < 2 && (run >= (total * (g + 1)) / 3 || left <= 2 - g)) { g++; run = 0; }
+  });
+  return groups.map((lines) => ({ kind: 'lines', lines: lines.length ? lines : ['—'] }));
+}
+
+async function openPptx(file) {
+  const buf = await file.arrayBuffer();
+  const zip = zipEntries(buf);
+  const names = [...zip.keys()]
+    .filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n))
+    .sort((a, b) => (+a.match(/(\d+)/)[1]) - (+b.match(/(\d+)/)[1]));
+  if (!names.length) throw new Error('no slides in that file');
+  const out = [];
+  for (const n of names) {
+    const shapes = shapesOf(await zipRead(buf, zip.get(n)));
+    if (!shapes.length) continue;                 // a title/section slide with no text
+    out.push({ label: file.name.replace(/\.pptx$/i, ''), parts: toThree(shapes) });
+  }
+  if (!out.length) throw new Error('no text found on those slides');
+  deck = out;
+  goto(0);
+}
+
+/* ===========================================================================
+   2 · Rendering the three parts onto the slide
+   =========================================================================== */
+
+/* Three bands stacked down the slide, each the full width of it. */
+const SLIDE_W = 1280, SLIDE_H = 720;
+const PAD_X = 56, PAD_Y = 34, GAP = 18;
+const BAND_W = SLIDE_W - PAD_X * 2;                                  // 1168px
+const BAND_H = Math.floor((SLIDE_H - PAD_Y * 2 - GAP * 2 - 74) / 3); // 74px clears the dock
+
+const slideEl = document.getElementById('slide');
+const partEls = [];
+
+function tableHTML(t) {
+  let html = '<span class="ptitle">' + esc(t.title) + '</span><table class="ptable"><tr>' +
+    t.cols.map((c) => '<th>' + esc(c) + '</th>').join('') + '</tr>';
+  for (const r of t.rows) {
+    html += '<tr>' + r.map((v) => '<td>' + esc(v) + '</td>').join('') + '</tr>';
+  }
+  return html + '</table>';
+}
+// both the built-in task band and any band read off a PPT are just lines
+const taskHTML = (p) =>
+  p.lines.map((l) => '<span class="pline">' + esc(l) + '</span>').join('');
+
+function renderQuestion(qi) {
+  const parts = (deck || BUILT_IN)[qi].parts;
+  slideEl.innerHTML = '';
+  partEls.length = 0;
+  parts.forEach((p, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'slot';
+    slot.style.left = PAD_X + 'px';
+    slot.style.top = (PAD_Y + i * (BAND_H + GAP)) + 'px';
+    slot.style.width = BAND_W + 'px';
+    slot.style.height = BAND_H + 'px';
+
+    const part = document.createElement('div');
+    part.className = 'part';
+    part.style.lineHeight = '1.3';
+    part.innerHTML = '<span class="partkey" style="visibility:hidden">' + KEYS[i].label + '</span>' +
+      (p.kind === 'table' ? tableHTML(p.data) : taskHTML(p));
+
+    slot.appendChild(part);
+    slideEl.appendChild(slot);
+    partEls.push(part);
+  });
+  // a PPT slide can carry any amount of text, so each band sets its own type
+  // size down until it fits its lane
+  partEls.forEach((el) => {
+    for (const fs of [30, 27, 24, 22, 20, 18, 16, 14, 12]) {
+      el.style.fontSize = fs + 'px';
+      if (el.scrollHeight <= BAND_H) break;
+    }
+  });
+  paint();
+}
+
+/* ===========================================================================
+   3 · The spin
+   =========================================================================== */
+
+/* One key per part. Ctrl+Q is free on Windows/Linux browsers; on macOS the OS
+   eats Cmd+Q, so the dock buttons are the fallback there. */
+const KEYS = [
+  { code: 'KeyA', key: 'a', label: 'Ctrl+A' },
+  { code: 'KeyD', key: 'd', label: 'Ctrl+D' },
+  { code: 'KeyQ', key: 'q', label: 'Ctrl+Q' },
+];
+
+/* Each band turns HORIZONTALLY — about its own vertical axis — so it sweeps
+   through the 180° mirror and back without ever swinging off the slide the way
+   an in-plane spin would. Neighbouring bands turn opposite ways, as drawn:
+     part 1  ->   part 2  <-   part 3  ->                                      */
+const SPIN = [
+  { dir:  1, spd: 30 },
+  { dir: -1, spd: 38 },
+  { dir:  1, spd: 46 },
+];
+
+const ang = [0, 130, 250];     // start spread out, so they never travel together
+const held = [false, false, false];
+
+/* how far this angle sits from upright, 0–180° */
+const offUpright = (a) => { const m = ((a % 360) + 360) % 360; return m > 180 ? 360 - m : m; };
+
+/* Write one part's pose. Called every frame while it spins, and once more the
+   moment it is held (so a held part keeps the exact angle it was caught at). */
+function pose(i) {
+  const a = ang[i];
+  const el = partEls[i];
+  if (!el) return;
+  el.style.transform = 'rotateY(' + a.toFixed(2) + 'deg)';
+  if (held[i]) {
+    // caught: full ink, no blur, whatever way up it happens to be
+    el.style.opacity = '1';
+    el.style.filter = 'none';
+  } else {
+    // turning: sharpens as it swings through upright, dissolves as it turns away
+    const k = Math.min(1, offUpright(a) / 55);
+    el.style.opacity = (1 - 0.62 * k).toFixed(3);
+    el.style.filter = 'blur(' + (2.1 * k).toFixed(2) + 'px)';
+  }
+}
+
+let prev = performance.now();
+function tick(now) {
+  const dt = Math.min(0.05, (now - prev) / 1000);
+  prev = now;
+  for (let i = 0; i < 3; i++) {
+    if (held[i]) continue;                        // held parts are simply not advanced
+    ang[i] += SPIN[i].dir * SPIN[i].spd * dt;
+    pose(i);
+  }
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+/* ===========================================================================
+   4 · Keys, dock, chrome
+   =========================================================================== */
+
+const keypadEl = document.getElementById('keypad');
+const dockEl = document.getElementById('dockinfo');
+const heldPill = document.getElementById('heldpill');
+const qLabel = document.getElementById('qlabel');
+
+KEYS.forEach((k, i) => {
+  const b = document.createElement('button');
+  b.className = 'keybtn';
+  b.id = 'kb' + i;
+  b.innerHTML = '<b>' + k.label + '</b><span>part ' + (i + 1) + '</span>';
+  b.addEventListener('click', () => toggle(i));
+  b.addEventListener('contextmenu', (e) => e.preventDefault());
+  keypadEl.appendChild(b);
+});
+
+function toggle(i) {
+  held[i] = !held[i];
+  pose(i);                                        // freeze/unfreeze at the current angle
+  paint();
+}
+
+function paint() {
+  const n = held.filter(Boolean).length;
+  heldPill.textContent = n + ' of 3 held';
+  KEYS.forEach((k, i) => {
+    document.getElementById('kb' + i).classList.toggle('active', held[i]);
+    const el = partEls[i];
+    if (!el) return;
+    el.classList.toggle('steady', held[i]);
+    el.style.zIndex = held[i] ? 30 + i : 5;
+    const tag = el.querySelector('.partkey');
+    if (tag) tag.style.visibility = held[i] ? 'visible' : 'hidden';
+  });
+  dockEl.innerHTML = n === 3
+    ? 'All three bands held. Press a key again to set one turning.'
+    : '<b>' + (3 - n) + '</b> still turning — press the key while a band is face-on to catch it there.';
+}
+
+/* One listener on window: binding to window AND document delivers every press
+   twice, which would toggle a part straight back off. */
+window.addEventListener('keydown', (e) => {
+  if (e.repeat) return;
+  if (!(e.ctrlKey || e.metaKey)) return;
+  const key = (e.key || '').toLowerCase();
+  if (key === 'f') { e.preventDefault(); toggleFullscreen(); return; }
+  const i = KEYS.findIndex((k) => e.code === k.code || key === k.key);
+  if (i >= 0) { e.preventDefault(); toggle(i); }   // preventDefault kills select-all / bookmark
+}, { capture: true });
+
+window.addEventListener('contextmenu', (e) => e.preventDefault());
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+  else document.exitFullscreen?.();
+}
+document.getElementById('fsbtn').addEventListener('click', toggleFullscreen);
+
+/* ---- question navigation ---- */
+let qi = 0;
+function count() { return (deck || BUILT_IN).length; }
+function goto(next) {
+  qi = (next + count()) % count();
+  const d = (deck || BUILT_IN)[qi];
+  qLabel.textContent = 'Slide ' + (qi + 1) + ' of ' + count() + (d.label ? ' · ' + d.label : '');
+  held[0] = held[1] = held[2] = false;
+  ang[0] = 0; ang[1] = 130; ang[2] = 250;
+  renderQuestion(qi);
+  for (let i = 0; i < 3; i++) pose(i);
+}
+
+/* ---- opening a normal .pptx ---- */
+const pptFile = document.getElementById('pptfile');
+document.getElementById('pptbtn').addEventListener('click', () => pptFile.click());
+pptFile.addEventListener('change', () => { if (pptFile.files[0]) load(pptFile.files[0]); });
+for (const type of ['dragover', 'drop']) {
+  window.addEventListener(type, (e) => {
+    e.preventDefault();
+    if (type === 'drop' && e.dataTransfer.files[0]) load(e.dataTransfer.files[0]);
+  });
+}
+async function load(file) {
+  try {
+    await openPptx(file);
+  } catch (err) {
+    dockEl.innerHTML = '<b>Could not read that PPT</b> — ' + err.message +
+      '. Save it as .pptx (not .ppt) and try again.';
+  }
+}
+document.getElementById('prevq').addEventListener('click', () => goto(qi - 1));
+document.getElementById('nextq').addEventListener('click', () => goto(qi + 1));
+
+/* ---- fit the 1280×720 slide to whatever room the window gives it ---- */
+const stage = document.getElementById('stage');
+const scaler = document.getElementById('scaler');
+function fit() {
+  const r = stage.getBoundingClientRect();
+  const s = Math.min((r.width - 32) / SLIDE_W, (r.height - 32) / SLIDE_H);
+  slideEl.style.transform = 'scale(' + s + ')';
+  scaler.style.width = SLIDE_W * s + 'px';
+  scaler.style.height = SLIDE_H * s + 'px';
+}
+new ResizeObserver(fit).observe(stage);
+
+goto(0);
+fit();
+</script>
+<script src="assessment-v2.js?v=dark-1"></script>
+</body>
+</html>
