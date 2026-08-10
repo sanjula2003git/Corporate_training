@@ -150,6 +150,7 @@ def get_regressor():
 
 CFG = dict(
     data=get_data, models=get_models, FEATURES=SENSORS, NICE=NICE[:8],
+    norm_source="occ_hours",          # the scaler is fitted on occupied intervals only
     unit="interval", unit_plural="intervals", pos="over-conditioned", neg="matched",
     export_name="BMS trend-log export",
     faults="A drifted CO₂ sensor (400 ppm all week), a failed zone sensor (0 °C), a broken people counter "

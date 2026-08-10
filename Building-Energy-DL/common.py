@@ -17,6 +17,7 @@ CFG keys
     export_name     -> "controller export", "BMS export", ...
     faults          -> one sentence naming the planted sensor faults
     fault_example   -> the value the median argument uses, e.g. "9,999-vehicle rollover"
+    norm_source     -> optional; the dataset key `norm` was scaled from, default "clean"
     scale_examples  -> [(label, "87 s"), ...] three readings in different units
     scale_note      -> the sentence explaining which one wins unfairly
     neuron_w        -> default weight per feature (same length as FEATURES)
@@ -118,7 +119,11 @@ def render_normalize(C):
     d = C["data"]()
     F, N = C["FEATURES"], C["NICE"]
     col = st.selectbox("Channel", F, index=0, format_func=lambda c: N[F.index(c)])
-    rawv = d["clean"][col].values
+    # The raw values must come from the same frame the scaler was fitted on, which is
+    # `clean` in most projects but only the occupied intervals in Building-Energy.
+    # Take it from anywhere else and the blend below has mismatched lengths.
+    raw = d[C.get("norm_source", "clean")]
+    rawv = raw[col].values
     nrm = d["norm"][col].values
     fig = go.Figure(go.Histogram(x=rawv, marker_color=MUTED, nbinsx=50))
     frames = []
@@ -131,8 +136,8 @@ def render_normalize(C):
     S.style(fig, 400); S.animate(fig, frames, ms=140)
     st.plotly_chart(fig, use_container_width=True)
 
-    lo, hi = float(d["clean"][col].min()), float(d["clean"][col].max())
-    v = st.slider("Try a raw reading", lo, hi, float(d["clean"][col].median()))
+    lo, hi = float(raw[col].min()), float(raw[col].max())
+    v = st.slider("Try a raw reading", lo, hi, float(raw[col].median()))
     c1, c2 = st.columns(2)
     c1.metric("Raw value", f"{v:.2f}")
     c2.metric("Scaled (0–1)", f"{(v - lo) / (hi - lo + 1e-9):.3f}")
