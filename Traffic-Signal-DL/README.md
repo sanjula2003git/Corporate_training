@@ -83,9 +83,11 @@ triple-quoted docstring would close the generator's own `r"""` string.
 Both live at the top of `build_nb.py`; rebuild after changing them.
 
 ```python
-APP   = "https://REPLACE-ME.streamlit.app"          # the illustration app, once deployed
+APP   = "https://traffic-signal-uyfomtzurrptqrg3pkd6gu.streamlit.app"   # live
 COLAB = "https://colab.research.google.com/REPLACE-ME"   # this notebook, once pushed
 ```
+
+`APP` is live — only `COLAB` is still a placeholder.
 
 `APP` drives all 30-odd "See it illustrated" deep links (`{APP}/?stage=<stage>`). `COLAB` drives the
 Open-in-Colab badge in the title cell.

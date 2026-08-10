@@ -17,7 +17,7 @@ import nbformat as nbf
 from nbformat.v4 import new_notebook, new_markdown_cell, new_code_cell
 
 # ----------------------------------------------------------------- placeholders
-APP   = "https://machine-anomaly-dl.streamlit.app"               # <- update after the Streamlit app is deployed
+APP   = "https://machine-anomaly-fhclwbacmwj6jorfvdwykv.streamlit.app"               # <- update after the Streamlit app is deployed
 COLAB = "https://colab.research.google.com/REPLACE-ME"   # <- update after this notebook is pushed
 
 cells = []
