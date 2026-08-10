@@ -17,13 +17,43 @@ this repo.
 |---|---|
 | `Hospital_Alarm_Fatigue_Manager.ipynb` | the notebook (open this) |
 | `build_nb.py` | generates the notebook; edit this, not the `.ipynb` |
-| `requirements.txt` | what it needs outside Colab |
+| `app.py` | the Streamlit illustration app — one page per teaching step |
+| `bridge.py` | the teaching registry: one entry per page. **Content edits go here** |
+| `story.py` | the ward, the models and the figures the app draws |
+| `requirements.txt` | the **app's** dependencies (see the note below) |
 
-Rebuild with:
+Rebuild the notebook with:
 
 ```
 py -3.13 build_nb.py
 ```
+
+Run the app locally with:
+
+```
+streamlit run app.py
+```
+
+## The app
+
+Deployed at **https://hospital-alarm-fatigue.streamlit.app**, and every step of the notebook links into it
+with `?stage=<id>`. Sixteen pages, each following the notebook's five-part shape: what happens on the ward,
+why it is hard, where the AI comes in, the illustration, and the takeaway.
+
+Three sidebar sliders — alerts allowed per hour, nurses on shift, sensor glitches per patient — re-run the
+whole ward. That is the thing the notebook cannot do: drop the budget to 2 or push the glitch rate to 40 and
+watch which metric breaks first.
+
+Two deliberate differences from the notebook, both forced by the 1 GB free container:
+
+- **Six days of ward instead of twelve**, and a 60-tree forest instead of 150. Steady-state memory is about
+  230 MB.
+- **No LSTM.** `requirements.txt` has no TensorFlow, because installing it would not fit. The sequence model
+  is explained on its page rather than trained, so the app's scoreboard runs 1, 2, 3 and 5. The notebook
+  trains all five — and found the forest ranks patients better than the LSTM anyway.
+
+To run the **notebook** outside Colab you also need `tensorflow-cpu`; it is left out of `requirements.txt` on
+purpose so the deployed app stays inside its container.
 
 ## What it covers
 
@@ -53,16 +83,13 @@ and can say *ignore*, *repeat the measurement* or *keep watching* instead of int
 That change alone — no better prediction — is what gets a nurse to every deteriorating patient before their
 crisis, inside the budget.
 
-## Running it
+## Running the notebook
 
-Colab has everything. Locally:
+Colab has everything — use the badge at the top of the notebook. Locally you need the app's requirements
+plus `tensorflow-cpu`.
 
-```
-pip install -r requirements.txt
-```
-
-TensorFlow is optional: without it the notebook substitutes a scikit-learn network for the LSTM and every
-section still runs. Full run time is a couple of minutes, most of it the LSTM.
+TensorFlow is optional even there: without it the notebook substitutes a scikit-learn network for the LSTM
+and every section still runs. A full run takes a couple of minutes, most of it the LSTM.
 
 ## A note on the data
 

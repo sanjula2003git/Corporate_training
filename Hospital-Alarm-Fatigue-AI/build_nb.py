@@ -27,6 +27,19 @@ def co(t):  cells.append(new_code_cell(t.strip("\n")))
 COLAB = ("https://colab.research.google.com/github/sanjula2003git/Corporate_training/blob/main/"
          "Hospital-Alarm-Fatigue-AI/Hospital_Alarm_Fatigue_Manager.ipynb")
 
+# The deployed illustration app. No trailing slash - links are built as APP/?stage=<id>.
+APP = "https://hospital-alarm-fatigue.streamlit.app"
+
+
+def link(stage, label):
+    """A deep link into the illustration app for this step."""
+    return f"🎬 **See it illustrated:** [{label}]({APP}/?stage={stage})"
+
+
+def see(stage, label):
+    """Append the deep link as its own small markdown cell."""
+    md(link(stage, label))
+
 
 # ============================================================ TITLE
 md(rf"""
@@ -112,6 +125,8 @@ Five measurements, all of them things a ward sister would ask about:
 21. Summary
 """)
 
+
+see("start", "The project overview")
 
 # ============================================================ SETUP
 md(r"""
@@ -219,6 +234,8 @@ md(r"""
 A system that sends 40 alerts an hour is not 8 times safer than one that sends 5. It is usually less safe.
 """)
 
+
+see("flood", "Why the ward drowns in alarms")
 
 # ============================================================ 2. THE WARD
 md(r"""
@@ -543,6 +560,8 @@ readings look alarming all week.
 """)
 
 
+see("ward", "The twenty patients and their seven signals")
+
 # ============================================================ 4. FIRST LOOK
 md(r"""
 ## 4 · A first look at three patients
@@ -607,6 +626,8 @@ exactly what a model can be good at.
 > sensor noise is **tall, sudden and short**. Real illness is **small, slow and persistent**.
 """)
 
+see("noise", "A loose probe or a sick patient?")
+
 # ============================================================ 5. THE FIVE ACTIONS
 md(r"""
 ## 5 · The five actions the system can choose
@@ -652,6 +673,8 @@ for key, a in ACTIONS.items():
 """)
 
 
+see("actions", "The five actions, and what each costs")
+
 # ============================================================ 6. THE BUDGET
 md(r"""
 ## 6 · The rule that changes everything: five alerts an hour
@@ -684,6 +707,8 @@ That is a ranking-and-budget problem, not just a prediction problem. Models 1 to
 Only model 5 answers the question the ward actually asked.
 """)
 
+
+see("budget", "Five interruptions an hour")
 
 # ============================================================ 7. THE SPLIT
 md(r"""
@@ -910,6 +935,8 @@ and history.
 """)
 
 
+see("limits", "What the monitor was really beeping about")
+
 # ============================================================ 10. FEATURES
 md(r"""
 ## 10 · Turning raw readings into useful clues
@@ -1022,6 +1049,8 @@ the monitor.
 """)
 
 
+see("clues", "The clues a good nurse uses")
+
 # ============================================================ 11. MODEL 2
 md(r"""
 ## 11 · Model 2 — a risk score
@@ -1092,6 +1121,8 @@ several measurements to agree is exactly what silences the noise, and exactly wh
 This is the honest ceiling of hand-written rules. To speak earlier we need something that reacts to *small*
 changes in *several* places at once — and that is a job for a model that has seen a lot of patients.
 """)
+
+see("score", "The early warning score")
 
 # ============================================================ 12. MODEL 3
 md(r"""
@@ -1226,6 +1257,8 @@ real question is section 15's: **when this model puts patients in order of risk,
 near the top?** If they are, we can spend our five alerts well. If they are not, no dial setting will save us.
 """)
 
+
+see("forest", "The forest, and the level that is never right")
 
 # ============================================================ 13. WHAT DL ADDS
 md(r"""
@@ -1394,6 +1427,8 @@ print(pd.DataFrame([summarise(k, v) for k, v in ALERTS.items()]).set_index("mode
 """)
 
 
+see("sequence", "Reading the whole hour")
+
 # ============================================================ 15. RANKING
 md(r"""
 ## 15 · Which model ranks the risk best
@@ -1492,6 +1527,8 @@ And nothing here tells us **which** five patients to alert on in a given hour, o
 Turning a good ordering into good decisions, without hindsight, is section 16.
 """)
 
+
+see("ranking", "Every method, at every alert rate")
 
 # ============================================================ 16. MODEL 5
 md(r"""
@@ -1714,6 +1751,8 @@ of human attention well*.
 """)
 
 
+see("manager", "The bucket of tokens, live")
+
 # ============================================================ 17. ONE PATIENT
 md(r"""
 ## 17 · Watching one patient, minute by minute
@@ -1793,6 +1832,8 @@ Compare that with what a fixed limit would have done here: nothing at all until 
 crossed 120, near the right-hand edge.
 """)
 
+
+see("patient", "One patient, minute by minute")
 
 # ============================================================ 18. NURSE SHIFT
 md(r"""
@@ -1909,6 +1950,8 @@ alerts than minutes.
 """)
 
 
+see("nurses", "The queue, and who gets reached")
+
 # ============================================================ 19. SCOREBOARD
 md(r"""
 ## 19 · The scoreboard
@@ -1988,6 +2031,8 @@ is per hour, not per cent: it interrupts the ward under five times an hour, a nu
 patient before their crisis, and the warnings arrive around an hour ahead. That is a ward that can function.
 """)
 
+
+see("scoreboard", "All the methods, side by side")
 
 # ============================================================ 20. WHAT IT GETS WRONG
 md(r"""
