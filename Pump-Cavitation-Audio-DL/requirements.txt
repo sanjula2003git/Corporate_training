@@ -1,0 +1,10 @@
+streamlit>=1.35
+numpy
+scipy
+matplotlib
+plotly
+scikit-learn
+tensorflow
+librosa
+soundfile
+

@@ -23,12 +23,18 @@ cells = []
 def md(t):  cells.append(new_markdown_cell(t.strip("\n")))
 def co(t):  cells.append(new_code_cell(t.strip("\n")))
 
+# Where this notebook lives on GitHub, so the "Open in Colab" badge works.
+COLAB = ("https://colab.research.google.com/github/sanjula2003git/Corporate_training/blob/main/"
+         "Hospital-Alarm-Fatigue-AI/Hospital_Alarm_Fatigue_Manager.ipynb")
+
 
 # ============================================================ TITLE
-md(r"""
+md(rf"""
 # Hospital Alarm-Fatigue Manager
 
 ### Teaching AI through the alarms on a hospital ward
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]({COLAB})
 
 A patient monitor beeps. A nurse walks over. Nothing is wrong. The probe had slipped off the finger.
 
