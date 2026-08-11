@@ -11,7 +11,7 @@ import streamlit as st
 import bridge
 import story
 
-st.set_page_config(page_title="Pandas Basics — Student Data", page_icon="🐼", layout="wide")
+st.set_page_config(page_title="Pandas Basics — Student Data", layout="wide")
 st.markdown("""<style>
 .stApp{background:#0e1117;color:#e6edf3}
 .block-container{max-width:1200px}
@@ -64,7 +64,7 @@ def header(s):
     p = bridge.PHASES[s["phase"]]
     st.markdown(
         f"<div class='hero'><small>PHASE {s['phase'] + 1} OF {len(bridge.PHASES)} · {p[0]}</small>"
-        f"<h1>🐼 {s['title']}</h1><h3><span class='data'>{s['title']}</span> → "
+        f"<h1>{s['title']}</h1><h3><span class='data'>{s['title']}</span> → "
         f"<span class='pd'>{s['pandas']}</span></h3></div>", unsafe_allow_html=True)
     a, b, c = st.columns(3)
     a.markdown("#### 1 · What you have")
@@ -95,7 +95,7 @@ def code(src):
 
 # --------------------------------------------------------------- landing
 if stage == "start":
-    st.title("🐼 Pandas Basics — Student Data")
+    st.title("Pandas Basics — Student Data")
     st.info(NOTE)
     st.markdown(
         "Three columns: **study_hours**, **attendance**, **result**. "
