@@ -20,8 +20,10 @@ first cell, so nothing needs uploading.
 **`app.py`** — the illustration app. Sixteen pages, one per teaching step, routed by
 `?stage=<id>` and following the same five-part layout as the other builds in this
 repo. The sidebar lets a student *break the file on purpose* — add empty cells, glue
-on duplicates, plant decimal-slip typos, move the IQR multiplier — and every later
-page reacts.
+on duplicates, plant decimal-slip typos, choose median or mean — and every later page
+reacts. The IQR multiplier is deliberately **not** a control: it is fixed at the
+notebook's 1.5, and the page explains that the number is a convention rather than
+letting a student dial it.
 
 ```
 streamlit run app.py

@@ -114,7 +114,8 @@ STEPS = [
                  "anyone can check.",
          pandas_link="Compute the two fences and select what falls outside. Four lines, no library.",
          notebook="Section 5 — the iqr_bounds() helper.",
-         takeaway="1.5 is a convention, not a law. Move the slider and watch the verdict change."),
+         takeaway="1.5 is a convention, not a law — it is the number Tukey picked, and it decides "
+                  "who counts as unusual."),
 
     dict(id="after", phase=3, title="After The Filter", pandas="What Removal Costs",
          tech="df[mask] · and the new dots that appear",

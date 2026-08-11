@@ -33,10 +33,11 @@ with st.sidebar:
                                "The notebook plants the first three.")
     st.divider()
     st.header("Cleaning choices")
-    k = st.slider("IQR multiplier", 0.5, 3.0, 1.5, step=0.25,
-                  help="The 1.5 in Q1 - 1.5 x IQR. It is a convention, not a law.")
     fill = st.radio("Fill the numeric holes with", ["median", "mean"], horizontal=True)
     st.caption("Change anything here and every page below re-runs.")
+
+# The 1.5 in "Q1 - 1.5 x IQR" is the notebook's, and the notebook's is the convention.
+K = 1.5
 
 
 @st.cache_data(show_spinner="Writing the messy file...")
@@ -46,12 +47,12 @@ def get_raw(n, n_missing, n_duplicates, n_extreme):
 
 
 @st.cache_data(show_spinner="Cleaning...")
-def get_run(n, n_missing, n_duplicates, n_extreme, k, fill):
-    return story.clean(get_raw(n, n_missing, n_duplicates, n_extreme), k=k, fill=fill)
+def get_run(n, n_missing, n_duplicates, n_extreme, fill):
+    return story.clean(get_raw(n, n_missing, n_duplicates, n_extreme), k=K, fill=fill)
 
 
 raw = get_raw(n, n_missing, n_duplicates, n_extreme)
-run = get_run(n, n_missing, n_duplicates, n_extreme, k, fill)
+run = get_run(n, n_missing, n_duplicates, n_extreme, fill)
 labelled, filled, final = run["labelled"], run["filled"], run["final"]
 stage = st.query_params.get("stage", "start")
 
@@ -101,7 +102,7 @@ if stage == "start":
         "One messy file. Everything a dataset needs before anybody is allowed to draw a "
         "conclusion from it.\n\n"
         "**Use the sidebar.** Break the file on purpose — add empty cells, add duplicates, "
-        "move the IQR multiplier — and watch which page notices.")
+        "plant extreme students — and watch which page notices.")
 
     a, b, c, d = st.columns(4)
     a.metric("Rows in the file", len(raw))
@@ -255,10 +256,10 @@ else:
             "- The **dots** are everything beyond it.")
 
     elif s["id"] == "iqr":
-        code(f"""q1 = df[col].quantile(0.25)
+        code("""q1 = df[col].quantile(0.25)
 q3 = df[col].quantile(0.75)
 iqr = q3 - q1
-low, high = q1 - {k} * iqr, q3 + {k} * iqr
+low, high = q1 - 1.5 * iqr, q3 + 1.5 * iqr
 outliers = df[(df[col] < low) | (df[col] > high)]""")
         col = st.selectbox("Which column?", story.NUMERIC)
         bounds = run["bounds"][col]
@@ -267,15 +268,16 @@ outliers = df[(df[col] < low) | (df[col] > high)]""")
         b.metric("Q3", f"{bounds['q3']:.2f}")
         c.metric("IQR", f"{bounds['iqr']:.2f}")
         d.metric("Fence", f"{bounds['low']:.1f} to {bounds['high']:.1f}")
-        st.plotly_chart(story.fig_iqr_explained(filled[col], k,
-                                                f"{col} — fence at {k} × IQR"),
+        st.plotly_chart(story.fig_iqr_explained(filled[col], K, f"{col} — fence at 1.5 × IQR"),
                         width="stretch")
         out = filled[(filled[col] < bounds["low"]) | (filled[col] > bounds["high"])]
-        st.markdown(f"**{len(out)} outlier(s)** in `{col}` at a multiplier of **{k}**:")
+        st.markdown(f"**{len(out)} outlier(s)** in `{col}`, in red above:")
         if len(out):
             st.dataframe(out, width="stretch")
-        st.warning("Drag the IQR multiplier in the sidebar. At 0.5 almost everyone is an outlier; at "
-                   "3.0 almost nobody is. The data did not change — only the convention did.")
+        st.warning("**The 1.5 is a convention, not a law.** Nothing in statistics derives it — it is "
+                   "the number Tukey chose because it flags roughly 1 in 150 values from a normal "
+                   "distribution. Use a smaller multiplier and almost everyone becomes an outlier; "
+                   "use a larger one and almost nobody does. The data would not have changed.")
 
     elif s["id"] == "after":
         a, b = st.columns(2)
