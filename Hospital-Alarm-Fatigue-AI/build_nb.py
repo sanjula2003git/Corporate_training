@@ -32,8 +32,15 @@ APP = "https://hospital-alarm-fatigue.streamlit.app"
 
 
 def link(stage, label):
-    """A deep link into the illustration app for this step."""
-    return f"🎬 **See it illustrated:** [{label}]({APP}/?stage={stage})"
+    """A deep link into the illustration app for this step.
+
+    Written as raw HTML rather than a markdown link so it can carry
+    target="illustration" - a *named* window. Every link in the notebook shares
+    that name, so the second and later clicks reuse the tab the first one
+    opened instead of piling up sixteen of them.
+    """
+    return (f'🎬 **See it illustrated:** '
+            f'<a href="{APP}/?stage={stage}" target="illustration">{label}</a>')
 
 
 def see(stage, label):
