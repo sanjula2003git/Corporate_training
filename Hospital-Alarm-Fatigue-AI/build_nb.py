@@ -16,8 +16,16 @@ NOTE for future editors:
   * the prose quotes numbers the cells print. After any change, re-run the smoke
     test and re-check every number written in markdown.
 """
+import sys
+from pathlib import Path
+
 import nbformat as nbf
 from nbformat.v4 import new_notebook, new_markdown_cell, new_code_cell
+
+# The illustration app's own step registry, so the step numbers printed in the
+# notebook are the numbers the app shows. Same folder, no heavy imports.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import bridge  # noqa: E402
 
 cells = []
 def md(t):  cells.append(new_markdown_cell(t.strip("\n")))
@@ -31,21 +39,19 @@ COLAB = ("https://colab.research.google.com/github/sanjula2003git/Corporate_trai
 APP = "https://hospital-alarm-fatigue.streamlit.app"
 
 
-def link(stage, label):
-    """A deep link into the illustration app for this step.
-
-    Written as raw HTML rather than a markdown link so it can carry
-    target="illustration" - a *named* window. Every link in the notebook shares
-    that name, so the second and later clicks reuse the tab the first one
-    opened instead of piling up sixteen of them.
-    """
-    return (f'🎬 **See it illustrated:** '
-            f'<a href="{APP}/?stage={stage}" target="illustration">{label}</a>')
-
-
 def see(stage, label):
-    """Append the deep link as its own small markdown cell."""
-    md(link(stage, label))
+    """Point at the matching page of the illustration app - without a link.
+
+    There used to be one deep link per section. Colab hands every external link
+    in a text cell to the browser with noopener semantics, which forces a fresh
+    tab and makes the window name irrelevant, so sixteen links meant sixteen
+    tabs no matter what target= or rel= said. Instead the app is opened once,
+    from the single anchor at the top, and each section here just names the step
+    to move that one tab to. The app carries the navigation itself: prev/next
+    buttons at the foot of every page and a clickable list on its front page.
+    """
+    n = bridge.ORDER.index(stage) + 1          # KeyError-by-ValueError if a stage is renamed
+    md(f"🎬 **See it illustrated:** step {n} in the illustration tab — *{label}*.")
 
 
 # ============================================================ TITLE
@@ -133,7 +139,20 @@ Five measurements, all of them things a ward sister would ask about:
 """)
 
 
-see("start", "The project overview")
+# The one and only link out to the illustration app. Everything below refers to
+# the step number instead, so the student keeps a single second tab open.
+md(f"""
+🎬 **The illustrated version.**
+<a href="{APP}/?stage=start" target="illustration">Open the illustration app once, in a second tab</a>,
+and leave it open beside this notebook.
+
+As you work down the notebook, each section says which **step** to show over there. Move that tab with the
+**◀ ▶** buttons at the foot of its page, or jump straight to any step from the **Learning journey** list on
+its front page. That way you finish the notebook with two tabs open, not seventeen.
+
+The steps run in the same order as the sections below, with one exception: we meet **step 8** just before
+**step 7**, because the app keeps the two hand-written rules side by side.
+""")
 
 # ============================================================ SETUP
 md(r"""
