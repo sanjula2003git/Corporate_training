@@ -16,6 +16,11 @@ st.markdown("""<style>
 .block-container{max-width:1200px}
 .hero{padding:1.1rem 1.3rem;border:1px solid #30363d;border-radius:15px;background:#161b22}
 .ward{color:#ffb74d}.ai{color:#4fc3f7}
+/* the navigation buttons, dressed as list rows rather than form buttons */
+.stButton button,div[data-testid="stButton"] button{background:transparent;border:1px solid #30363d;
+    color:#e6edf3;justify-content:flex-start;text-align:left;font-weight:400}
+.stButton button:hover,div[data-testid="stButton"] button:hover{border-color:#4fc3f7;color:#4fc3f7;
+    background:#161b22}
 </style>""", unsafe_allow_html=True)
 
 
@@ -105,6 +110,20 @@ def header(s):
     st.markdown(f"#### 4 · What it looks like — `{s['tech']}`")
 
 
+def goto(target, label, key, where=None):
+    """One step of navigation, inside this browser tab.
+
+    Never a link. Streamlit renders every markdown link with target="_blank",
+    so [text](?stage=x) opened a fresh tab on each click and a student walking
+    the fifteen steps finished with fifteen tabs. A button reruns the script in
+    place; the query parameter is still written, so the URL stays shareable and
+    the notebook's deep links keep working.
+    """
+    if (where or st).button(label, key=key, width="stretch"):
+        st.query_params["stage"] = target
+        st.rerun()
+
+
 def footer(s):
     st.markdown("#### 5 · In the notebook")
     st.write(s["notebook"])
@@ -112,10 +131,10 @@ def footer(s):
     i = bridge.ORDER.index(s["id"])
     cols = st.columns(3)
     if i:
-        cols[0].markdown(f"[◀ {bridge.STEPS[i - 1]['ward']}](?stage={bridge.ORDER[i - 1]})")
-    cols[1].markdown("[Overview](?stage=start)")
+        goto(bridge.ORDER[i - 1], f"◀ {bridge.STEPS[i - 1]['ward']}", f"prev_{s['id']}", cols[0])
+    goto("start", "Overview", f"home_{s['id']}", cols[1])
     if i < len(bridge.STEPS) - 1:
-        cols[2].markdown(f"[{bridge.STEPS[i + 1]['ward']} ▶](?stage={bridge.ORDER[i + 1]})")
+        goto(bridge.ORDER[i + 1], f"{bridge.STEPS[i + 1]['ward']} ▶", f"next_{s['id']}", cols[2])
 
 
 def scoreboard_table():
@@ -148,7 +167,7 @@ if stage == "start":
 
     st.subheader("Learning journey")
     for i, s in enumerate(bridge.STEPS, 1):
-        st.markdown(f"**{i}. [{s['ward']}](?stage={s['id']})** — {s['ai']}")
+        goto(s["id"], f"**{i}. {s['ward']}** — {s['ai']}", f"jump_{s['id']}")
 
     st.subheader("The notebook")
     st.markdown(

@@ -1,0 +1,11 @@
+const t=(await(await fetch('http://127.0.0.1:9333/json/list')).json()).find(t=>t.url.includes('5180'))
+const ws=new WebSocket(t.webSocketDebuggerUrl); await new Promise(r=>ws.addEventListener('open',r))
+let id=0; const pend=new Map()
+ws.addEventListener('message',e=>{const m=JSON.parse(e.data); if(m.id&&pend.has(m.id)){pend.get(m.id)(m);pend.delete(m.id)}})
+const send=(m,p={})=>new Promise(r=>{const i=++id;pend.set(i,r);ws.send(JSON.stringify({id:i,method:m,params:p}))})
+const ev=(x)=>send('Runtime.evaluate',{expression:x,returnByValue:true})
+// band 1 caught face-on, band 2 mid-turn, band 3 caught at the 180° mirror
+await ev('held[0]=true;ang[0]=3;pose(0);held[1]=false;ang[1]=52;pose(1);held[2]=true;ang[2]=181;pose(2);paint();')
+const s=await send('Page.captureScreenshot',{format:'png'})
+;(await import('node:fs')).writeFileSync(process.argv[2],Buffer.from(s.result.data,'base64'))
+console.log('ok'); ws.close()
