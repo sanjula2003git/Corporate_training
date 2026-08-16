@@ -58,9 +58,47 @@ correct output instead: keep the beat going, do not stop.
 |---|---|
 | `AI_CPR_Guardian.ipynb` | The notebook, executed, with all figures embedded |
 | `build_nb.py` | Builds the notebook. Run with `python -X utf8 build_nb.py` |
+| `story.py` | The simulated rescue, the coaching rules and the figures, for the app |
+| `bridge.py` | The teaching registry: 16 steps, five parts each |
+| `app.py` | The illustration app, one page per step, routed by `?stage=` |
 
-Only numpy, pandas and matplotlib — all pre-installed in Colab. The peak finder is written by
-hand rather than imported, because seeing how compressions get counted is half the lesson.
+The notebook needs only numpy, pandas and matplotlib — all pre-installed in Colab. The peak
+finder is written by hand rather than imported, because seeing how compressions get counted is
+half the lesson.
+
+## Running the illustration app
+
+```
+py -3.13 -m streamlit run app.py
+```
+
+Sixteen pages plus a landing page, one per teaching step, in the same shape as the other apps
+in this repo: what is happening in the room, why it is hard, where the AI comes in, what it
+looks like, and what the notebook section says. Deep links are `?stage=<id>`, with the ids in
+`bridge.ORDER`. Navigation inside the app is by button, never by markdown link — Streamlit
+renders every markdown link with `target="_blank"`, so a link opens a new browser tab on every
+click.
+
+**At the default sidebar settings the app reproduces the notebook exactly**: 352 compressions,
+91% chest compression fraction, rescuer A at 5.27 cm mean depth and 4.93 cm mean stroke,
+rescuer B at 5.55 and 5.40, both at 70% green, fatigue caught at 71 s. Four dials change that,
+and each is one of the notebook's closing exercises:
+
+| Dial | What it does |
+|---|---|
+| Patient | switches the depth band from an adult's 5–6 cm to a child's 4–5 cm |
+| How hard rescuer A tires | 1.0 is the notebook; at 0 rescuer A never tires and both detectors stay silent |
+| Pad slipping | adds false depth over time, as a pad sliding on the chest would |
+| The helper is alone | switches the switch plan to *keep going, do not stop* |
+
+Two figure traps worth knowing if you edit `story.py`:
+
+- **A shape targeted at a subplot with `row=`/`col=` is silently dropped if that subplot has no
+  trace yet.** Plotly resolves the axis from the traces already there, and with none it quietly
+  does nothing. The figure still builds and still serialises — it just comes out missing its
+  guideline bands. Traces go on first, bands and reference lines afterwards.
+- A figure with both a main title and subplot titles needs its top margin raised, or the two
+  land on top of each other.
 
 ## Sources for the guideline numbers
 
