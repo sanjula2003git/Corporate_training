@@ -1,5 +1,6 @@
 """Build Guardian_Road_AI_Safety_Shield.ipynb. Run with: py -3 -X utf8 build_nb.py"""
 from pathlib import Path
+import ast
 import nbformat as nbf
 from nbformat.v4 import new_code_cell, new_markdown_cell, new_notebook
 
@@ -7,6 +8,11 @@ ROOT=Path(__file__).resolve().parent
 cells=[]
 def md(s): cells.append(new_markdown_cell(s.strip()))
 def co(s): cells.append(new_code_cell(s.strip()))
+CORE_SOURCE=(ROOT/"guardian.py").read_text(encoding="utf-8")
+CORE_LINES=CORE_SOURCE.splitlines();CORE_TREE=ast.parse(CORE_SOURCE)
+CORE_BLOCKS={n.name:"\n".join(CORE_LINES[n.lineno-1:n.end_lineno]) for n in CORE_TREE.body if isinstance(n,(ast.FunctionDef,ast.ClassDef))}
+FIRST_DEF=min(n.lineno for n in CORE_TREE.body if isinstance(n,ast.FunctionDef));CORE_BLOCKS["__preamble__"]="\n".join(CORE_LINES[:FIRST_DEF-1])
+def core(*names):co("\n\n".join(CORE_BLOCKS[n] for n in names))
 
 md(r"""
 # 🛣️ Guardian Road
@@ -36,6 +42,7 @@ severe braking and less traffic delay than a fixed-distance warning system?
 5. Dynamic studs, speed limits, merge control, safe paths and ambulance access.
 6. A seven-controller benchmark, sensor-failure test and staged reopening procedure.
 """)
+md('🎬 **The illustrated version — open it once.**\n\n[Open the Guardian Road illustration app in a second tab](https://guardian-road.streamlit.app/?stage=start) and leave it open beside this notebook.\n\nEvery lesson below carries a line like *"🎬 Illustration tab → step 4 · *A Warning That Changes Shape*"*. That names the page to open from\nthe app\'s **Learning journey** list, then move with its own ◀ ▶ buttons. There is deliberately no second link to click: Colab gives every link click a brand-new browser tab,\nso one anchor here keeps you at two tabs instead of sixty.\n')
 
 md(r"""
 ### Contents
@@ -60,6 +67,12 @@ md(r"""
 md("## Setup\n\nThe notebook is standalone. It contains the simulation source inline and uses fixed seeds so the figures and prose agree each time.")
 co(r"""
 # !pip install numpy pandas plotly scikit-learn nbformat
+try:
+    import plotly.graph_objects as go
+    import sklearn
+except ModuleNotFoundError:
+    import micropip
+    await micropip.install(["plotly", "scikit-learn", "ipywidgets", "nbformat"])
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -78,8 +91,7 @@ print("Ready.")
 """)
 
 # The teaching notebook remains standalone by carrying the tested domain module inline.
-source=(ROOT/"guardian.py").read_text(encoding="utf-8")
-co("# Guardian Road simulation core — kept in guardian.py in the project\n"+source)
+core("__preamble__")
 
 md(r"""
 ## 1 · Build the road
@@ -91,6 +103,13 @@ remains before the obstruction.
 The drawing is not decoration. Its warning boundary, studs, lanes and vehicles are generated from
 the same controller state used in the score table.
 """)
+core("stopping_distance")
+core("required_warning")
+core("merge_choice")
+core("controller")
+core("outcome")
+core("_layout")
+core("fig_road")
 co(r"""
 scene = Scene()
 action = controller(scene, "Safe AI + ambulance")
@@ -139,6 +158,7 @@ At three seconds the rider and motorcycle separate. The rider remains in the cen
 traffic continues upstream. Camera signals are noisy, and useful evidence appears at different
 times—not on one magical impact frame.
 """)
+core("detection_signals")
 co(r"""
 incident=detection_signals("fallen_rider")
 incident.head(25).tail(8)
@@ -160,6 +180,8 @@ orientation and nearby trajectory change.
 
 The output is an **obstruction probability**. The medical condition remains unknown.
 """)
+core("detection_probability")
+core("fig_detection")
 co("fig_detection().show()")
 co(r"""
 det=[]
@@ -230,6 +252,7 @@ We generate thousands of synthetic situations from the same physical world. Four
 the required distance. The split is made before fitting, and the held-out test pile is touched only
 for the final table.
 """)
+core("build_warning_dataset")
 co(r"""
 data=build_warning_dataset(3500)
 features=["speed_kmh","weather","reaction_s","vehicle_type","density","left_occupancy",
@@ -261,6 +284,7 @@ L=\begin{cases}\alpha|e|,&\text{warning too late}\\\beta|e|,&\text{warning too e
 
 A deployment controller then applies a physical guard: `max(model prediction, physics minimum)`.
 """)
+core("asymmetric_loss")
 co(r"""
 rows=[]
 physics_floor=np.array([required_warning(Scene(speed_kmh=r.speed_kmh,weather=r.weather,
@@ -296,6 +320,7 @@ md(r"""
 One distance becomes five visible zones: awareness, speed reduction, merge, exclusion and rider
 protection. The road changes shape when the sidebar conditions—or the code below—change.
 """)
+core("road_zones")
 co("road_zones(action)")
 co("fig_road(scene,action).show()")
 
@@ -359,6 +384,9 @@ md(r"""
 The shortest geometric line crosses moving traffic. Dijkstra instead minimizes accumulated risk.
 The path may be displayed only after the controller confirms the relevant traffic protection.
 """)
+core("hazard_grid")
+core("plan_path")
+core("fig_hazard")
 co(r"""
 cost=hazard_grid(active_lanes=() if action["upstream_red"] else (0,2),reserve_lane=0)
 path=plan_path(cost)
@@ -419,6 +447,8 @@ md(r"""
 Seven controllers face the opening scenario. Secondary-collision probability remains separate from
 braking, delay and ambulance blockage so a convenient average cannot hide an unsafe decision.
 """)
+core("compare_controllers")
+core("fig_tradeoff")
 co(r"""
 scoreboard=compare_controllers(scene)
 scoreboard[["Controller","warning_m","collision_probability","max_deceleration",
@@ -448,6 +478,20 @@ and emergency-service governance.
 - Reopen only after authorized clearance.
 """)
 
+# One anchor near the top; each lesson names the step to open in the illustration tab.
+# Colab opens a fresh tab per link click, so per-cell links are deliberately NOT emitted.
+_STEPS=['A Rider In The Centre Lane', 'One Shape, Several Explanations', 'How Much Road Is Enough?', 'A Warning That Changes Shape', 'Centre Closed Does Not Mean Left', 'A Safe Way For People And Responders', 'When The Road Cannot Trust Its Senses', 'Did The Shield Help?', 'Opening The Road Is Also A Safety Action']
+_SMAP={1: 1, 2: 1, 3: 1, 4: 2, 5: 3, 6: 3, 7: 3, 8: 3, 9: 4, 10: 5, 11: 5, 12: 5, 13: 6, 14: 7, 15: 9}
+_FINALS={'Final benchmark': 8}
+import re as _re
+for _cell in cells:
+    if _cell["cell_type"]!="markdown": continue
+    _src=_cell["source"] if isinstance(_cell["source"],str) else "".join(_cell["source"])
+    _m=_re.match(r"##\s+(\d+)\s+·",_src.lstrip())
+    _step=_SMAP.get(int(_m.group(1))) if _m else next(
+        (_v for _k,_v in _FINALS.items() if _src.lstrip().startswith("## "+_k)),None)
+    if _step:
+        _cell["source"]=_src.rstrip()+"\n\n> 🎬 **Illustration tab →** step %d · *%s*\n"%(_step,_STEPS[_step-1])
 nb=new_notebook(cells=cells,metadata={"kernelspec":{"display_name":"Python 3","language":"python","name":"python3"},
                                       "language_info":{"name":"python","version":"3"},
                                       "colab":{"name":"Guardian_Road_AI_Safety_Shield.ipynb","provenance":[]}})
