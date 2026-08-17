@@ -103,6 +103,21 @@ df["allowed"] = np.where(
     "Allowed", "Not Allowed")
 print("missing values left:", df.isnull().sum().sum())
 """
+nb["cells"][27]["source"] = r"""## 5. Normal distribution checks — boxplots + z-scores
+
+A boxplot is still useful for seeing the centre and spread, but our main inspection method is the **z-score**:
+
+\[
+z = \frac{x - \mu}{\sigma}
+\]
+
+- `z = 0` means the value is at the mean.
+- `z = 1` means one standard deviation above the mean.
+- For approximately normal data, `|z| > 3` is an unusual observation worth checking.
+- Unusual does **not** mean incorrect, so a flagged person's valid measurement is retained.
+
+🎬 **See it illustrated:** step 9 — *Reading A Boxplot*, step 10 — *The ±3 Z-Score Check*, step 11 — *After The Z-Score Check* in the illustration tab.
+"""
 nb["cells"][28]["source"] = """fig, axes = plt.subplots(1, 2, figsize=(10, 4))
 for ax, col in zip(axes, ["height_cm", "weight_kg"]):
     ax.boxplot(df[col], patch_artist=True, boxprops=dict(facecolor="#cfe0f3"), medianprops=dict(color="#c94f4f", linewidth=2))
@@ -110,17 +125,19 @@ for ax, col in zip(axes, ["height_cm", "weight_kg"]):
 plt.tight_layout(); plt.show()
 """
 nb["cells"][29]["source"] = 'df[["height_cm", "weight_kg"]].describe().loc[["min", "25%", "50%", "mean", "75%", "max"]]'
-nb["cells"][30]["source"] = """def iqr_bounds(series):
-    q1, q3 = series.quantile([0.25, 0.75]); iqr = q3 - q1
-    return q1, q3, iqr, q1 - 1.5 * iqr, q3 + 1.5 * iqr
+nb["cells"][30]["source"] = """def zscore_values(series):
+    return (series - series.mean()) / series.std(ddof=0)
 
 for col in ["height_cm", "weight_kg"]:
-    q1, q3, iqr, low, high = iqr_bounds(df[col])
-    flagged = df[(df[col] < low) | (df[col] > high)]
-    print(col, "mean", round(df[col].mean(),2), "median", round(df[col].median(),2), "IQR flags", len(flagged))
+    z = zscore_values(df[col])
+    print(col, "mean", round(df[col].mean(), 2),
+          "std", round(df[col].std(ddof=0), 2),
+          "|z| > 3 flags", int((z.abs() > 3).sum()))
 """
-nb["cells"][31]["source"] = """# For this pure normal teaching dataset, inspect IQR flags but do not automatically delete valid people.
-df_outliers = pd.concat([df[(df[c] < iqr_bounds(df[c])[3]) | (df[c] > iqr_bounds(df[c])[4])] for c in ["height_cm", "weight_kg"]]).drop_duplicates()
+nb["cells"][31]["source"] = """# For this normal teaching dataset, inspect |z| > 3 flags without automatically deleting valid people.
+z_height = zscore_values(df["height_cm"]).abs()
+z_weight = zscore_values(df["weight_kg"]).abs()
+df_outliers = df[(z_height > 3) | (z_weight > 3)].copy()
 df_clean = df.copy().reset_index(drop=True)
 print("rows flagged for inspection:", len(df_outliers))
 print("rows retained:", len(df_clean))
@@ -134,7 +151,7 @@ for ax, col in zip(axes, ["height_cm", "weight_kg"]):
     ax.set_title(col); ax.legend()
 plt.suptitle("Normal data: mean and median stay close"); plt.tight_layout(); plt.show()
 """
-nb["cells"][33]["source"] = "The IQR rule may flag valid tail observations even in a normal distribution. We inspect them, but we do not delete real people merely because their measurements are uncommon."
+nb["cells"][33]["source"] = "For approximately normal data, a value with `|z| > 3` is unusual and worth checking. It is not automatically wrong, so we do not delete a real person merely because their measurements are uncommon."
 nb["cells"][39]["source"] = 'df_clean.loc[0:4, ["person", "height_cm", "weight_kg", "allowed"]]'
 nb["cells"][40]["source"] = 'df_clean.loc[df_clean["height_cm"] > 170]'
 nb["cells"][41]["source"] = 'eligible_tall = df_clean.loc[(df_clean["height_cm"] >= 145) & (df_clean["height_cm"] <= 190) & (df_clean["weight_kg"] <= 90)]\nprint("inside simulated limits:", len(eligible_tall))\neligible_tall.head()'
@@ -157,15 +174,14 @@ nb["cells"][47]["source"] = """## 8. Your turn
 1. Compare mean and median for both normal numeric columns.
 2. Use `loc` to show visitors taller than 170 cm.
 3. Recalculate eligibility with a different **simulated** height limit.
-4. Count IQR flags without deleting them.
+4. Calculate z-scores and count `|z| > 3` flags without deleting them.
 5. Explain why mean imputation is reasonable here but may be poor for skewed data.
 """
 
-linked=[]
-for cell in nb["cells"]:
-    linked.append(cell)
-    linked.append({"cell_type":"markdown","metadata":{},"source":"🎬 [Open this lesson in the Pandas Ride illustration app](https://pandas-ride-normal-basics.streamlit.app/?stage=start)\n"})
-nb["cells"]=linked
+# No per-cell app link is emitted. The notebook carries ONE anchor near the top and a
+# "See it illustrated: step N" pointer per section. Colab hands every external link to
+# the browser with noopener semantics, so each click opens a brand-new tab: repeating
+# the link before every cell produced ~48 identical tabs, all landing on ?stage=start.
 nb["metadata"].setdefault("colab",{})["name"]="pandas_ride_normal_basics.ipynb"
 OUT.write_text(json.dumps(nb,ensure_ascii=False,indent=1),encoding="utf-8")
 print("Wrote",OUT,"with",len(linked),"cells")

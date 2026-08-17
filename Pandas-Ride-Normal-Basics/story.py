@@ -56,15 +56,14 @@ def build_raw(n=60, n_missing=6, n_duplicates=4, n_extreme=0, seed=7):
     return df
 
 
-def iqr_bounds(series, k=1.5):
-    """Return (Q1, Q3, IQR, lower, upper) — the notebook's helper."""
-    q1 = series.quantile(0.25)
-    q3 = series.quantile(0.75)
-    iqr = q3 - q1
-    return q1, q3, iqr, q1 - k * iqr, q3 + k * iqr
+def zscore_bounds(series, limit=3.0):
+    """Return mean, population standard deviation and the ±limit bounds."""
+    mean = series.mean()
+    std = series.std(ddof=0)
+    return mean, std, mean - limit * std, mean + limit * std
 
 
-def clean(raw, k=1.5, fill="mean"):
+def clean(raw, k=3.0, fill="mean"):
     """Run the notebook's whole cleaning pipeline, keeping every intermediate."""
     deduped = raw.drop_duplicates().reset_index(drop=True)
     labelled = deduped.copy()
@@ -79,11 +78,13 @@ def clean(raw, k=1.5, fill="mean"):
     mask = pd.Series(True, index=filled.index)
     bounds = {}
     for col in NUMERIC:
-        q1, q3, iqr, low, high = iqr_bounds(filled[col], k)
-        bounds[col] = dict(q1=q1, q3=q3, iqr=iqr, low=low, high=high)
+        mean, std, low, high = zscore_bounds(filled[col], k)
+        bounds[col] = dict(mean=mean, std=std, low=low, high=high)
         mask &= filled[col].between(low, high)
 
-    final = filled[mask].reset_index(drop=True)
+    # A large absolute z-score is a review flag, not proof that a real person is bad data.
+    # Keep every valid measurement; students can inspect the flagged rows separately.
+    final = filled.copy().reset_index(drop=True)
     final["allowed"] = np.where(final["height_cm"].between(145, 190) &
                                 final["weight_kg"].le(90), "Allowed", "Not Allowed")
     final["ride_check"] = "inside limits"
@@ -94,7 +95,7 @@ def clean(raw, k=1.5, fill="mean"):
                 stages=[("raw file", len(raw)),
                         ("after drop_duplicates", len(deduped)),
                         ("after checking missing values", len(labelled)),
-                        ("after the IQR filter", len(final))])
+                        ("after the z-score check", len(final))])
 
 
 # --------------------------------------------------------------- figures
@@ -151,32 +152,30 @@ def fig_box(df, cols=NUMERIC, title="Boxplot"):
     return _layout(fig, height=400, title=title)
 
 
-def fig_iqr_explained(series, k=1.5, title="The 1.5 × IQR fence"):
-    """Every visitor as a dot, with the four lines the rule actually computes."""
-    q1, q3, iqr, low, high = iqr_bounds(series, k)
+def fig_zscore_explained(series, limit=3.0, title="The ±3 z-score check"):
+    """Every visitor as a dot, with mean and three-standard-deviation bounds."""
+    mean, std, low, high = zscore_bounds(series, limit)
     values = series.dropna()
     inside = values.between(low, high)
     jitter = np.random.default_rng(1).normal(0, 0.10, len(values))
 
-    # drawn by hand rather than with add_box: plotly's own whiskers use plotly's own
-    # 1.5-IQR rule, which would contradict the fence the visitor just chose
+    # Drawn by hand so the visual shows standard-deviation bands explicitly.
     fig = go.Figure()
-    fig.add_hrect(y0=q1, y1=q3, fillcolor=CYAN, opacity=0.10, line_width=0)
-    for keep, colour, label in ((True, CYAN, "inside the fence"), (False, RED, "outlier")):
+    fig.add_hrect(y0=mean-std, y1=mean+std, fillcolor=CYAN, opacity=0.10, line_width=0)
+    for keep, colour, label in ((True, CYAN, "within ±3σ"), (False, RED, "review: |z| > 3")):
         sel = (inside == keep).to_numpy()
         if sel.any():
             fig.add_scatter(x=jitter[sel], y=values.to_numpy()[sel], mode="markers", name=label,
                             marker=dict(color=colour, size=8, line=dict(color=BG, width=1)))
-    for value, colour, dash, label in ((high, RED, "dot", f"upper fence  {high:.1f}"),
-                                       (q3, GREY, "dash", f"Q3  {q3:.1f}"),
-                                       (values.median(), CYAN, "solid",
-                                        f"median  {values.median():.1f}"),
-                                       (q1, GREY, "dash", f"Q1  {q1:.1f}"),
-                                       (low, RED, "dot", f"lower fence  {low:.1f}")):
+    for value, colour, dash, label in ((high, RED, "dot", f"+3σ  {high:.1f}"),
+                                       (mean+std, GREY, "dash", f"+1σ  {mean+std:.1f}"),
+                                       (mean, CYAN, "solid", f"mean  {mean:.1f}"),
+                                       (mean-std, GREY, "dash", f"−1σ  {mean-std:.1f}"),
+                                       (low, RED, "dot", f"−3σ  {low:.1f}")):
         fig.add_hline(y=value, line=dict(color=colour, width=2, dash=dash),
                       annotation_text=label, annotation_position="right",
                       annotation_font_color=colour, annotation_font_size=12)
-    fig.add_annotation(x=-0.40, y=(q1 + q3) / 2, text=f"IQR = {iqr:.2f}", showarrow=False,
+    fig.add_annotation(x=-0.40, y=mean, text=f"σ = {std:.2f}", showarrow=False,
                        font=dict(color=CYAN, size=13), bgcolor=BG)
     fig.update_xaxes(showticklabels=False, range=[-0.55, 0.55], zeroline=False)
     return _layout(fig, height=460, right=175, title=title,

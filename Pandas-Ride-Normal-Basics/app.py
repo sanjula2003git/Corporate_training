@@ -35,8 +35,8 @@ with st.sidebar:
     fill = st.radio("Fill the numeric holes with", ["mean", "median"], horizontal=True)
     st.caption("Change anything here and every page below re-runs.")
 
-# The 1.5 in "Q1 - 1.5 x IQR" is the notebook's, and the notebook's is the convention.
-K = 1.5
+# A normal-distribution lesson uses the conventional ±3 standard-deviation check.
+K = 3.0
 
 
 @st.cache_data(show_spinner="Writing the messy file...")
@@ -248,28 +248,25 @@ else:
             "- The **dots** are everything beyond it.")
 
     elif s["id"] == "iqr":
-        code("""q1 = df[col].quantile(0.25)
-q3 = df[col].quantile(0.75)
-iqr = q3 - q1
-low, high = q1 - 1.5 * iqr, q3 + 1.5 * iqr
-outliers = df[(df[col] < low) | (df[col] > high)]""")
+        code("""mean = df[col].mean()
+std = df[col].std(ddof=0)
+z = (df[col] - mean) / std
+unusual = df[z.abs() > 3]""")
         col = st.selectbox("Which column?", story.NUMERIC)
         bounds = run["bounds"][col]
         a, b, c, d = st.columns(4)
-        a.metric("Q1", f"{bounds['q1']:.2f}")
-        b.metric("Q3", f"{bounds['q3']:.2f}")
-        c.metric("IQR", f"{bounds['iqr']:.2f}")
-        d.metric("Fence", f"{bounds['low']:.1f} to {bounds['high']:.1f}")
-        st.plotly_chart(story.fig_iqr_explained(filled[col], K, f"{col} — fence at 1.5 × IQR"),
+        a.metric("Mean", f"{bounds['mean']:.2f}")
+        b.metric("Std dev", f"{bounds['std']:.2f}")
+        c.metric("Lower −3σ", f"{bounds['low']:.2f}")
+        d.metric("Upper +3σ", f"{bounds['high']:.2f}")
+        st.plotly_chart(story.fig_zscore_explained(filled[col], K, f"{col} — z-score inspection"),
                         width="stretch")
         out = filled[(filled[col] < bounds["low"]) | (filled[col] > bounds["high"])]
-        st.markdown(f"**{len(out)} outlier(s)** in `{col}`, in red above:")
+        st.markdown(f"**{len(out)} unusual value(s)** in `{col}` (`|z| > 3`), in red above:")
         if len(out):
             st.dataframe(out, width="stretch")
-        st.warning("**The 1.5 is a convention, not a law.** Nothing in statistics derives it — it is "
-                   "the number Tukey chose because it flags roughly 1 in 150 values from a normal "
-                   "distribution. Use a smaller multiplier and almost everyone becomes an outlier; "
-                   "use a larger one and almost nobody does. The data would not have changed.")
+        st.warning("**A |z| > 3 value is unusual, not automatically wrong.** Verify the measurement "
+                   "before changing or removing a real person's record.")
 
     elif s["id"] == "after":
         a, b = st.columns(2)
@@ -277,12 +274,11 @@ outliers = df[(df[col] < low) | (df[col] > high)]""")
                        width="stretch")
         b.plotly_chart(story.fig_before_after(filled, final, "weight_kg"),
                        width="stretch")
-        st.metric("Rows removed by the filter", len(run["outliers"]))
+        st.metric("Rows flagged by the z-score check", len(run["outliers"]))
         if len(run["outliers"]):
             st.dataframe(run["outliers"], width="stretch")
-        st.error("**Look at the 'after' boxes: new dots have appeared.** That is not a bug. Removing "
-                 "the extremes shrinks the IQR, so the fence moves inwards and the next-most-unusual "
-                 "visitors fall outside it. Loop this to zero and you will delete your dataset.")
+        st.info("The check runs once. Flagged records require verification; rarity alone is not a reason "
+                "to exclude a real visitor.")
 
     elif s["id"] == "iloc":
         st.markdown("Pick a slice and watch which cells it actually returns.")

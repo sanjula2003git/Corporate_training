@@ -16,7 +16,7 @@ PHASES = [
     ("The File You Were Sent", "Nobody hands you clean data."),
     ("The First Look", "Four functions, four different questions."),
     ("Cleaning", "Duplicates and empty cells, in that order."),
-    ("Distribution", "Boxplots, and the rule that draws the dots."),
+    ("Distribution", "Bell curves, standard deviation and z-scores."),
     ("Selecting Rows", "iloc counts. loc reads labels."),
     ("The Payoff", "What the cleaned table finally says."),
 ]
@@ -107,24 +107,22 @@ STEPS = [
          notebook="Section 5 — boxplots.",
          takeaway="The box holds the middle 50%. Everything interesting is at the edges."),
 
-    dict(id="iqr", phase=3, title="The 1.5 × IQR Rule", pandas="Finding Outliers",
-         tech="IQR = Q3 − Q1 · fence = Q1 − 1.5·IQR to Q3 + 1.5·IQR",
-         data="An arithmetic rule for 'unusually far from the crowd'.",
-         problem="Eyeballing outliers is not reproducible, and 'looks wrong to me' is not a method "
-                 "anyone can check.",
-         pandas_link="Compute the two fences and select what falls outside. Four lines, no library.",
-         notebook="Section 5 — the iqr_bounds() helper.",
-         takeaway="1.5 is a convention, not a law — it is the number Tukey picked, and it decides "
-                  "who counts as unusual."),
+    dict(id="iqr", phase=3, title="The ±3 Z-Score Check", pandas="Normal-Data Inspection",
+         tech="z = (x − mean) / standard deviation · inspect when |z| > 3",
+         data="A standardized distance from the mean for an approximately normal column.",
+         problem="Raw centimetres and kilograms use different scales, so distance must be standardized.",
+         pandas_link="Compute mean and standard deviation, then inspect records more than three "
+                     "standard deviations away.",
+         notebook="Section 5 — the z-score helper.",
+         takeaway="A large z-score means unusual, not wrong; verify the measurement before acting."),
 
-    dict(id="after", phase=3, title="After The Filter", pandas="What Removal Costs",
-         tech="df[mask] · and the new dots that appear",
-         data="The same two normally distributed columns after a one-pass IQR check.",
-         problem="New dots appear outside the whiskers. Remove those too and you can shrink your "
-                 "dataset to nothing.",
-         pandas_link="Run the rule once, deliberately, and say in writing that you did.",
-         notebook="Section 5 — before and after the IQR filter.",
-         takeaway="Removing an outlier is a decision you have to defend, not a cleaning step."),
+    dict(id="after", phase=3, title="After The Z-Score Check", pandas="Inspect, Do Not Auto-Delete",
+         tech="df[z.abs() > 3] · verify flagged measurements",
+         data="The normally distributed columns with unusual tail records identified.",
+         problem="A real person can be unusually tall, short, light or heavy without being a data error.",
+         pandas_link="Flag unusual records for verification and retain them unless evidence shows an error.",
+         notebook="Section 5 — z-score inspection and retention.",
+         takeaway="Normal-data cleaning uses z-scores for inspection, not automatic deletion."),
 
     dict(id="iloc", phase=4, title="iloc — By Position", pandas="Integer Location",
          tech="df.iloc[0:5, 0:2] — end excluded, like a Python list",
