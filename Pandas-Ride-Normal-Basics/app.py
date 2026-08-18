@@ -45,13 +45,16 @@ def get_raw(n, n_missing, n_duplicates, n_extreme):
                            n_extreme=n_extreme)
 
 
+# `k` is an explicit argument, not a read of the module-level K: st.cache_data keys on
+# this function's own source and arguments, so a K it closed over would be invisible to
+# the cache and a retuned K would keep serving the previous run's dict.
 @st.cache_data(show_spinner="Cleaning...")
-def get_run(n, n_missing, n_duplicates, n_extreme, fill):
-    return story.clean(get_raw(n, n_missing, n_duplicates, n_extreme), k=K, fill=fill)
+def get_run(n, n_missing, n_duplicates, n_extreme, fill, k):
+    return story.clean(get_raw(n, n_missing, n_duplicates, n_extreme), k=k, fill=fill)
 
 
 raw = get_raw(n, n_missing, n_duplicates, n_extreme)
-run = get_run(n, n_missing, n_duplicates, n_extreme, fill)
+run = get_run(n, n_missing, n_duplicates, n_extreme, fill, K)
 labelled, filled, final = run["labelled"], run["filled"], run["final"]
 stage = st.query_params.get("stage", "start")
 
