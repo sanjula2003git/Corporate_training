@@ -145,6 +145,8 @@ def header(s):
     b.write(s["challenge"])
     c.markdown("#### 3 · Where the AI comes in")
     c.write(s["ai_link"])
+    if s.get("plain"):
+        st.info(f"**In plain words.** {s['plain']}")
     st.markdown(f"#### 4 · What it looks like — `{s['tech']}`")
 
 
@@ -159,6 +161,28 @@ def footer(s):
     goto("start", "Overview", f"home_{s['id']}", cols[1])
     if i < len(bridge.STEPS) - 1:
         goto(bridge.ORDER[i + 1], f"{bridge.STEPS[i + 1]['scene']} ▶", f"next_{s['id']}", cols[2])
+
+
+def window_feature_tables():
+    """The eleven numbers the forest is handed, in words a first-time reader can read.
+
+    Rendered open rather than behind collapsed expanders: on this page the list
+    IS the lesson, and a student who has to click five times to find out what
+    `close_max` means will simply not click.
+    """
+    st.markdown(f"#### All {bridge.WINDOW_FEATURE_COUNT} clues, in plain English")
+    st.caption("The camera looks 5 times a second and the window is 6 seconds long, so every "
+               "\"in the window\" below means the last 30 frames. Grouped by the idea behind "
+               "them, because the groups are the lesson.")
+    for g in bridge.WINDOW_FEATURE_GROUPS:
+        st.markdown(f"##### {g['name']}  ·  {len(g['rows'])} column"
+                    f"{'s' if len(g['rows']) > 1 else ''}")
+        a, b = st.columns(2)
+        a.markdown(f"**What it is.** {g['idea']}")
+        b.markdown(f"**What we do with it.** {g['plan']}")
+        st.dataframe(pd.DataFrame(g["rows"],
+                                  columns=["Column", "What it is", "What it is for"]
+                                  ).set_index("Column"), width="stretch")
 
 
 def a_clip(kind):
@@ -237,10 +261,24 @@ else:
         st.caption("Every line above is a person lying in a road. Only two of them are hurt.")
 
     elif s["id"] == "clues":
+        st.markdown(
+            "The camera reports 10 numbers per frame, and every one of them describes **this "
+            "instant only**. A crash is not an instant, so on their own they cannot decide "
+            "anything.\n\n"
+            f"So we keep the last 6 seconds in memory and boil them down to "
+            f"**{bridge.WINDOW_FEATURE_COUNT} new numbers**. Those are what the model actually "
+            "sees. Read the table, then look at the two charts underneath — the same clues, "
+            "drawn for a real crash and for a false alarm.")
+        window_feature_tables()
+        st.markdown("#### The same clues, on two clips that look alike at first")
         c1 = a_clip("collision_down")
         c2 = a_clip("worker")
         st.plotly_chart(story.fig_signals(f, c1, "A real crash"), width="stretch")
         st.plotly_chart(story.fig_signals(f, c2, "A mechanic under a van"), width="stretch")
+        st.info("Both clips have somebody lying in the road for a long time, so `down_secs` "
+                "alone cannot separate them. What differs is the company it keeps: the crash "
+                "has a crowd that grows, hard braking and traffic that stops. The mechanic has "
+                "none of those.")
 
     elif s["id"] in ("frame_rule", "timer_rule", "forest"):
         board = get_board(level, wait)
@@ -250,7 +288,10 @@ else:
         st.dataframe(get_by_scenario(level, wait).set_index("Clip"), width="stretch")
         if s["id"] == "forest":
             forest = get_forest("v1")
+            st.markdown("#### Which clue the forest actually leaned on")
             st.plotly_chart(story.fig_importance(forest), width="stretch")
+            st.caption("Longer bar = that column changed the forest's mind more often. Every "
+                       "name here is explained on the *Clues That Only Exist In Time* page.")
 
     elif s["id"] == "sequence":
         st.info("This page explains the sequence network rather than training one. "

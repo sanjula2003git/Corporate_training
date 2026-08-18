@@ -87,6 +87,8 @@ def header(st_):
     b.write(st_["challenge"])
     c.markdown("#### 3 · Where the AI comes in")
     c.write(st_["ai_link"])
+    if st_.get("plain"):
+        st.info(f"**In plain words.** {st_['plain']}")
     st.markdown(f"#### 4 · What it looks like — `{st_['tech']}`")
 
 
@@ -103,9 +105,30 @@ def footer(st_):
         goto(bridge.ORDER[i + 1], f"{bridge.STEPS[i + 1]['scene']} ▶", f"next_{st_['id']}", cols[2])
 
 
+def measure_tables():
+    """Every column one compression produces, in words a first-time reader can read.
+
+    Rendered open rather than behind collapsed expanders: these names are the
+    app's whole vocabulary, and a student who has to click four times to find
+    out what `residual_cm` means will simply not click.
+    """
+    st.markdown(f"#### The {bridge.MEASURE_COUNT} numbers we take from every single push")
+    st.caption("The pad and the camera both report 50 times a second. All of that is boiled "
+               "down to one row per compression, with these columns on it.")
+    for g in bridge.MEASURE_GROUPS:
+        st.markdown(f"##### {g['name']}  ·  {len(g['rows'])} column"
+                    f"{'s' if len(g['rows']) > 1 else ''}")
+        a, b = st.columns(2)
+        a.markdown(f"**What it is.** {g['idea']}")
+        b.markdown(f"**What we do with it.** {g['plan']}")
+        st.dataframe(pd.DataFrame(g["rows"],
+                                  columns=["Column", "What it is", "What the coach does with it"]
+                                  ).set_index("Column"), width="stretch")
+
+
 def report_table():
     st.dataframe(story.report(comp, DEPTH_MIN, DEPTH_MAX).set_index("Rescuer"),
-                 use_container_width=True)
+                 width="stretch")
 
 
 # --------------------------------------------------------------- landing
@@ -128,7 +151,7 @@ if stage == "start":
     d.metric("Fatigue caught at", f"{fired:.0f} s" if fired else "never",
              help="Rescuer A, detected on the stroke against their own opening compressions.")
 
-    st.plotly_chart(story.fig_minutes(), use_container_width=True)
+    st.plotly_chart(story.fig_minutes(), width="stretch")
     st.caption("This curve is the rule of thumb every resuscitation course teaches, drawn out. "
                "It is illustration — no part of it comes from the simulation below.")
 
@@ -152,7 +175,7 @@ else:
     header(step)
 
     if step["id"] == "collapse":
-        st.plotly_chart(story.fig_minutes(), use_container_width=True)
+        st.plotly_chart(story.fig_minutes(), width="stretch")
         a, b, c = st.columns(3)
         a.metric("The rescue, start to finish", f"{story.RESCUE_SECONDS} s")
         b.metric("Compressions in that time", len(comp))
@@ -175,7 +198,7 @@ else:
             {"Question": "Should a shock be delivered?", "Answered by": "The AED. Only ever the AED.",
              "Why not the other one": "The coaching AI must never make, override or influence "
                                       "this decision"},
-        ]).set_index("Question"), use_container_width=True)
+        ]).set_index("Question"), width="stretch")
         st.error("**The boundary that does not move.** Nothing in this app or the notebook "
                  "decides about a shock. There is no branch anywhere in the code that could grow "
                  "into one, and adding one would be a different and regulated project.")
@@ -195,14 +218,14 @@ else:
                                                          "touch the patient."},
             {"Time": "112 – 210 s", "What is happening": "Rescuer B, fresh. Good depth, far too "
                                                          "slow — until the beat pulls them up."},
-        ]).set_index("Time"), use_container_width=True)
+        ]).set_index("Time"), width="stretch")
         st.plotly_chart(story.fig_whole_rescue(pad, DEPTH_MIN, DEPTH_MAX),
-                        use_container_width=True)
+                        width="stretch")
         st.caption("At this zoom every compression is one vertical stroke. The next page zooms "
                    "in far enough to read one.")
 
     elif step["id"] == "pad":
-        st.plotly_chart(story.fig_zoom(pad, DEPTH_MIN, DEPTH_MAX), use_container_width=True)
+        st.plotly_chart(story.fig_zoom(pad, DEPTH_MIN, DEPTH_MAX), width="stretch")
         st.markdown(
             "Read the two panels against each other. On the right the peaks are **lower**, they "
             "are **closer together**, and the troughs no longer come back down to the floor — "
@@ -219,7 +242,7 @@ else:
 
     elif step["id"] == "camera":
         st.plotly_chart(story.fig_posture(s["wrist"], s["elbow_pt"], s["shoulder"],
-                                          s["elbow_smooth"]), use_container_width=True)
+                                          s["elbow_smooth"]), width="stretch")
         st.markdown(
             "The cross is the centre of the sternum, where the hands belong. The dotted line is "
             "straight up from it: with good technique the shoulder sits on that line, directly "
@@ -229,7 +252,7 @@ else:
 
     elif step["id"] == "elbow":
         st.plotly_chart(story.fig_elbow_error(pad, s["curves"]["elbow"], s["elbow_measured"],
-                                              s["elbow_smooth"]), use_container_width=True)
+                                              s["elbow_smooth"]), width="stretch")
         raw_err = float(np.abs(s["elbow_measured"] - s["curves"]["elbow"]).mean())
         sm_err = float(np.abs(s["elbow_smooth"] - s["curves"]["elbow"]).mean())
         a, b, c = st.columns(3)
@@ -246,7 +269,7 @@ else:
             "chest travel. That is the whole reason depth comes from the pad.")
 
     elif step["id"] == "peaks":
-        st.plotly_chart(story.fig_peaks(pad, comp), use_container_width=True)
+        st.plotly_chart(story.fig_peaks(pad, comp), width="stretch")
         a, b, c = st.columns(3)
         a.metric("Compressions found", len(comp))
         b.metric("Time actually compressing", f"{s['hands_on']:.0f} s")
@@ -259,13 +282,17 @@ else:
             language="python")
         st.info("Three lines of rule and no library. Not everything that reads a signal has to "
                 "be a model.")
+        st.divider()
+        measure_tables()
 
     elif step["id"] == "release":
         st.plotly_chart(story.fig_depth_vs_stroke(comp, DEPTH_MIN, DEPTH_MAX),
-                        use_container_width=True)
+                        width="stretch")
+        st.markdown("**Each helper's averages.** One row per person, so the two can be compared.")
         st.dataframe(comp.groupby("rescuer")[["depth_cm", "stroke_cm", "residual_cm",
-                                              "rate_cpm", "elbow_deg"]].mean().round(2),
-                     use_container_width=True)
+                                              "rate_cpm", "elbow_deg"]].mean().round(2)
+                     .rename(columns=bridge.MEASURE_LABELS),
+                     width="stretch")
         st.markdown(
             "**`depth` and `stroke` are not the same number, and the gap between them is the "
             "most important thing on this page.**\n\n"
@@ -280,14 +307,14 @@ else:
         st.dataframe(pd.DataFrame(
             [{"The unit sees": a, "Light": b, "It says": c, "Why it ranks here": d}
              for a, b, c, d in story.RULE_ORDER]).set_index("The unit sees"),
-            use_container_width=True)
-        st.plotly_chart(story.fig_messages(comp), use_container_width=True)
-        st.plotly_chart(story.fig_lights(comp), use_container_width=True)
+            width="stretch")
+        st.plotly_chart(story.fig_messages(comp), width="stretch")
+        st.plotly_chart(story.fig_lights(comp), width="stretch")
         st.info("The list is in priority order, top to bottom, and only the first rule that "
                 "fires is spoken. Reorder it and you have built a different device.")
 
     elif step["id"] == "metronome":
-        st.plotly_chart(story.fig_metronome(comp), use_container_width=True)
+        st.plotly_chart(story.fig_metronome(comp), width="stretch")
         b_first = comp[comp.rescuer == "B"].head(1)
         a, b, c = st.columns(3)
         if len(b_first):
@@ -304,8 +331,8 @@ else:
             "reference.")
 
     elif step["id"] == "fatigue":
-        st.plotly_chart(story.fig_fatigue(comp, DEPTH_MIN, DEPTH_MAX), use_container_width=True)
-        st.dataframe(story.fatigue_summary(comp).set_index("Rescuer"), use_container_width=True)
+        st.plotly_chart(story.fig_fatigue(comp, DEPTH_MIN, DEPTH_MAX), width="stretch")
+        st.dataframe(story.fatigue_summary(comp).set_index("Rescuer"), width="stretch")
         a_part = comp[comp.rescuer == "A"]
         a, b, c = st.columns(3)
         a.metric("Rescuer A's peak depth fell",
@@ -338,7 +365,7 @@ else:
                 "Warn the standby": f"{warn:.0f} s" if warn is not None else "—",
                 "Call the swap": f"{call:.0f} s" if call is not None else "—",
                 "Why": reason})
-        st.dataframe(pd.DataFrame(rows).set_index("Rescuer"), use_container_width=True)
+        st.dataframe(pd.DataFrame(rows).set_index("Rescuer"), width="stretch")
         if alone:
             st.error("**Nobody else is here.** A unit that says *you are tiring, swap with "
                      "somebody* to a person who is completely alone has issued an instruction "
@@ -355,7 +382,7 @@ else:
                     "seconds** on the clock, or the fatigue detector from the previous page.")
 
     elif step["id"] == "handsoff":
-        st.plotly_chart(story.fig_ccf(s["compressing"], s["hands_on"]), use_container_width=True)
+        st.plotly_chart(story.fig_ccf(s["compressing"], s["hands_on"]), width="stretch")
         found, ccf_found = story.pauses_found(pad, peaks)
         a, b, c = st.columns(3)
         a.metric("Hands on the chest", f"{s['hands_on']:.0f} s")
@@ -366,7 +393,7 @@ else:
                     "because the real unit is not handed one:")
         st.dataframe(pd.DataFrame(
             [{"Pause": f"{a_:.1f} s", "Until": f"{b_:.1f} s", "Length": f"{b_ - a_:.1f} s"}
-             for a_, b_ in found]).set_index("Pause"), use_container_width=True)
+             for a_, b_ in found]).set_index("Pause"), width="stretch")
         st.caption(f"That gives {100 * ccf_found:.1f}% against the {100 * s['ccf']:.1f}% we get "
                    "from knowing where the pauses were. A peak is the *bottom* of a push, so "
                    "measuring gaps peak-to-peak counts part of a compression cycle into each "
@@ -379,7 +406,7 @@ else:
         for state in story.AED_STATES:
             light, message = story.aed_coach(state, hands)
             rows.append({"AED state": state, "Light": light.upper(), "What the unit says": message})
-        st.dataframe(pd.DataFrame(rows).set_index("AED state"), use_container_width=True)
+        st.dataframe(pd.DataFrame(rows).set_index("AED state"), width="stretch")
         st.error("**There is no fifth state, and there never will be.** Nothing above decides "
                  "whether to shock. It reads what the AED is doing and coaches around it. "
                  "Whether a rhythm is shockable, and whether to deliver, belongs to a regulated "
@@ -388,11 +415,11 @@ else:
             "The loudest thing this state machine ever says is **resume**, because the seconds "
             "after a shock — while a stunned helper waits for permission — are where rescues "
             "are lost.")
-        st.plotly_chart(story.fig_ccf(s["compressing"], s["hands_on"]), use_container_width=True)
+        st.plotly_chart(story.fig_ccf(s["compressing"], s["hands_on"]), width="stretch")
         st.caption("The second red block is that AED pause, priced in seconds.")
 
     elif step["id"] == "timeline":
-        st.plotly_chart(story.fig_timeline(comp, DEPTH_MIN, DEPTH_MAX), use_container_width=True)
+        st.plotly_chart(story.fig_timeline(comp, DEPTH_MIN, DEPTH_MAX), width="stretch")
         report_table()
         st.markdown(
             "Top to bottom: depth with each compression coloured by what the unit said, rate "
@@ -428,7 +455,7 @@ else:
         a.metric("Green light now", f"{100 * (comp.light == 'green').mean():.0f}%")
         b.metric("Told to press deeper", int((comp.message == "Press deeper").sum()))
         c.metric("Told to ease off", int((comp.message == "Ease off - too deep").sum()))
-        st.plotly_chart(story.fig_messages(comp), use_container_width=True)
+        st.plotly_chart(story.fig_messages(comp), width="stretch")
         st.error("**And the boundary that does not move:** the coach never decides about a "
                  "shock. That belongs to a regulated AED, and this project models only the "
                  "stand-clear state around it.")

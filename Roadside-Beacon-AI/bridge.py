@@ -7,8 +7,14 @@ to anything a beginner would not already know.
   challenge - why that is hard for people
   ai_link   - what the AI is actually being asked to do
   tech      - the one-line technical idea
+  plain     - the technical name in everyday words, for a first-time reader
   notebook  - which notebook section this matches
   takeaway  - one sentence to remember
+
+'plain' exists because every page heading carries a term of art - "state
+machine", "random forest", "1D CNN", "Dijkstra". A student meeting those for
+the first time should never have to guess, so each page says what its own
+jargon means before it uses it.
 """
 
 PHASES = [
@@ -30,6 +36,8 @@ STEPS = [
                    "closest to the rider are the least likely to have training.",
          ai_link="The camera on the pole already saw it. The only question is whether it does "
                  "anything with what it saw.",
+         plain="The 'golden minutes' are the first few minutes after an injury, when what a bystander "
+               "does matters more than anything that happens later in hospital.",
          notebook="Section 1 - the golden minutes.",
          takeaway="The camera is already there. Everything in this project is about the "
                   "minutes before the ambulance arrives."),
@@ -42,6 +50,9 @@ STEPS = [
                    "behind a van does not exist at all. Nothing about this is certain.",
          ai_link="Everything downstream is built on ten numbers per frame: who is on the road, "
                  "who is lying down, how close two tracks came, how fast traffic is moving.",
+         plain="A 'box' is the rectangle a detector draws around something it recognises. A 'track' is "
+               "an id number that stays with that box as it moves, so the system knows it is the same "
+               "motorcycle a second later.",
          notebook="Sections 2 and 3 - the camera, and the virtual junction.",
          takeaway="Build the whole system on what a box can honestly tell you, and no more."),
 
@@ -53,6 +64,9 @@ STEPS = [
                    "there for two minutes looks exactly like one who arrived two seconds ago.",
          ai_link="This is the argument for time. The question is never 'what is in this frame', "
                  "it is 'what changed, and in what order'.",
+         plain="'One frame' means a single still picture, five of which arrive every second. The point "
+               "of this page is that a still picture has no past, and a crash is entirely about what "
+               "changed.",
          notebook="Section 4 - five ways to be lying in a road.",
          takeaway="A crash is not a shape. It is a sequence."),
 
@@ -64,6 +78,8 @@ STEPS = [
                    "seconds held in memory.",
          ai_link="We build eleven numbers over a six-second window and hand those to the model, "
                  "instead of the raw picture.",
+         plain="'Feature engineering' means building better numbers out of the raw ones. The camera "
+               "reports what is true right now; we work out what has been true for the last six seconds.",
          notebook="Section 5 - the clues that only exist in time.",
          takeaway="Most of the work in a camera system is deciding what to remember."),
 
@@ -75,6 +91,8 @@ STEPS = [
                    "and a fallen board. It never sees a rollover, because nobody is on the road.",
          ai_link="Useful as a floor to measure against, not as a system. Every later model has "
                  "to beat it on both counts, not one.",
+         plain="A 'baseline' is the simplest thing that could possibly work, built on purpose so later "
+               "models have something honest to beat. It is not meant to be good.",
          notebook="Section 6 - model 1, one frame.",
          takeaway="A rule with no memory is loud about the wrong things and silent about the "
                   "right ones."),
@@ -88,6 +106,8 @@ STEPS = [
                    "an incident, although the lane is blocked and he is in shock.",
          ai_link="A timer buys accuracy with time. It cannot tell two identical pictures apart, "
                  "however long it stares at them.",
+         plain="A 'rule-based' model is one a person wrote out as if-this-then-that. Nothing is learned "
+               "from data: every number in it was chosen by a human being.",
          notebook="Section 7 - model 2, a timer.",
          takeaway="Waiting longer fixes noise. It does not fix a rule that was asking the "
                   "wrong question."),
@@ -100,6 +120,8 @@ STEPS = [
                    "both is identical, and from a red light, which stops the traffic just as hard.",
          ai_link="A random forest over the eleven window features. It catches every incident, "
                  "including the rollover with nobody visible and the rider who stands up.",
+         plain="A 'random forest' is a crowd of simple yes/no flowcharts, each shown a different slice "
+               "of the old clips. They vote, and the share of votes becomes the probability.",
          notebook="Section 8 - model 3, a forest over a window.",
          takeaway="Give a model the right few seconds of history and it beats every rule we "
                   "wrote by hand."),
@@ -112,6 +134,9 @@ STEPS = [
                    "false alarms as the forest. It is also half a second slower every time.",
          ai_link="Neither one wins. The forest is quicker off the mark, the network is calmer. "
                  "The real difference is that nobody had to invent the network's features.",
+         plain="A '1D CNN' slides a small pattern-detector along a strip of time, the way you might run "
+               "a finger along a line of text. It learns the shapes worth noticing instead of being told "
+               "them.",
          notebook="Section 10 - model 4, a sequence network.",
          takeaway="The question is not which model is better. It is which mistake you would "
                   "rather make."),
@@ -124,6 +149,8 @@ STEPS = [
                    "saved is more false calls to a control room that has other work.",
          ai_link="One dial, and the whole system's character is set by it. This page lets you "
                  "move it and watch both costs at once.",
+         plain="'Confirmation' means refusing to act on the first sign of something. The dial sets how "
+               "many seconds the alarm must stay on before anybody is actually called.",
          notebook="Section 10 - the waiting dial.",
          takeaway="There is no correct setting. There is a choice, and it should be made by "
                   "the people who answer the calls."),
@@ -137,6 +164,8 @@ STEPS = [
                    "at every signal cycle.",
          ai_link="Nothing about the model changed to fix it. The mix of clips changed, to look "
                  "like the road instead of a tidy dataset.",
+         plain="The 'training mix' is which examples you put in the pile the model learns from. Get the "
+               "proportions wrong and the model learns your pile instead of the road.",
          notebook="Section 11 - why we kept eight red lights for every four crashes.",
          takeaway="A model trained on a balanced pile learns a world that does not exist."),
 
@@ -149,6 +178,8 @@ STEPS = [
                    "and number plates have no business in a control room recording.",
          ai_link="The AI never waits to be certain before calling. It calls, says what it is "
                  "unsure about, and lets a person decide.",
+         plain="A 'packet' is just the bundle of information sent with the call - where, when, how many "
+               "people, what is visible. Nothing here is a medical opinion.",
          notebook="Section 12 - the dispatch packet.",
          takeaway="Call first, and be honest about what you cannot see."),
 
@@ -160,6 +191,8 @@ STEPS = [
                    "someone standing on the wrong side of moving traffic.",
          ai_link="A grid of costs, drawn on the screen in red, before a single first-aid word "
                  "is shown.",
+         plain="A 'cost map' scores every square metre by how dangerous it is. High cost means keep out, "
+               "and the routing step below reads these numbers rather than distances.",
          notebook="Section 13 - the hazard map.",
          takeaway="The first job is not first aid. It is not creating a second casualty."),
 
@@ -170,6 +203,8 @@ STEPS = [
          challenge="The shortest way is almost always across the live lane. The safe way is "
                    "longer, and has to be shown, not described.",
          ai_link="The same algorithm a map app uses, with danger in place of minutes.",
+         plain="'Dijkstra' is the classic shortest-route method a maps app uses. Feed it danger instead "
+               "of minutes and 'shortest' turns into 'safest'.",
          notebook="Section 14 - the safe way in.",
          takeaway="Show the route. Nobody follows a paragraph while panicking."),
 
@@ -181,6 +216,8 @@ STEPS = [
                    "worst possible thing to put on a public screen.",
          ai_link="The AI chooses between approved videos. It does not write them. A dispatcher "
                  "can take the screen at any moment, and that branch is checked first.",
+         plain="A 'state machine' is a system that is always in exactly one named step, with fixed rules "
+               "for which step may come next. It cannot wander, and it cannot invent a step.",
          notebook="Section 15 - choosing an approved module.",
          takeaway="The AI picks the page. Clinicians wrote the page."),
 
@@ -193,6 +230,8 @@ STEPS = [
                    "Pixels to centimetres depends on the lens, the angle and the clothing.",
          ai_link="Feedback only on what is visible. Depth and pressure need an instrumented "
                  "mat or pad, not a camera.",
+         plain="'Feedback' here means the screen reacting to what the bystander is doing. The hard part "
+               "is being honest about which of those things a camera can genuinely see.",
          notebook="Section 16 - watching the helper, and what the camera cannot measure.",
          takeaway="Give feedback only on what you can actually see."),
 
@@ -204,6 +243,8 @@ STEPS = [
                    "response team, and 'somebody call an ambulance' into 'you, in the red "
                    "jacket, press this button'.",
          ai_link="A small assignment problem on the screen, solved by distance.",
+         plain="An 'assignment problem' is the job of matching people to tasks at the lowest total cost. "
+               "Ours is small enough to solve by asking who is nearest to what.",
          notebook="Section 17 - giving the crowd jobs.",
          takeaway="Four named jobs beat twenty willing strangers."),
 
@@ -216,6 +257,8 @@ STEPS = [
                    "with them.",
          ai_link="What the system can honestly claim: the call goes out sooner, the lane clears "
                  "sooner, and fewer people move a rider who should not be moved.",
+         plain="A 'benchmark' is running the same situation many times, with and without the system, and "
+               "comparing. It measures the change, not whether anybody survived.",
          notebook="Section 18 - did it help.",
          takeaway="Measure the minutes you can change, not the outcomes you cannot."),
 
@@ -227,10 +270,77 @@ STEPS = [
                    "add one more feature.",
          ai_link="It says what it cannot see. It never says what is wrong with a person. It "
                  "never delays the call while it thinks.",
+         plain="A 'boundary' is a rule the system is not allowed to cross even when crossing it would "
+               "help. These are decided once, in advance, and never at runtime.",
          notebook="Sections 19 and 20 - what it gets wrong, and the rules that do not move.",
          takeaway="A system that knows what it cannot see is safer than one that is usually "
                   "right."),
 ]
+
+# --------------------------------------------------------------- the 11 clues
+# story.WINDOW_FEATURES is a bare list of column names, and "close_max" teaches
+# nobody anything. Every feature the forest is given is named here in three
+# parts - the column, what it actually is, and what it is FOR.
+# The camera runs at 5 frames a second and the window is 6 seconds, so
+# "the window" below always means the last 30 frames.
+WINDOW_FEATURE_GROUPS = [
+    dict(name="Is somebody down, and for how long?",
+         idea="The camera's guess at posture, cleaned up and then timed.",
+         plan="Turn a flickering yes/no into a stopwatch. A crash is not somebody being down; "
+              "it is somebody being down and staying down.",
+         rows=[
+             ("down_secs", "Seconds somebody has been lying in the road without a break.",
+              "The single most important clue, and the one every hand-written rule is built on."),
+             ("still_frac", "What share of the last 6 seconds that person did not move at all.",
+              "Separates an injured rider from somebody who fell and is already getting up."),
+             ("road_frac", "What share of the last 6 seconds a person was inside the carriageway.",
+              "Throws away everyone on the pavement, who are not our problem."),
+         ]),
+    dict(name="What the people around them are doing",
+         idea="A headcount near the spot, and how fast that headcount is changing.",
+         plan="People walking towards one point is the signal a human watcher would name first, "
+              "and it costs nothing to compute.",
+         rows=[
+             ("crowd", "How many people are standing near the person on the ground, right now.",
+              "A crowd forms around a crash; it does not form around a mechanic."),
+             ("crowd_growth", "How much that headcount has grown in the last 3 seconds.",
+              "A bus queue is large but steady. A crash crowd appears from nothing."),
+         ]),
+    dict(name="What the traffic is doing",
+         idea="How much the traffic has slowed, and how many vehicles have stopped.",
+         plan="Deliberately the *change* in flow, never the raw speed. An early version fed in "
+              "plain speed and the forest learned 'this clip is slowish, so it is a crash' - a "
+              "fact about our clips, not about crashes.",
+         rows=[
+             ("flow_drop", "How much average traffic speed has fallen over the last 4 seconds.",
+              "Traffic stops for a blockage - and for a red light, which is why it cannot decide alone."),
+             ("stopped_max", "The most vehicles seen stopped at once during the window.",
+              "Confirms the lane is genuinely blocked rather than merely slow."),
+         ]),
+    dict(name="The moment of the impact itself",
+         idea="The most violent thing the tracker saw in the last 6 seconds.",
+         plan="These three are what tell a crash from a near miss, which look identical for the "
+              "first half second and then diverge completely.",
+         rows=[
+             ("decel_peak", "The hardest braking seen during the window, in m/s squared.",
+              "Emergency braking happens just before a collision, and just before a near miss."),
+             ("gap_min", "The smallest gap two road users came to, in metres.",
+              "A gap near zero means they touched; a small gap means they nearly did."),
+             ("close_max", "The fastest two tracks were closing on each other, in m/s.",
+              "How hard the impact would have been - the difference between a scare and an injury."),
+         ]),
+    dict(name="Fire and debris",
+         idea="How much smoke or dust is visible, scored 0 to 1.",
+         plan="The one clue that works when nobody is visible at all, which is exactly the case "
+              "the person-based rules miss completely.",
+         rows=[
+             ("smoke_max", "The most smoke or dust seen at any point in the window.",
+              "Catches the rollover where the rider is still inside the vehicle."),
+         ]),
+]
+
+WINDOW_FEATURE_COUNT = sum(len(g["rows"]) for g in WINDOW_FEATURE_GROUPS)
+
 
 BY_ID = {s["id"]: s for s in STEPS}
 ORDER = [s["id"] for s in STEPS]

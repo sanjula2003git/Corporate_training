@@ -134,7 +134,30 @@ def header(step):
     b.write(step["challenge"])
     c.markdown("#### 3 · Where the AI comes in")
     c.write(step["ai_link"])
+    if step.get("plain"):
+        st.info(f"**In plain words.** {step['plain']}")
     st.markdown(f"#### 4 · What it looks like — `{step['tech']}`")
+
+
+def report_feature_tables():
+    """Every column the model is given, in words a first-time reader can read.
+
+    Rendered open rather than behind collapsed expanders: on this page the list
+    IS the lesson, and a student who has to click four times to find out what
+    `person_responsive_unknown` means will simply not click.
+    """
+    st.markdown(f"#### All {bridge.REPORT_FEATURE_COUNT} columns the model is given")
+    st.caption("Every one of them describes what the caller SAID, never what was true. "
+               "The model never sees the right answer at the moment it has to decide.")
+    for g in bridge.REPORT_FEATURE_GROUPS:
+        st.markdown(f"##### {g['name']}  ·  {len(g['rows'])} column"
+                    f"{'s' if len(g['rows']) > 1 else ''}")
+        a, b = st.columns(2)
+        a.markdown(f"**What it is.** {g['idea']}")
+        b.markdown(f"**What we do with it.** {g['plan']}")
+        st.dataframe(pd.DataFrame(g["rows"],
+                                  columns=["Column", "What it is", "What it is for"]
+                                  ).set_index("Column"), width="stretch")
 
 
 def footer(step):
@@ -153,7 +176,7 @@ def footer(step):
 
 
 def show_doors(caption=True):
-    st.plotly_chart(story.fig_doors(states, chances, notes), use_container_width=True)
+    st.plotly_chart(story.fig_doors(states, chances, notes), width="stretch")
     if caption:
         st.caption("Green opens · amber is waiting for a person · red stays shut · "
                    "grey has nothing usable · blue means the next cabinet has one. "
@@ -164,7 +187,7 @@ def decision_table():
     rows = [{"Compartment": story.NAMES[c], "Door": states[c],
              "Chance it is needed": round(chances[c], 2), "Why": notes[c]}
             for c in story.COMPARTMENTS]
-    st.dataframe(pd.DataFrame(rows).set_index("Compartment"), use_container_width=True)
+    st.dataframe(pd.DataFrame(rows).set_index("Compartment"), width="stretch")
 
 
 # --------------------------------------------------------------- landing
@@ -192,7 +215,7 @@ if stage == "start":
              delta_color="inverse")
 
     st.subheader("The two systems, on the same unseen emergencies")
-    st.dataframe(board.set_index("System"), use_container_width=True)
+    st.dataframe(board.set_index("System"), width="stretch")
 
     st.subheader("Learning journey")
     for i, step in enumerate(bridge.STEPS, 1):
@@ -223,7 +246,7 @@ else:
     elif step["id"] == "inventory":
         table = pd.DataFrame(cabinet).T
         table.index = [story.NAMES[i] for i in table.index]
-        st.dataframe(table, use_container_width=True)
+        st.dataframe(table, width="stretch")
         unusable = [story.NAMES[c] for c in story.COMPARTMENTS if not story.usable(cabinet[c])]
         if unusable:
             st.error("Nothing usable in: " + ", ".join(unusable))
@@ -238,7 +261,7 @@ else:
             "- **Never leaves** — the communication unit is bolted in.")
 
     elif step["id"] == "report":
-        st.plotly_chart(story.fig_needed(answers), use_container_width=True)
+        st.plotly_chart(story.fig_needed(answers), width="stretch")
         st.markdown(
             "The right-hand chart is the one that decides what kind of model we need. **Almost "
             "no emergency needs only one compartment.** So the question is never *which one is "
@@ -256,14 +279,19 @@ else:
                 "no dispatcher yet": rep["dispatcher_confirmed"] == 0})
         st.markdown("#### How often the report does not match what is really happening")
         st.dataframe((pd.DataFrame(rows).mean() * 100).round(1)
-                     .rename("% of calls").to_frame().T, use_container_width=True)
+                     .rename("% of calls").to_frame().T, width="stretch")
+        st.info("Read that row again before moving on. None of these are bugs — they are what "
+                "frightened people on a phone actually sound like, and the model has to be "
+                "useful anyway.")
+        st.divider()
+        report_feature_tables()
 
     elif step["id"] == "rules":
         opened = [story.NAMES[c] for c, v in story.rule_cabinet(REPORT).items() if v]
         st.markdown("**On the call in the sidebar, the rulebook opens:** " + ", ".join(opened))
         board, rules_opened, model_opened, test_answers = get_scores()
         st.plotly_chart(story.fig_misses(rules_opened, model_opened, test_answers),
-                        use_container_width=True)
+                        width="stretch")
         st.markdown(
             "Look at the red bars. On some compartments the rules are **perfect** — nothing "
             "missed at all. On others they fall apart.\n\n"
@@ -296,7 +324,7 @@ else:
             rows.append({"The call": title,
                          "The rulebook opens": ", ".join(
                              story.NAMES[c] for c, v in story.rule_cabinet(rep).items() if v)})
-        st.dataframe(pd.DataFrame(rows).set_index("The call"), use_container_width=True)
+        st.dataframe(pd.DataFrame(rows).set_index("The call"), width="stretch")
 
         st.markdown("#### The one that matters: `unknown` is not `no`")
         rows = []
@@ -306,7 +334,7 @@ else:
                          "The rulebook": "opens the AED" if story.rule_cabinet(rep)["aed"]
                                          else "leaves it shut"})
         st.dataframe(pd.DataFrame(rows).set_index("Is the person responding?"),
-                     use_container_width=True)
+                     width="stretch")
         st.error("`unknown` and `no` get the same treatment, and they should not. Not knowing "
                  "whether somebody is breathing is not the same as knowing they are fine.")
 
@@ -314,7 +342,7 @@ else:
         st.markdown("#### What the model says about the call in the sidebar")
         ranked = pd.Series(chances).sort_values(ascending=False)
         st.dataframe(ranked.rename("chance it is needed").to_frame()
-                     .rename(index=story.NAMES).T, use_container_width=True)
+                     .rename(index=story.NAMES).T, width="stretch")
         st.markdown(
             "Not a yes or a no — a **ranking, with a number attached**. That is the whole point "
             "of this step. Set *is the person responding* to `unknown` in the sidebar and watch "
@@ -326,9 +354,9 @@ else:
 
     elif step["id"] == "gain":
         board, rules_opened, model_opened, test_answers = get_scores()
-        st.dataframe(board.set_index("System"), use_container_width=True)
+        st.dataframe(board.set_index("System"), width="stretch")
         st.plotly_chart(story.fig_misses(rules_opened, model_opened, test_answers),
-                        use_container_width=True)
+                        width="stretch")
         st.markdown(
             "Two compartments have no bars for either system. Those are the ones the caller "
             "reports reliably, and there the plain rules were already perfect. A model cannot "
@@ -365,7 +393,7 @@ else:
                          person_responsive="no", dispatcher_confirmed=0)
         w_chances, w_states, w_notes, _ = story.cabinet_decides(
             collapsed, story.fresh_cabinet(), model)
-        st.plotly_chart(story.fig_doors(w_states, w_chances, w_notes), use_container_width=True)
+        st.plotly_chart(story.fig_doors(w_states, w_chances, w_notes), width="stretch")
         st.caption("Somebody has collapsed and is not responding. No dispatcher on the line yet.")
         st.markdown(
             "Look at the AED. The model is as sure as it ever gets. The shelf has one. It works.\n\n"
@@ -382,13 +410,13 @@ else:
             {"Weight": story.W_MISSING, "What it is avoiding": "missing something needed"},
             {"Weight": story.W_SHORTAGE, "What it is avoiding": "leaving the next emergency short"},
             {"Weight": story.W_DELAY, "What it is avoiding": "each extra door to read"},
-        ]).set_index("Weight"), use_container_width=True)
+        ]).set_index("Weight"), width="stretch")
 
         allowed = set(story.COMPARTMENTS)
         full = story.fresh_cabinet()
         points = {c: story.door_opens_above(c, {**chances, c: 0.0}, full, allowed)
                   for c in story.COMPARTMENTS}
-        st.plotly_chart(story.fig_thresholds(points), use_container_width=True)
+        st.plotly_chart(story.fig_thresholds(points), width="stretch")
         st.markdown(
             "Handing over a spare pair of gloves costs almost nothing. Handing over **the** "
             "defibrillator costs a great deal — there is exactly one, and it is the only thing "
@@ -416,7 +444,7 @@ else:
 
     elif step["id"] == "day":
         days, fills = get_days()
-        st.plotly_chart(story.fig_day(days, fills), use_container_width=True)
+        st.plotly_chart(story.fig_day(days, fills), width="stretch")
         rows = []
         for strategy, label in story.STRATEGIES:
             for f in fills:
@@ -426,7 +454,7 @@ else:
                              "Items missed": int(log.missed.sum()),
                              "Handed over unnecessarily": int(log.extra.sum()),
                              "Items left at the end": int(left)})
-        st.dataframe(pd.DataFrame(rows).set_index("Strategy"), use_container_width=True)
+        st.dataframe(pd.DataFrame(rows).set_index("Strategy"), width="stretch")
         st.markdown(
             "Follow the green line and the amber line and watch where they separate.\n\n"
             "- **Full shelves.** The lines meet. There is plenty of everything, so being careful "
@@ -442,15 +470,15 @@ else:
                    "item handed out in the morning is one that is not there in the afternoon.")
 
     elif step["id"] == "sensors":
-        st.plotly_chart(story.fig_events(), use_container_width=True)
+        st.plotly_chart(story.fig_events(), width="stretch")
         st.dataframe(pd.DataFrame(story.EVENT_LOG,
                                   columns=["Time", "Compartment", "What happened"])
-                     .set_index("Time"), use_container_width=True)
+                     .set_index("Time"), width="stretch")
         st.markdown("#### What the cabinet works out from that")
         st.dataframe(pd.DataFrame(
             [{"Compartment": story.NAMES.get(w, w), "Finding": note}
              for w, note in story.read_events()]).set_index("Compartment"),
-            use_container_width=True)
+            width="stretch")
         st.markdown(
             "The forced AED door is the obvious one — never unlocked, opened anyway, and two "
             "seconds later the defibrillator left the cabinet.\n\n"
@@ -462,7 +490,7 @@ else:
     elif step["id"] == "misuse":
         table, line = get_anomaly()
         st.dataframe(table[["what", "really_wrong", "rules", "forest", "result"]]
-                     .set_index("what"), use_container_width=True)
+                     .set_index("what"), width="stretch")
         st.metric("Anything stranger than this gets flagged", f"{line:.3f}",
                   help="Set by allowing 5% false alarms on days we know were normal — "
                        "not by trying numbers until the answers looked good.")
