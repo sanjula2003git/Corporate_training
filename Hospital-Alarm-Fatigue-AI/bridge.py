@@ -56,15 +56,18 @@ PHASES = [
 STEPS = [
     dict(id="flood", phase=0, ward="Too Many Alarms", ai="The Real Problem",
          step="1 - Understand the problem",
-         doing="Before choosing any model, look at what is going wrong: the machines ask for "
-               "attention far more often than two nurses can give it.",
+         doing="Look at what is actually going wrong, before choosing any model.",
          tech="hundreds of alarms a day, and almost none of them need anybody",
-         site="A machine beeps. The nurse walks over. The clip that measures oxygen had slipped "
-              "off the patient's finger. The patient was fine. This repeats all night.",
-         challenge="Each machine watches one patient and beeps at anything odd. Fine for one bed. "
-                   "On a ward of twenty, the beeping never stops.",
-         ai_link="The machines already spot every odd number. We want something that looks at all "
-                 "twenty patients and picks the few beeps worth walking over for.",
+         site=("A machine beeps.",
+               "The nurse walks over.",
+               "The oxygen clip had slipped off the finger.",
+               "The patient was fine."),
+         challenge=("Each machine watches one patient.",
+                    "It beeps at anything odd.",
+                    "Twenty patients, two nurses: it never stops."),
+         ai_link=("The machines already spot every odd number.",
+                  "We want one that looks at all twenty patients.",
+                  "It picks the few beeps worth walking over for."),
          plain="'Alarm fatigue' is what happens when something beeps so often that people stop "
                "noticing it - like a car alarm in your street. You still hear it. You have heard it "
                "a hundred times this month and it was nothing every time, so you carry on with what "
@@ -81,15 +84,17 @@ STEPS = [
 
     dict(id="ward", phase=1, ward="Twenty Patients, Seven Signals", ai="The Input Data",
          step="2 - Collect the data",
-         doing="Write down what can be measured, and how often. A model can only use what it is "
-               "handed, so this list is the ceiling on everything later.",
+         doing="List what can be measured. A model can only use what it is given.",
          tech="heart rate, oxygen, breathing, blood pressure, temperature, signal quality, medicines",
-         site="Every patient is wired to a monitor. Seven readings arrive every 2 minutes. Blood "
-              "pressure comes from an arm cuff, so it can be 16 minutes old.",
-         challenge="There is no single normal. One healthy heart beats 62 times a minute, another "
-                   "88. The same number means different things for different people.",
-         ai_link="We also hand over two things the monitor ignores: how good the signal is right "
-                 "now, and which medicine was just given.",
+         site=("Each patient is wired to a monitor.",
+               "Seven readings arrive every 2 minutes.",
+               "Blood pressure is up to 16 minutes old."),
+         challenge=("Everyone has a different normal.",
+                    "One healthy heart beats 62 a minute, another 88.",
+                    "The same number means different things."),
+         ai_link=("We add two things the monitor ignores.",
+                  "How good the signal is right now.",
+                  "Which medicine was just given."),
          plain="'Input data' means everything the model is allowed to look at - as far as the model "
                "is concerned, nothing else in the world exists. Here it is seven measurements per "
                "patient, arriving every 2 minutes.",
@@ -105,15 +110,17 @@ STEPS = [
 
     dict(id="noise", phase=1, ward="A Loose Clip Or A Sick Patient?", ai="Real Signal Or False Reading",
          step="3 - Explore the data (EDA)",
-         doing="The exploring step. Look at the data and ask what separates a real emergency from "
-               "a false alarm, because that decides which columns are worth building.",
+         doing="Explore the data: what separates a real emergency from a false alarm?",
          tech="big, sudden and brief = the equipment - small, slow and lasting = the patient",
-         site="A clip slips. A patient scratches their nose. A pad peels off. The number jumps, "
-              "the machine beeps, and the patient is fine.",
-         challenge="Equipment misbehaves three times as often as a patient gets ill, and it looks "
-                   "worse: a glitch jumps, while illness drifts slowly.",
-         ai_link="So we look for a clue that tells them apart: the monitor's own signal-quality "
-                 "number, and how the patient looked half an hour ago.",
+         site=("A clip slips off a finger.",
+               "The number jumps. The machine beeps.",
+               "The patient is fine."),
+         challenge=("Equipment goes wrong far more often than patients get ill.",
+                    "A glitch jumps. Illness drifts slowly.",
+                    "The glitch looks worse."),
+         ai_link=("Use the monitor's signal-quality number.",
+                  "Compare with the same patient 30 minutes ago.",
+                  "Together they tell the two apart."),
          plain="When the equipment is the reason a number looks wrong - a clip that slipped, a pad "
                "that peeled off - we call it a false reading. The number really was measured; it "
                "just says nothing about the patient. (In the notebook and in most textbooks this is "
@@ -133,15 +140,16 @@ STEPS = [
 
     dict(id="actions", phase=2, ward="Five Things The System Can Do", ai="The Action Space",
          step="4 - Decide what the system may do",
-         doing="Decide what the system is allowed to do at all. Five choices instead of two is "
-               "what makes every later page possible.",
+         doing="Decide what moves the system is allowed to make.",
          tech="ignore - measure again - watch that bed - call the nurse - call for emergency help",
-         site="A nurse who is unsure rarely calls for help. They take the reading again, or check "
-              "that bed on the next round.",
-         challenge="If the only choices are alarm or silence, every slightly odd reading has to "
-                   "become an interruption.",
-         ai_link="We give the computer five moves instead of two. Only two of them interrupt a "
-                 "person; the other three are free.",
+         site=("An unsure nurse rarely calls for help.",
+               "They take the reading again.",
+               "Or check that bed on the next round."),
+         challenge=("Alarm or silence is only two choices.",
+                    "So every odd reading becomes an interruption."),
+         ai_link=("We give the computer five moves.",
+                  "Only two interrupt a person.",
+                  "The other three are free."),
          plain="The 'action space' is just the list of moves the system is allowed to make, the way "
                "a chess piece has a list of legal moves. Ours has five, and three of them cost "
                "nobody any time.",
@@ -158,15 +166,17 @@ STEPS = [
 
     dict(id="budget", phase=2, ward="Five Interruptions An Hour", ai="The Attention Budget",
          step="4 - Decide what the system may do",
-         doing="Fix a hard limit before anything is built: how often the system may interrupt "
-               "somebody. Ignore this and the ward switches it off.",
+         doing="Set a hard limit on interrupting people, before anything is built.",
          tech="600 readings an hour - 5 interruptions allowed - 60 minutes in each nurse's hour",
-         site="An hour is 60 minutes for every nurse. Two nurses do not make the hour longer - "
-              "they mean two jobs can happen at once.",
-         challenge="An alert costs about 8 minutes. Twenty an hour is more work than two nurses "
-                   "can finish, so a queue builds and never clears.",
-         ai_link="So attention is treated like money: five interruptions an hour, and the computer "
-                 "decides which five are worth it.",
+         site=("An hour is 60 minutes for every nurse.",
+               "Two nurses do not make the hour longer.",
+               "They mean two jobs at once."),
+         challenge=("One alert costs about 8 minutes.",
+                    "Twenty an hour is more than two nurses can finish.",
+                    "A queue builds and never clears."),
+         ai_link=("Attention is treated like money.",
+                  "Five interruptions an hour.",
+                  "The computer picks which five."),
          plain="An 'attention budget' means what it sounds like. There is only so much of a nurse's "
                "time in an hour, and spending it on one patient is spending it away from another.",
          figure="Four numbers, then a chart. The numbers: how many readings arrive each hour across "
@@ -185,14 +195,16 @@ STEPS = [
 
     dict(id="limits", phase=3, ward="The Monitor On The Wall", ai="Fixed Thresholds",
          step="5 - Build a baseline",
-         doing="Build the simple baseline every hospital already uses. Anything cleverer has to "
-               "beat it, or it is not worth having.",
+         doing="Build the baseline every hospital already uses, so there is something to beat.",
          tech="beep if any single number leaves its allowed range",
-         site="Give each measurement a high and a low line. Cross one and it beeps. That is what "
-              "most monitors do today.",
-         challenge="Six of our twenty patients sit near a line all week and are well. Their bed "
-                   "beeps constantly, so the ward learns to ignore it.",
-         ai_link="We keep it underneath as a safety net, and use its score as the bar to beat.",
+         site=("Each measurement gets a high and a low line.",
+               "Cross one and it beeps.",
+               "Most monitors still work this way."),
+         challenge=("Six of our twenty patients sit near a line all week.",
+                    "They are well.",
+                    "Their bed beeps, so the ward stops listening."),
+         ai_link=("Keep it underneath as a safety net.",
+                  "Use its score as the bar anything cleverer must beat."),
          plain="A 'threshold' is a cut-off line. Above it the machine beeps, below it stays quiet, "
                "and nothing else about the patient is taken into account.",
          figure="Every alert this method sent, sorted by what actually caused it: a real "
@@ -206,15 +218,15 @@ STEPS = [
 
     dict(id="score", phase=3, ward="The Early Warning Score", ai="A Hand-Written Risk Model",
          step="5 - Build a baseline",
-         doing="A second baseline: the paper scoring chart from real ward walls. How far do you "
-               "get by adding a few points together?",
+         doing="A second baseline: the paper scoring chart from real ward walls.",
          tech="points for each abnormal reading, call a nurse at 5, an emergency at 7",
-         site="Give points for how abnormal each reading is, add them up, and act when the total "
-              "passes a line. Most wards have this chart on the wall.",
-         challenge="Points only arrive once a number is clearly abnormal. A patient drifting "
-                   "downhill inside the normal range scores zero.",
-         ai_link="We keep the good idea - several signals must agree - and try to get it working "
-                 "earlier.",
+         site=("Points for how abnormal each reading is.",
+               "Add them up.",
+               "Act when the total passes 5."),
+         challenge=("Points arrive only once a number is clearly abnormal.",
+                    "A patient drifting inside the normal range scores zero."),
+         ai_link=("Keep the good idea: several signals must agree.",
+                  "Try to get it working earlier."),
          plain="'Hand-written model' means a person decided the rules in advance. Nothing is learned "
                "from data: somebody chose the points, and the computer only does the adding up.",
          figure="The same ward, scored by this method: how many alerts it sends per hour, how many "
@@ -229,15 +241,16 @@ STEPS = [
 
     dict(id="clues", phase=4, ward="What A Good Nurse Notices", ai="Feature Engineering",
          step="6 - Feature engineering",
-         doing="Build better columns out of the raw ones. In most projects this is where the "
-               "biggest gain comes from, before any model is chosen.",
+         doing="Build better columns out of the raw readings.",
          tech="this patient's own normal - which way it is moving - a spike-proof average",
-         site="An experienced nurse does not read the screen. They notice this patient is not how "
-              "they were an hour ago.",
-         challenge="None of that is in the data. 'Different from an hour ago' is not a column the "
-                   "monitor gives you.",
-         ai_link="So we build it: each patient's own normal, the change over 30 minutes, and an "
-                 "average that quietly drops one-off spikes.",
+         site=("A good nurse does not read the screen.",
+               "They notice this patient changed since an hour ago."),
+         challenge=("That is not in the data.",
+                    "'Changed since an hour ago' is not a column the monitor gives."),
+         ai_link=("So we build it.",
+                  "Each patient's own normal.",
+                  "The change over 30 minutes.",
+                  "An average that drops one-off spikes."),
          plain="'Feature engineering' means making new columns out of the ones you already have. The "
                "monitor gives you a heart rate; we work out whether that heart rate is high for this "
                "particular person.",
@@ -252,15 +265,16 @@ STEPS = [
 
     dict(id="forest", phase=4, ward="Learning From Past Patients", ai="Random Forest",
          step="7 - Train models",
-         doing="The training step. Show the computer several days of the ward with the real events "
-               "marked, and let it find the patterns itself.",
+         doing="Train a model: let the computer find the patterns itself.",
          tech="150 simple flowcharts vote on 27 clues at once",
-         site="Show a machine a few days of the ward, answers included, and let it work out what "
-              "came before a patient got worse.",
-         challenge="It is far more accurate than the rules. But it needs one fixed level of worry, "
-                   "and no single level suits both a quiet night and a bad one.",
-         ai_link="So we use it to put patients in order of concern, and decide separately how far "
-                 "down that list we can afford to go.",
+         site=("Show the computer a few days of the ward.",
+               "Mark where real trouble happened.",
+               "Let it find what came before."),
+         challenge=("Far more accurate than the rules.",
+                    "But it needs one fixed level of worry.",
+                    "No level suits every night."),
+         ai_link=("Use it to rank patients by concern.",
+                  "Decide separately how far down the list we can afford."),
          plain="A 'random forest' is a crowd of simple yes/no flowcharts, each shown a different "
                "slice of the data. They all vote, and the share of votes becomes the risk number.",
          figure="The alert level this model was given, chosen once on a separate tuning day, and "
@@ -275,14 +289,15 @@ STEPS = [
 
     dict(id="sequence", phase=4, ward="Reading The Whole Hour", ai="LSTM",
          step="7 - Train models",
-         doing="Try the deep-learning option, so the comparison is fair: give a model the whole "
-               "hour in order instead of hand-built summaries.",
+         doing="Try the deep-learning option, so the comparison is fair.",
          tech="30 readings in order, and learning what to forget",
-         site="A nurse looking at an hour of the chart sees a shape, not a number.",
-         challenge="Our built columns assumed 30 minutes was the interesting gap. If the real "
-                   "pattern is faster or slower, they miss it.",
-         ai_link="So we hand a network the whole hour, reading by reading, and let it find the "
-                 "shape - including what to ignore.",
+         site=("A nurse reading an hour of chart sees a shape.",
+               "Not a number."),
+         challenge=("Our columns assumed 30 minutes was the interesting gap.",
+                    "A faster or slower pattern is missed."),
+         ai_link=("Give a network the whole hour, in order.",
+                  "Let it find the shape itself.",
+                  "And learn what to ignore."),
          plain="An 'LSTM' reads readings in order, the way you read a sentence, keeping a small "
                "memory as it goes. That memory is what lets it tell a passing blip from a steady "
                "drift.",
@@ -298,14 +313,15 @@ STEPS = [
 
     dict(id="ranking", phase=5, ward="Who Is Top Of The List?", ai="Ranking, Not Thresholds",
          step="8 - Evaluate",
-         doing="The evaluation step. Stop asking whether a model is accurate; ask how much it "
-               "catches for an amount of noise the ward can live with.",
+         doing="Evaluate: how much does each method catch, for noise we can afford?",
          tech="events caught, at every possible alert rate",
-         site="Ask each method to sort the ward, most worrying patient first.",
-         challenge="Counting alerts at one setting tells you nothing. Turn any method up and it "
-                   "catches more; turn it down and it catches less.",
-         ai_link="So we test every setting at once, and read every method at the same place: the "
-                 "budget we can afford.",
+         site=("Ask each method to sort the ward.",
+               "Most worrying patient first."),
+         challenge=("One setting tells you nothing.",
+                    "Turn it up and it catches more.",
+                    "Turn it down and it catches less."),
+         ai_link=("Test every setting at once.",
+                  "Read all methods at the budget we can afford."),
          plain="'Ranking' asks a different question from alarming. Not 'is this patient in danger?' "
                "but 'of everyone here, who should be looked at first?'",
          figure="One line per method. Going right means allowing more alerts an hour - note the "
@@ -321,15 +337,15 @@ STEPS = [
 
     dict(id="manager", phase=5, ward="Spending The Five", ai="Attention-Budget Optimizer",
          step="9 - Turn predictions into decisions",
-         doing="A risk number is not a decision. Hand the system five tokens an hour and make it "
-               "choose when to spend them.",
+         doing="Turn a risk number into a decision.",
          tech="a bucket of tokens, and a level of worry that moves with what is left",
-         site="On a quiet night a nurse will check a hunch. In the worst ten minutes of a bad "
-              "shift, only a certainty moves them.",
-         challenge="A fixed level cannot do that. The right answer depends on how busy the ward "
-                   "is, not only on the patient.",
-         ai_link="So the level moves with what is left. Full bucket: check a maybe. Nearly empty: "
-                 "only near-certainties - and always an emergency.",
+         site=("On a quiet night a nurse checks a hunch.",
+               "In the worst ten minutes, only a certainty moves them."),
+         challenge=("A fixed level cannot do that.",
+                    "The right answer depends on how busy the ward is."),
+         ai_link=("The level moves with the budget left.",
+                  "Full bucket: check a maybe.",
+                  "Nearly empty: only certainties, and always an emergency."),
          plain="An 'optimizer' here is not heavy maths. It is simply the part that decides how to "
                "spend a limited budget, using a risk number it did not work out itself.",
          figure="Alerts sent in each hour of the test period. The dashed red line is the budget you "
@@ -345,14 +361,14 @@ STEPS = [
 
     dict(id="patient", phase=5, ward="One Patient, Minute By Minute", ai="The Policy In Action",
          step="9 - Turn predictions into decisions",
-         doing="Averages hide what a rule does to a person, so follow one patient and label every "
-               "reading with the move the system chose.",
+         doing="Follow one patient, and label every reading with the move chosen.",
          tech="every reading marked with the move it produced",
-         site="Follow one patient from the first sign of trouble to the crisis.",
-         challenge="A scoreboard averages over everybody. It cannot show whether this person was "
-                   "reached in time.",
-         ai_link="Every mark on the chart is the computer choosing: re-check, watch that bed, call "
-                 "the nurse, escalate.",
+         site=("Follow one patient.",
+               "From the first sign of trouble to the crisis."),
+         challenge=("Averages hide what happens to a person.",
+                    "A scoreboard cannot show who was reached in time."),
+         ai_link=("Every mark is the computer choosing.",
+                  "Re-check, watch, call the nurse, escalate."),
          plain="A 'policy' is the rule that turns a risk number into a move. Same numbers, different "
                "policy, completely different ward.",
          figure="The purple line is the computer's level of worry about this one patient over time. "
@@ -368,15 +384,16 @@ STEPS = [
 
     dict(id="nurses", phase=5, ward="The Nurse's Shift", ai="A Queue With Two Servers",
          step="10 - Test against the real world",
-         doing="Sending an alert is not somebody arriving. Simulate the nurses walking, and judge "
-               "each method on patients reached rather than alerts sent.",
+         doing="Test against reality: only two nurses exist, and they have to walk.",
          tech="8 minutes for a call, 20 for an emergency, emergencies jump the queue",
-         site="Nobody is treated by an alert. A nurse has to walk over, and there are only two of "
-              "them.",
-         challenge="When more work arrives than two people can do, a queue forms and never clears. "
-                   "Right alerts wait behind wrong ones.",
-         ai_link="So every method is scored on patients reached before the crisis, not on alerts "
-                 "fired.",
+         site=("Nobody is treated by an alert.",
+               "A nurse has to walk over.",
+               "There are only two of them."),
+         challenge=("More work than two people can do builds a queue.",
+                    "It never clears.",
+                    "Right alerts wait behind wrong ones."),
+         ai_link=("Score each method on patients reached in time.",
+                  "Not on alerts sent."),
          plain="'A queue with two servers' is the supermarket-till idea: alerts arrive whenever they "
                "like, but only two people can serve them, so a rush builds a line.",
          figure="Four columns for each method: how many alerts an hour it sends, how many nurse "
@@ -391,15 +408,17 @@ STEPS = [
 
     dict(id="scoreboard", phase=5, ward="What The Ward Would Choose", ai="The Comparison",
          step="11 - Compare and choose",
-         doing="The final comparison. Same ward, same patients, same days - only the decision rule "
-               "changes, so the rows can be read against each other.",
+         doing="Compare every method on the same days, then choose.",
          tech="the five methods, side by side, on the numbers a ward sister asks about",
-         site="The questions a ward sister asks: was anybody missed, did a nurse arrive in time, "
-              "how much warning, how many false alarms, how much work.",
-         challenge="No method wins every column. The loud one is answered late, the quiet one "
-                   "misses people, the accurate one leaves the budget unspent.",
-         ai_link="So we judge on the one a patient would care about: did somebody get there in "
-                 "time?",
+         site=("The questions a ward sister asks.",
+               "Was anybody missed?",
+               "Did a nurse arrive in time?",
+               "How many false alarms?"),
+         challenge=("No method wins every column.",
+                    "The loud one is answered late.",
+                    "The quiet one misses people."),
+         ai_link=("Judge on what a patient would care about.",
+                  "Did somebody get there in time?"),
          plain="'Metrics' are the columns you agree to be judged on. Choosing them badly is how a "
                "system passes its own test and still fails the ward.",
          figure="The same four methods on the numbers that matter, drawn as bars so the trade-offs "

@@ -94,6 +94,19 @@ DISCLAIMER = ("Educational simulation on invented patients. Nothing here is a me
               "part of it may be used to decide the care of a real person.")
 
 
+def lines(column, value):
+    """Short bullets, not a paragraph.
+
+    Three columns of prose side by side is a wall of text at the top of every
+    page. The registry holds these as tuples of short fragments; a plain string
+    still renders, so a page left as prose does not break.
+    """
+    if isinstance(value, (list, tuple)):
+        column.markdown("\n".join(f"- {line}" for line in value))
+    else:
+        column.write(value)
+
+
 def header(s):
     """The five parts of every page, in the same order every time.
 
@@ -116,11 +129,11 @@ def header(s):
         st.markdown(f"**What we are doing on this page, and why.** {s['doing']}")
     a, b, c = st.columns(3)
     a.markdown("#### 1 · On the ward")
-    a.write(s["site"])
+    lines(a, s["site"])
     b.markdown("#### 2 · Why it is hard")
-    b.write(s["challenge"])
+    lines(b, s["challenge"])
     c.markdown("#### 3 · Where the computer comes in")
-    c.write(s["ai_link"])
+    lines(c, s["ai_link"])
     if s.get("plain"):
         st.info(f"**In plain words.** {s['plain']}")
     st.markdown(f"#### 4 · What it looks like — `{s['tech']}`")
