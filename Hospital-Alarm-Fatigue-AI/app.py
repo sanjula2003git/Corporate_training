@@ -160,18 +160,93 @@ def feature_tables():
                                   ).set_index("Column"), width="stretch")
 
 
-def scoreboard_table():
-    st.dataframe(board.set_index("Model"), width="stretch")
+def score_columns():
+    """Column labels and hover help for the scoreboard.
+
+    Seven bare numbers, some of which should go up and some of which should go
+    down, is not readable by a first-time visitor. Every column now says in
+    words what it counts and which direction is good.
+    """
+    n = len(events)
+    minutes = 60 * n_nurses
+    return {
+        "Model": st.column_config.TextColumn(
+            "Way of choosing",
+            help="Each row is one rule for deciding who to interrupt the nurse about."),
+        "Alerts/hr": st.column_config.NumberColumn(
+            "Alerts an hour",
+            help=f"How often this rule interrupts somebody, for the whole ward. "
+                 f"You have allowed {budget} an hour."),
+        "Never alerted": st.column_config.NumberColumn(
+            "Missed completely",
+            help=f"Patients who got into trouble and this rule never made a sound about, out of "
+                 f"{n}. Lower is better, and 0 is what you want."),
+        "Nurse arrived in time": st.column_config.NumberColumn(
+            "Nurse got there in time",
+            help=f"The column that matters. Of the {n} patients who got into trouble, how many had "
+                 f"a nurse at the bedside before it became a crisis. Higher is better; {n} is perfect."),
+        "Early warning (min)": st.column_config.NumberColumn(
+            "Warning time (min)",
+            help="Minutes between the first alert and the crisis, typically. More minutes means "
+                 "more time to act, so higher is better."),
+        "False alarms": st.column_config.NumberColumn(
+            "False alarms",
+            help="Alerts raised about a patient who turned out to be fine. Every one of these is "
+                 "what teaches staff to stop listening."),
+        "Nurse min/hr": st.column_config.NumberColumn(
+            "Nurse minutes an hour",
+            help=f"How much nursing time answering these alerts eats every hour. {n_nurses} "
+                 f"nurse(s) have {minutes} minutes an hour between them, so anything above "
+                 f"{minutes} cannot actually happen."),
+        "Response (min)": st.column_config.NumberColumn(
+            "Wait for a nurse",
+            help="Once an alert is raised, how long the patient typically waits before a nurse "
+                 "arrives. Lower is better."),
+    }
+
+
+def scoreboard_table(explain=False):
+    """The scoreboard. With `explain`, it also says how to read itself."""
+    n = len(events)
+    minutes = 60 * n_nurses
+    if explain:
+        st.markdown(
+            "Every row below is **one rule for deciding who to interrupt the nurse about**. Same "
+            "ward, same patients, same day — the only thing that changes is the rule, so the rows "
+            "can be compared directly.")
+        a, b = st.columns(2)
+        a.success(
+            f"**Read this column first: _Nurse got there in time_.** {n} patients on this ward got "
+            f"into real trouble. This is how many of them had a nurse at the bedside before it "
+            f"became a crisis. Higher is better, and {n} out of {n} would be perfect.")
+        b.warning(
+            f"**Then read what it cost: _Alerts an hour_, _False alarms_, _Nurse minutes_.** You "
+            f"allowed {budget} alerts an hour, and {n_nurses} nurse(s) have only {minutes} minutes "
+            f"an hour between them. A rule that beeps at everything looks good in the first column "
+            f"and is unusable on a real ward.")
+    st.dataframe(board, hide_index=True, width="stretch", column_config=score_columns())
+    if explain:
+        st.caption(
+            "Hover any column heading to see what it counts. Rule 1 beeps at everything: it does "
+            "reach people, and it costs more nursing time than the ward has. Rule 3 is the "
+            "quietest and misses patients completely. The last row is the one that is handed a "
+            "budget and has to spend it well. There is no rule 4 here — it is trained in the "
+            "notebook, but it needs TensorFlow, which does not fit in a free Streamlit container.")
 
 
 # --------------------------------------------------------------- landing
 if stage == "start":
     st.title("🏥 Hospital Alarm-Fatigue Manager")
-    st.warning(DISCLAIMER)
     st.markdown(
-        "A nurse has a limited amount of attention. We may interrupt that nurse "
-        f"**{budget} times an hour** for the whole ward. **Which {budget}?**  \n"
-        "That question — not predicting who gets sick — is what this app is about.")
+        "The machines beside a hospital bed beep all day. Most of those beeps turn out to be "
+        "nothing, so after a while people stop hearing them. That is the problem this app is "
+        "about.")
+    st.markdown(
+        f"One nurse cannot chase every beep. On this ward we allow **{budget} interruptions "
+        f"an hour** — {budget} for all the patients put together.")
+    st.markdown(
+        f"So the question is simply: **which {budget}?** The app is not trying to guess who "
+        "will fall ill. It is deciding whose beep is worth a nurse walking over right now.")
 
     best = board.sort_values(["Nurse arrived in time", "Early warning (min)"],
                              ascending=False).iloc[0]
@@ -186,7 +261,7 @@ if stage == "start":
     st.caption("Being louder does not create more emergencies. It only buries the ones you have.")
 
     st.subheader("The scoreboard, at your current settings")
-    scoreboard_table()
+    scoreboard_table(explain=True)
 
     st.subheader("Learning journey")
     for i, s in enumerate(bridge.STEPS, 1):
@@ -382,7 +457,7 @@ else:
 
     elif s["id"] == "scoreboard":
         st.plotly_chart(story.fig_scoreboard(board, budget, len(events)), width="stretch")
-        scoreboard_table()
+        scoreboard_table(explain=True)
         st.markdown(
             "**What it still gets wrong.** The ward is invented, and every number is a statement about "
             "the simulator rather than about a hospital. The budget is a real cost that somebody pays. "
