@@ -8,6 +8,7 @@ The rules, the thresholds and the actions are the same as the notebook's.
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from sklearn.ensemble import RandomForestClassifier
 
 BG = "#0e1117"
@@ -401,57 +402,141 @@ def _layout(fig, height=400, **kw):
 
 def fig_fatigue():
     a = np.arange(1, 41)
+    real = 100 * np.clip(0.35 / a, 0, 1)
+    checked = 100 * np.exp(-a / 9.0)
     fig = go.Figure()
-    fig.add_scatter(x=a, y=100 * np.clip(0.35 / a, 0, 1), name="% of alarms that are real",
-                    line=dict(color=CYAN, width=3))
-    fig.add_scatter(x=a, y=100 * np.exp(-a / 9.0), name="% a nurse still checks",
-                    line=dict(color=RED, width=3))
-    return _layout(fig, xaxis_title="alarms per hour on the ward", yaxis_title="percent")
+    fig.add_scatter(x=a, y=real, name="% of alarms that are real", line=dict(color=CYAN, width=3),
+                    hovertemplate="At %{x} alarms an hour<br>only <b>%{y:.0f}%</b> of them are a "
+                                  "real emergency<extra></extra>")
+    fig.add_scatter(x=a, y=checked, name="% a nurse still checks", line=dict(color=RED, width=3),
+                    hovertemplate="At %{x} alarms an hour<br>a nurse still walks over to "
+                                  "<b>%{y:.0f}%</b> of them<extra></extra>")
+    # The part that is going wrong, marked on the picture rather than left to the caption.
+    fig.add_vrect(x0=15, x1=40, fillcolor=RED, opacity=0.10, line_width=0,
+                  annotation_text="the alarm has stopped working here",
+                  annotation_position="top right", annotation_font_color="white")
+    fig.add_annotation(x=3, y=real[2], ax=60, ay=-45, text="quiet ward: worth checking",
+                       font_color="white", arrowcolor=CYAN)
+    return _layout(fig, xaxis_title="alarms per hour on the ward", yaxis_title="percent",
+                   hovermode="x unified")
 
 
 def fig_patient_day(ward, patient, day, title):
     part = ward[(ward.patient == patient) & (ward.day == day)]
     hours = (part.minute.to_numpy() - part.minute.min()) / 60.0
     fig = go.Figure()
-    fig.add_scatter(x=hours, y=part.hr, name="heart rate", line=dict(color=RED, width=1.2))
-    fig.add_scatter(x=hours, y=part.rr * 4, name="breaths/min (x4)", line=dict(color=GREEN, width=1.2))
-    fig.add_scatter(x=hours, y=part.spo2, name="SpO2 %", line=dict(color=CYAN, width=1.2))
+    for col, name, colour, unit in ((part.hr, "heart rate", RED, "beats/min"),
+                                    (part.rr * 4, "breaths/min (x4)", GREEN, "x4"),
+                                    (part.spo2, "SpO2 %", CYAN, "%")):
+        fig.add_scatter(x=hours, y=col, name=name, line=dict(color=colour, width=1.2),
+                        hovertemplate=f"{name}: %{{y:.0f}} {unit}<br>hour %{{x:.1f}}<extra></extra>")
+
+    # Mark the readings the equipment got wrong. Without this the student is told
+    # "every spike is a sensor" and has to take it on trust.
+    art = part.artifact.to_numpy() == 1 if "artifact" in part else np.zeros(len(part), bool)
+    if art.any():
+        # A tick along the top, not a marker on the heart-rate line: the glitch
+        # can be in any of the three signals, and pinning it to one of them puts
+        # the mark on a perfectly ordinary reading.
+        top = float(max(part.hr.max(), (part.rr * 4).max(), part.spo2.max())) * 1.04
+        fig.add_scatter(x=hours[art], y=np.full(int(art.sum()), top), mode="markers",
+                        name="equipment glitch, not the patient",
+                        marker=dict(color=AMBER, symbol="triangle-down", size=10),
+                        hovertemplate="<b>Equipment glitch at hour %{x:.1f}</b><br>a clip or pad "
+                                      "slipped, so one of the lines below jumps<br>the patient was "
+                                      "fine<extra></extra>")
     tr = part.trouble.to_numpy()
     if tr.any():
         fig.add_vrect(x0=hours[tr == 1].min(), x1=hours[tr == 1].max(),
                       fillcolor=RED, opacity=0.14, line_width=0,
-                      annotation_text="real deterioration", annotation_font_color="white")
+                      annotation_text="the patient really was getting worse here",
+                      annotation_font_color="white")
     return _layout(fig, title=title, xaxis_title="hour of the day", yaxis_title="value")
 
 
 def fig_alarm_sources(counts):
-    fig = go.Figure(go.Bar(x=list(counts.values()), y=list(counts.keys()), orientation="h",
-                           marker_color=[GREEN, AMBER, AMBER, GREY, GREY]))
+    values, labels = list(counts.values()), list(counts.keys())
+    total = max(sum(values), 1)
+    share = [100 * v / total for v in values]
+    fig = go.Figure(go.Bar(
+        x=values, y=labels, orientation="h", marker_color=[GREEN, AMBER, AMBER, GREY, GREY],
+        customdata=share,
+        hovertemplate="%{y}<br><b>%{x} alerts</b> - %{customdata:.0f}% of everything it "
+                      "sent<extra></extra>"))
+    fig.add_annotation(x=values[0], y=labels[0], ax=90, ay=0, font_color="white", arrowcolor=GREEN,
+                       text="only this bar is a patient")
     return _layout(fig, height=330, xaxis_title="number of alerts",
                    title="What a fixed-limit monitor was actually beeping about")
 
 
 def fig_noise_vs_illness(test):
+    """The EDA chart: five measurements, averaged twice - once during a real
+    deterioration, once during a false reading.
+
+    Two panels, not one. Signal quality is a 0-1 number and the other four run
+    to 20-odd, so drawn on a single axis the one pair that carries the lesson is
+    two invisible slivers on the floor of the chart. Traces are added before any
+    annotation: a shape or annotation attached to a subplot that has no trace
+    yet is silently dropped.
+    """
     sick = test[(test.trouble == 1) & (test.mins_to_crisis < 30)]
     glitch = test[(test.artifact == 1) & (test.trouble == 0)]
-    look = ["hr_off", "rr_off", "spo2_off", "hr_smooth_d30", "quality"]
-    labels = ["heart rate vs own normal", "breathing vs own normal", "oxygen vs own normal",
-              "heart rate change / 30 min", "sensor quality (0-1)"]
-    fig = go.Figure()
-    fig.add_bar(x=labels, y=sick[look].mean().values, name="real deterioration", marker_color=RED)
-    fig.add_bar(x=labels, y=glitch[look].mean().values, name="sensor glitch", marker_color=GREY)
-    return _layout(fig, barmode="group", title="The clue that separates a patient from a loose wire")
+    off = ["hr_off", "rr_off", "spo2_off", "hr_smooth_d30"]
+    off_labels = ["heart rate vs<br>own normal", "breathing vs<br>own normal",
+                  "oxygen vs<br>own normal", "heart rate change<br>over 30 min"]
+    series = [("real deterioration", sick, RED), ("false reading (equipment)", glitch, GREY)]
+
+    fig = make_subplots(rows=1, cols=2, column_widths=[0.72, 0.28], horizontal_spacing=0.12,
+                        subplot_titles=("How far from this patient's own normal",
+                                        "How good the signal was"))
+    for name, frame, colour in series:
+        fig.add_bar(x=off_labels, y=frame[off].mean().values, name=name, marker_color=colour,
+                    legendgroup=name,
+                    hovertemplate=f"<b>{name}</b><br>%{{x}}<br>average: %{{y:.2f}}<extra></extra>",
+                    row=1, col=1)
+    for name, frame, colour in series:
+        fig.add_bar(x=["signal quality"], y=[frame["quality"].mean()], name=name, marker_color=colour,
+                    legendgroup=name, showlegend=False,
+                    hovertemplate=f"<b>{name}</b><br>signal quality: %{{y:.2f}} out of 1<br>"
+                                  f"1 means the sensor was perfectly attached<extra></extra>",
+                    row=1, col=2)
+
+    gap = float(sick["quality"].mean() - glitch["quality"].mean())
+    fig.add_annotation(row=1, col=2, x=0, y=max(sick["quality"].mean(), glitch["quality"].mean()),
+                       ay=-40, font_color="white", arrowcolor=AMBER,
+                       text=f"<b>this is the one that separates them</b><br>"
+                            f"quality holds up in real illness and collapses<br>"
+                            f"in a false reading - a gap of {abs(gap):.2f} out of 1")
+    fig.update_yaxes(range=[0, 1.15], row=1, col=2)
+    fig.update_yaxes(title_text="distance from normal", row=1, col=1)
+    fig = _layout(fig, barmode="group", height=470,
+                  title="Real deterioration or a loose wire? The five clues, side by side")
+    # The two subplot titles sit where the main title would land, so it needs its
+    # own strip of margin rather than overlapping them.
+    fig.update_layout(margin_t=95)
+    return fig
 
 
 def fig_importance(forest):
     imp = pd.Series(forest.feature_importances_, index=FEATURES).sort_values()[-12:]
-    fig = go.Figure(go.Bar(x=imp.values, y=imp.index, orientation="h", marker_color=CYAN))
+    fig = go.Figure(go.Bar(
+        x=imp.values, y=imp.index, orientation="h", marker_color=CYAN,
+        hovertemplate="%{y}<br>the forest leans on this <b>%{x:.3f}</b> worth<br>"
+                      "(all clues together add up to 1)<extra></extra>"))
     return _layout(fig, height=430, xaxis_title="how much the forest relies on this clue",
                    title="The 12 clues the forest uses most")
 
 
 def fig_budget_curve(test, events, hours, budget):
+    """Events caught against alerts per hour, for every setting of each method.
+
+    The x axis is logarithmic, and on a log axis Plotly reads shape coordinates
+    as log10 values - so a line drawn at x=5 lands at 100000 alerts an hour and
+    silently stretches the axis over sixty decades. Every shape here is placed
+    with log10() for that reason.
+    """
     fig = go.Figure()
+    widest = budget
     for col, name, colour in (("score01", "Risk score", GREEN), ("risk_rf", "Random forest", CYAN)):
         rate, caught = [], []
         for q in np.linspace(0.95, 0.9999, 18):
@@ -461,10 +546,20 @@ def fig_budget_curve(test, events, hours, budget):
                       if len(a[(a.patient == e.patient) & (a.minute >= e.start) & (a.minute <= e.crisis)]))
             rate.append(len(a) / hours)
             caught.append(hit)
-        fig.add_scatter(x=rate, y=caught, mode="lines+markers", name=name, line=dict(color=colour, width=3))
+        widest = max(widest, max(rate))
+        fig.add_scatter(x=rate, y=caught, mode="lines+markers", name=name,
+                        line=dict(color=colour, width=3),
+                        hovertemplate=f"<b>{name}</b><br>allow %{{x:.1f}} alerts an hour<br>"
+                                      f"catches %{{y}} of {len(events)} real events<extra></extra>")
+    left, right = 0.2, max(widest * 1.6, budget * 2.5)
     fig.add_vline(x=budget, line_dash="dash", line_color="white",
-                  annotation_text="our budget", annotation_font_color="white")
-    fig.update_xaxes(type="log")
+                  annotation_text=f"our budget: {budget} an hour", annotation_font_color="white")
+    # Everything right of the budget is a result the ward cannot buy, so it is
+    # greyed out rather than left looking like an option.
+    fig.add_vrect(x0=budget, x1=right, fillcolor=GREY, opacity=0.16,
+                  line_width=0, annotation_text="too noisy to afford",
+                  annotation_position="top right", annotation_font_color="white")
+    fig.update_xaxes(type="log", range=[np.log10(left), np.log10(right)])
     return _layout(fig, xaxis_title="alerts per hour (log scale)",
                    yaxis_title=f"events caught, out of {len(events)}",
                    title="What each method could catch, for a given amount of noise")
@@ -474,8 +569,16 @@ def fig_bucket(alerts, test, budget):
     per_hour = alerts.groupby(alerts.minute // 60).size()
     full = per_hour.reindex(range(int(test.minute.min()) // 60,
                                   int(test.minute.max()) // 60 + 1), fill_value=0)
-    fig = go.Figure(go.Scatter(x=np.arange(len(full)), y=full.values, mode="lines",
-                               line=dict(color=CYAN, width=1.4), name="alerts sent"))
+    x = np.arange(len(full))
+    fig = go.Figure(go.Scatter(x=x, y=full.values, mode="lines",
+                               line=dict(color=CYAN, width=1.4), name="alerts sent",
+                               hovertemplate="hour %{x}<br><b>%{y} alerts</b> sent<extra></extra>"))
+    over = full.values > budget
+    if over.any():
+        fig.add_scatter(x=x[over], y=full.values[over], mode="markers", name="over budget",
+                        marker=dict(color=RED, size=9, symbol="circle-open", line=dict(width=2)),
+                        hovertemplate="hour %{x}<br><b>%{y} alerts - over the budget</b><br>"
+                                      "an emergency is always let through<extra></extra>")
     fig.add_hline(y=budget, line_dash="dash", line_color=RED,
                   annotation_text=f"budget = {budget}/hour", annotation_font_color="white")
     return _layout(fig, height=330, xaxis_title="hour of the exam period", yaxis_title="alerts sent",
@@ -488,7 +591,9 @@ def fig_patient_trace(test, decisions, ev, lv):
     dec = decisions[decisions.row.isin(part.index)]
     hours = (part.minute.to_numpy() - ev.crisis) / 60.0
     fig = go.Figure()
-    fig.add_scatter(x=hours, y=part.risk_rf, name="risk", line=dict(color=VIOLET, width=2.5))
+    fig.add_scatter(x=hours, y=part.risk_rf, name="risk", line=dict(color=VIOLET, width=2.5),
+                    hovertemplate="%{x:.1f} hours before the crisis<br>the computer's worry: "
+                                  "<b>%{y:.2f}</b><extra></extra>")
     fig.add_hline(y=lv["normal"], line_dash="dot", line_color=AMBER,
                   annotation_text="notify level", annotation_font_color="white")
     fig.add_hline(y=lv["urgent"], line_dash="dot", line_color=RED,
@@ -498,9 +603,14 @@ def fig_patient_trace(test, decisions, ev, lv):
     for act, (colour, symbol, size) in marks.items():
         sel = dec[dec.action == act]
         if len(sel):
+            costs = ACTIONS[act]["nurse_minutes"]
+            spends = "interrupts a nurse" if ACTIONS[act]["alerts"] else "costs nobody anything"
             fig.add_scatter(x=(sel.minute.to_numpy() - ev.crisis) / 60.0,
                             y=np.full(len(sel), -0.06), mode="markers", name=ACTIONS[act]["label"],
-                            marker=dict(color=colour, symbol=symbol, size=size))
+                            marker=dict(color=colour, symbol=symbol, size=size),
+                            hovertemplate=f"<b>{ACTIONS[act]['label']}</b><br>{spends} "
+                                          f"({costs} nurse-minutes)<br>%{{x:.1f}} hours before the "
+                                          f"crisis<extra></extra>")
     fig.add_vrect(x0=(ev.start - ev.crisis) / 60.0, x1=0, fillcolor=RED, opacity=0.12, line_width=0)
     fig.add_vline(x=0, line_color="white")
     return _layout(fig, height=430, xaxis_title="hours before the crisis point", yaxis_title="risk",
@@ -512,10 +622,14 @@ def fig_scoreboard(board, budget, n_events):
             ("Alerts/hr", AMBER, f"budget {budget}"),
             ("Early warning (min)", VIOLET, "higher is better"),
             ("Response (min)", CYAN, "lower is better")]
-    from plotly.subplots import make_subplots
     fig = make_subplots(rows=1, cols=4, subplot_titles=[f"{c}<br><sub>{note}</sub>" for c, _, note in cols])
     names = [m.split(". ")[-1] for m in board["Model"]]
-    for i, (c, colour, _) in enumerate(cols, 1):
-        fig.add_bar(x=names, y=board[c], marker_color=colour, showlegend=False, row=1, col=i)
+    reading = {"Nurse arrived in time": "patients a nurse reached before the crisis",
+               "Alerts/hr": "interruptions an hour",
+               "Early warning (min)": "minutes of warning, typically",
+               "Response (min)": "minutes a patient waited for a nurse"}
+    for i, (c, colour, note) in enumerate(cols, 1):
+        fig.add_bar(x=names, y=board[c], marker_color=colour, showlegend=False, row=1, col=i,
+                    hovertemplate=f"<b>%{{x}}</b><br>%{{y}} {reading[c]}<br>({note})<extra></extra>")
     fig.update_xaxes(tickangle=-40)
     return _layout(fig, height=380)

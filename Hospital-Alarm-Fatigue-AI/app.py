@@ -95,17 +95,25 @@ DISCLAIMER = ("Educational simulation on invented patients. Nothing here is a me
 
 
 def header(s):
+    """The five parts of every page, in the same order every time.
+
+    `doing` comes first and is deliberately the loudest thing on the page: a
+    student who cannot say what a page is for will not learn anything from the
+    chart underneath it.
+    """
     p = bridge.PHASES[s["phase"]]
     st.markdown(
-        f"<div class='hero'><small>PHASE {s['phase'] + 1} OF {len(bridge.PHASES)} · {p[0]}</small>"
+        f"<div class='hero'><small>PHASE {s['phase'] + 1} OF {len(bridge.PHASES)} · {p[0]}"
+        f" &nbsp;·&nbsp; DATA-SCIENCE STEP {s['step'].upper()}</small>"
         f"<h1>🏥 {s['ward']}</h1><h3><span class='ward'>{s['ward']}</span> → "
         f"<span class='ai'>{s['ai']}</span></h3></div>", unsafe_allow_html=True)
+    st.markdown(f"**What we are doing on this page, and why.** {s['doing']}")
     a, b, c = st.columns(3)
     a.markdown("#### 1 · On the ward")
     a.write(s["site"])
     b.markdown("#### 2 · Why it is hard")
     b.write(s["challenge"])
-    c.markdown("#### 3 · Where the AI comes in")
+    c.markdown("#### 3 · Where the computer comes in")
     c.write(s["ai_link"])
     if s.get("plain"):
         st.info(f"**In plain words.** {s['plain']}")
@@ -126,8 +134,20 @@ def goto(target, label, key, where=None):
         st.rerun()
 
 
+def picture(s):
+    """What the chart above actually shows, and what is wrong in it.
+
+    A chart with no words under it is decoration. Every page says in two lines
+    what is being drawn, then points at the thing the student is supposed to
+    notice - which is usually the thing that is going wrong.
+    """
+    st.markdown("#### 5 · What the picture shows")
+    st.write(s["figure"])
+    st.warning(f"**What to look for.** {s['watch']}")
+
+
 def footer(s):
-    st.markdown("#### 5 · In the notebook")
+    st.markdown("#### 6 · In the notebook")
     st.write(s["notebook"])
     st.success(s["takeaway"])
     i = bridge.ORDER.index(s["id"])
@@ -195,9 +215,9 @@ def score_columns():
                  "what teaches staff to stop listening."),
         "Nurse min/hr": st.column_config.NumberColumn(
             "Nurse minutes an hour",
-            help=f"How much nursing time answering these alerts eats every hour. {n_nurses} "
-                 f"nurse(s) have {minutes} minutes an hour between them, so anything above "
-                 f"{minutes} cannot actually happen."),
+            help=f"How much nursing time answering these alerts eats every hour. Each nurse has "
+                 f"60 minutes in an hour and {n_nurses} of them work side by side, so the ward can "
+                 f"finish {minutes} minutes of work an hour at the very most."),
         "Response (min)": st.column_config.NumberColumn(
             "Wait for a nurse",
             help="Once an alert is raised, how long the patient typically waits before a nurse "
@@ -221,9 +241,10 @@ def scoreboard_table(explain=False):
             f"became a crisis. Higher is better, and {n} out of {n} would be perfect.")
         b.warning(
             f"**Then read what it cost: _Alerts an hour_, _False alarms_, _Nurse minutes_.** You "
-            f"allowed {budget} alerts an hour, and {n_nurses} nurse(s) have only {minutes} minutes "
-            f"an hour between them. A rule that beeps at everything looks good in the first column "
-            f"and is unusable on a real ward.")
+            f"allowed {budget} alerts an hour. Each nurse has 60 minutes in that hour and "
+            f"{n_nurses} of them work side by side, so {minutes} minutes of work an hour is the "
+            f"ceiling. A rule that beeps at everything looks good in the first column and is "
+            f"unusable on a real ward.")
     st.dataframe(board, hide_index=True, width="stretch", column_config=score_columns())
     if explain:
         st.caption(
@@ -263,9 +284,25 @@ if stage == "start":
     st.subheader("The scoreboard, at your current settings")
     scoreboard_table(explain=True)
 
+    st.subheader("What this app actually does, step by step")
+    st.markdown(
+        "Underneath the hospital story this is an ordinary data-science project, done in the "
+        "ordinary order. Every page below belongs to one of these steps, and says which one it is "
+        "at the top.")
+    st.dataframe(pd.DataFrame([
+        dict(Step=name, **{"What happens here": what,
+                           "Pages": ", ".join(bridge.BY_ID[i]["ward"] for i in ids)})
+        for name, what, ids in bridge.WORKFLOW]),
+        hide_index=True, width="stretch", height=36 * len(bridge.WORKFLOW) + 44,
+        column_config={"Step": st.column_config.TextColumn("Step", width="medium"),
+                       "What happens here": st.column_config.TextColumn(width="large")})
+
     st.subheader("Learning journey")
+    st.caption("Fifteen pages, in order. Each one has the same five parts: what we are doing and "
+               "why, what is happening on the ward, why it is hard, where the computer comes in, "
+               "and what the picture shows.")
     for i, s in enumerate(bridge.STEPS, 1):
-        goto(s["id"], f"**{i}. {s['ward']}** — {s['ai']}", f"jump_{s['id']}")
+        goto(s["id"], f"**{i}. {s['ward']}** — {s['ai']}  ·  _{s['step']}_", f"jump_{s['id']}")
 
     st.subheader("The notebook")
     st.markdown(
@@ -284,8 +321,7 @@ else:
         a.metric("Alerts an hour from fixed limits", lim["Alerts/hr"])
         b.metric("Of those, false alarms", int(lim["False alarms"]))
         c.metric("Nurse minutes needed per hour", lim["Nurse min/hr"],
-                 delta=f"{lim['Nurse min/hr'] - 60 * n_nurses:+.0f} vs available",
-                 delta_color="inverse")
+                 delta=f"the ward has {60 * n_nurses} minutes an hour", delta_color="off")
 
     elif s["id"] == "ward":
         quiet = (ward.groupby(["patient", "day"])
@@ -305,9 +341,6 @@ else:
                                               f"Patient {int(ev.patient)} — real deterioration ({ev.kind})"),
                         width="stretch")
         st.plotly_chart(story.fig_noise_vs_illness(test), width="stretch")
-        st.markdown("During real deterioration several signals move together and **sensor quality stays "
-                    "high**. During a glitch the numbers are extreme but **quality collapses**, and the "
-                    "other measurements do not agree.")
 
     elif s["id"] == "actions":
         st.dataframe(pd.DataFrame([
@@ -321,15 +354,24 @@ else:
 
     elif s["id"] == "budget":
         readings = story.N_PATIENTS * 60 // story.DT
-        a, b, c = st.columns(3)
-        a.metric("Readings per hour", readings)
-        b.metric("Alerts allowed", budget)
-        c.metric("Nurse minutes available", 60 * n_nurses)
+        a, b, c, d = st.columns(4)
+        a.metric("Readings arriving per hour", readings)
+        b.metric("Interruptions allowed per hour", budget)
+        c.metric("Minutes in each nurse's hour", 60)
+        d.metric("Nurses working side by side", n_nurses)
         st.markdown(
-            f"`{budget} alerts × 8 minutes = {budget * 8} minutes` of the "
-            f"`{60 * n_nurses}` a shift of {n_nurses} has. "
-            f"That is **{100 * budget * 8 / (60 * n_nurses):.0f}%** of the ward's staff time, "
-            "before anything else on the ward gets done.")
+            f"An hour is 60 minutes long for **every** nurse — putting {n_nurses} of them on shift "
+            f"does not make the hour longer, it means {n_nurses} jobs can happen at the same time. "
+            f"So the ward can finish about `{n_nurses} × 60 = {60 * n_nurses}` minutes of work in "
+            "an hour, and not a minute more.")
+        st.markdown(
+            f"Answering an alert takes about 8 minutes. `{budget} alerts × 8 minutes = "
+            f"{budget * 8} minutes` of work, which split between {n_nurses} nurses is roughly "
+            f"**{budget * 8 // n_nurses} minutes each** — about "
+            f"**{100 * budget * 8 / (60 * n_nurses):.0f}%** of their hour, before drug rounds, "
+            "washes, notes and admissions.")
+        st.caption("Push the budget slider up in the sidebar and this percentage climbs. Past 100% "
+                   "the work simply does not fit in the hour, so it rolls into the next one.")
         st.plotly_chart(story.fig_bucket(run["alerts"]["5. Attention budget"], test, budget),
                         width="stretch")
 
@@ -449,7 +491,8 @@ else:
         st.dataframe(board.set_index("Model")[["Alerts/hr", "Nurse min/hr", "Response (min)",
                                                "Nurse arrived in time"]], width="stretch")
         st.markdown(
-            f"{n_nurses} nurse(s) have **{60 * n_nurses} minutes** of attention per hour. Any method "
+            f"Each nurse has **60 minutes** in an hour and {n_nurses} of them work side by side, so "
+            f"the ward can finish about **{60 * n_nurses} minutes** of work in an hour. Any method "
             "asking for more than that builds a queue it can never clear — and the alerts that were "
             "right end up waiting behind the ones that were not.\n\n"
             "**Nurse arrived in time** counts deteriorations where somebody physically reached the "
@@ -466,4 +509,5 @@ else:
             "should always win an argument with it.")
         st.warning(DISCLAIMER)
 
+    picture(s)
     footer(s)
