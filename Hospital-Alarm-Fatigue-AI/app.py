@@ -102,12 +102,18 @@ def header(s):
     chart underneath it.
     """
     p = bridge.PHASES[s["phase"]]
+    # .get, not [...]: Streamlit can hot-reload app.py while still holding an
+    # older bridge in memory, and a page that half-crashes in front of a class
+    # is worse than one missing its badge. A reboot restores the full page.
+    step = s.get("step", "")
+    badge = f" &nbsp;·&nbsp; DATA-SCIENCE STEP {step.upper()}" if step else ""
     st.markdown(
         f"<div class='hero'><small>PHASE {s['phase'] + 1} OF {len(bridge.PHASES)} · {p[0]}"
-        f" &nbsp;·&nbsp; DATA-SCIENCE STEP {s['step'].upper()}</small>"
+        f"{badge}</small>"
         f"<h1>🏥 {s['ward']}</h1><h3><span class='ward'>{s['ward']}</span> → "
         f"<span class='ai'>{s['ai']}</span></h3></div>", unsafe_allow_html=True)
-    st.markdown(f"**What we are doing on this page, and why.** {s['doing']}")
+    if s.get("doing"):
+        st.markdown(f"**What we are doing on this page, and why.** {s['doing']}")
     a, b, c = st.columns(3)
     a.markdown("#### 1 · On the ward")
     a.write(s["site"])
@@ -141,9 +147,12 @@ def picture(s):
     what is being drawn, then points at the thing the student is supposed to
     notice - which is usually the thing that is going wrong.
     """
+    if not s.get("figure"):
+        return
     st.markdown("#### 5 · What the picture shows")
     st.write(s["figure"])
-    st.warning(f"**What to look for.** {s['watch']}")
+    if s.get("watch"):
+        st.warning(f"**What to look for.** {s['watch']}")
 
 
 def footer(s):
@@ -284,25 +293,31 @@ if stage == "start":
     st.subheader("The scoreboard, at your current settings")
     scoreboard_table(explain=True)
 
-    st.subheader("What this app actually does, step by step")
-    st.markdown(
-        "Underneath the hospital story this is an ordinary data-science project, done in the "
-        "ordinary order. Every page below belongs to one of these steps, and says which one it is "
-        "at the top.")
-    st.dataframe(pd.DataFrame([
-        dict(Step=name, **{"What happens here": what,
-                           "Pages": ", ".join(bridge.BY_ID[i]["ward"] for i in ids)})
-        for name, what, ids in bridge.WORKFLOW]),
-        hide_index=True, width="stretch", height=36 * len(bridge.WORKFLOW) + 44,
-        column_config={"Step": st.column_config.TextColumn("Step", width="medium"),
-                       "What happens here": st.column_config.TextColumn(width="large")})
+    workflow = getattr(bridge, "WORKFLOW", [])
+    if workflow:
+        st.subheader("What this app actually does, step by step")
+        st.markdown(
+            "Underneath the hospital story this is an ordinary data-science project, done in the "
+            "ordinary order. Every page below belongs to one of these steps, and says which one "
+            "it is at the top.")
+        st.dataframe(pd.DataFrame([
+            dict(Step=name, **{"What happens here": what,
+                               "Pages": ", ".join(bridge.BY_ID[i]["ward"] for i in ids
+                                                  if i in bridge.BY_ID)})
+            for name, what, ids in workflow]),
+            hide_index=True, width="stretch", height=36 * len(workflow) + 44,
+            column_config={"Step": st.column_config.TextColumn("Step", width="medium"),
+                           "What happens here": st.column_config.TextColumn(width="large")})
 
     st.subheader("Learning journey")
     st.caption("Fifteen pages, in order. Each one has the same five parts: what we are doing and "
                "why, what is happening on the ward, why it is hard, where the computer comes in, "
                "and what the picture shows.")
     for i, s in enumerate(bridge.STEPS, 1):
-        goto(s["id"], f"**{i}. {s['ward']}** — {s['ai']}  ·  _{s['step']}_", f"jump_{s['id']}")
+        label = f"**{i}. {s['ward']}** — {s['ai']}"
+        if s.get("step"):
+            label += f"  ·  _{s['step']}_"
+        goto(s["id"], label, f"jump_{s['id']}")
 
     st.subheader("The notebook")
     st.markdown(
