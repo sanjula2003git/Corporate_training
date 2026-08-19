@@ -1,0 +1,5 @@
+streamlit>=1.50
+pandas
+plotly
+# kaleido is only needed to run `python figures.py`, which writes the charts to
+# PNG so they can be looked at outside a browser. The app itself does not use it.
