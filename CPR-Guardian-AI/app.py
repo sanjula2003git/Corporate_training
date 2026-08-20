@@ -89,6 +89,24 @@ s = get_session(tire, drift, DEPTH_MIN, DEPTH_MAX)
 pad, comp, peaks = s["pad"], s["comp"], s["peaks"]
 stage = st.query_params.get("stage", "start")
 
+# Streamlit Cloud reruns the script after a push WITHOUT restarting the process,
+# so `import bridge` can hand back the copy that was already in sys.modules
+# before the push: new app.py, old bridge. Every attribute added after the first
+# release is therefore read through getattr with a fallback, so a half-reloaded
+# app loses a section instead of showing a traceback.
+#
+# It still needs saying out loud. The silent version of this failure is worse
+# than the crash: the page renders, nothing has visibly changed, and the reader
+# concludes the deploy did nothing. COLUMN_HELP is the probe because it was
+# added in the same commit as everything else on the page.
+STALE_BRIDGE = not hasattr(bridge, "COLUMN_HELP")
+if STALE_BRIDGE:
+    st.warning(
+        "**This page is running new code against an older copy of its text.** That happens "
+        "when Streamlit Cloud reruns the app after a push without restarting it, so some "
+        "sections below are missing and the wording is out of date. Open **Manage app** in the "
+        "lower right, then **Reboot**, to pick up the current version.")
+
 
 def when_tired(who="A"):
     """When the working detector fired for this rescuer, or None."""
@@ -123,9 +141,12 @@ def helped(df):
     Streamlit shows `help` as a tooltip on the column header, so a reader who
     does not know what 'Full recoil' means finds out by pointing at it instead
     of leaving the page.
+
+    getattr, not bridge.COLUMN_HELP: see STALE_BRIDGE below. A missing table of
+    tooltips should cost the tooltips, not the page.
     """
-    return {c: st.column_config.Column(help=bridge.COLUMN_HELP[c])
-            for c in df.columns if c in bridge.COLUMN_HELP}
+    tips = getattr(bridge, "COLUMN_HELP", {})
+    return {c: st.column_config.Column(help=tips[c]) for c in df.columns if c in tips}
 
 
 def hover_table(rows, headers, tip_from=None):
