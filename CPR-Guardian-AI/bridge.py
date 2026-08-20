@@ -2,7 +2,6 @@
 
 Every entry keeps the same parts, and the same plain-English house style: short
 sentences, everyday words, and no term used before it is explained.
-  step      - where this page sits in an ordinary data-science project
   doing     - what we do on this page, and why we do it here
   scene     - what is happening in the room, with no computer in it
   challenge - why that is hard for the person doing it
@@ -15,9 +14,12 @@ sentences, everyday words, and no term used before it is explained.
   takeaway  - one sentence to remember
   next_q    - the question this page leaves open, answered by the next page
 
-`step` exists because the page titles are about an emergency, and a student
-needs to see the ordinary shape of a data project underneath: understand the
-problem, collect data, explore it, build features, decide, evaluate, report.
+THE PHASES ARE THE METHOD. There is one spine, not two: each of the ten phases
+is a step of an ordinary data project - understand the problem, decide what to
+measure, collect, explore and clean, build features, build the decision logic,
+evaluate, act, report, admit the limits - and the pages inside a phase are that
+step done on this problem. The page titles stay about the emergency; the phase
+name is what the student is actually learning.
 
 `plain` exists because every heading carries a term of art - "pose keypoints",
 "compression fraction", "peak finder". A student meeting those for the first
@@ -35,46 +37,9 @@ No computed figure is quoted in this prose. Every number on a page is worked
 out by that page, so the two can never drift apart.
 """
 
-# ---------------------------------------------------------------- the workflow
-# The ordinary shape of a data project, and the pages that do each part. Shown
-# on the landing page so the emergency story never hides the method.
-#
-# Step 7 is deliberately honest: this build trains no model at all. The decision
-# logic is a checklist a clinician wrote. Saying so IS the lesson - a student who
-# leaves thinking every problem needs a trained model has learned the wrong thing.
-WORKFLOW = [
-    ("1 - Understand the problem",
-     "What is actually going wrong, before any data or any code.", ["collapse"]),
-    ("2 - Decide what to measure",
-     "Which piece of hardware is allowed to answer which question.", ["sensors"]),
-    ("3 - Collect the data",
-     "No recording of a real emergency exists, so we generate one.", ["rescue"]),
-    ("4 - Explore the data (EDA)",
-     "Look at both raw signals before touching them. What can you actually see?",
-     ["pad", "camera"]),
-    ("5 - Clean the measurements",
-     "Raw dots wobble. Smooth them, and measure what the smoothing cost.", ["elbow"]),
-    ("6 - Feature engineering",
-     "Turn a wiggly line into one row per push, then build the column that matters.",
-     ["peaks", "release"]),
-    ("7 - Build the decision logic",
-     "Where a model would normally be trained. Here it is a ranked checklist instead, "
-     "and the page says why that is the right answer.", ["rules", "metronome"]),
-    ("8 - Evaluate over the whole session",
-     "Two ways of catching the same fault, scored against each other.",
-     ["fatigue", "handsoff"]),
-    ("9 - Turn numbers into actions",
-     "A measurement is not an instruction. This is where it becomes one.",
-     ["switch", "aed"]),
-    ("10 - Report the result",
-     "Three and a half minutes, handed over in five seconds.", ["timeline"]),
-    ("11 - Be honest about the limits",
-     "What would break in a real room, specific enough to go and test.", ["limits"]),
-]
-
-# Said once, plainly, under the workflow table. A student who has met other apps
-# in this series will look for the training step and needs to be told why it is
-# missing rather than left to assume it was forgotten.
+# Said once, plainly, under the phase table on the landing page. A student who
+# has met other apps in this series will look for the training phase and needs
+# to be told why there is not one, rather than assume it was forgotten.
 WORKFLOW_NOTE = (
     "One thing is deliberately missing from that list: **nothing here is trained**. There is "
     "no model that learned anything from data. The push counter is three lines of ordinary "
@@ -82,18 +47,40 @@ WORKFLOW_NOTE = (
     "for this problem, and knowing when you do *not* need a trained model is as much a part "
     "of the job as building one.")
 
+# ONE SPINE, TEN PHASES. Each phase is a step of an ordinary data project, and
+# the pages inside it are that step done on this problem. There used to be two
+# numbering systems - six story phases and eleven workflow steps, both printed
+# on every header - which meant a reader had to hold two positions at once.
+#
+# Phases must stay CONTIGUOUS in page order, because the header prints
+# "PHASE n OF 10": a page order that jumps 7, 8, 7, 8 reads as a mistake. That
+# constraint is what moved 'Hands Off The Chest' up next to the fatigue page.
 PHASES = [
-    ("The First Four Minutes", "Somebody has collapsed and nobody here is trained."),
-    ("Which Sensor Answers What", "The split the whole design is built on."),
-    ("Reading The Compressions", "Finding the pushes, then measuring them."),
-    ("What The Unit Says", "One message at a time, and a beat to follow."),
-    ("The Whole Session", "Tiring, swapping, hands-off time, and the defibrillator."),
-    ("The Handover", "The picture an ambulance crew gets, and what it would get wrong."),
+
+    ("Understand The Problem",
+     "What is actually going wrong, before any data or any code."),
+    ("Decide What To Measure",
+     "Which piece of hardware is allowed to answer which question."),
+    ("Collect The Data",
+     "No recording of a real emergency exists, so we make one."),
+    ("Explore And Clean The Data",
+     "Look at both sensors as they come, then deal with the wobble."),
+    ("Feature Engineering",
+     "Turn a wiggly line into one row per push, then build the column that matters."),
+    ("Build The Decision Logic",
+     "Where a model would normally be trained. Here it is a ranked checklist."),
+    ("Evaluate The Whole Session",
+     "Two ways of catching the same fault, and the cost of every pause."),
+    ("Turn Numbers Into Actions",
+     "A measurement is not an instruction. This is where it becomes one."),
+    ("Report The Result",
+     "Three and a half minutes, handed over in about five seconds."),
+    ("Be Honest About The Limits",
+     "What would break in a real room, exact enough to go and test."),
 ]
 
 STEPS = [
     dict(id="collapse", phase=0, scene="Nobody Here Is Trained", ai="The Real Problem",
-         step="1 - Understand the problem",
          doing="Work out what is actually going wrong, before choosing anything clever. "
                "Everything else in this app exists because of what is on this page.",
          tech="a wall unit with a camera, a pressure pad, a speaker and three lights",
@@ -122,7 +109,6 @@ STEPS = [
                 "camera, and the next page is about why that answer is wrong."),
 
     dict(id="sensors", phase=1, scene="Camera, Pad Or Defibrillator?", ai="The Sensor Split",
-         step="2 - Decide what to measure",
          doing="Decide which piece of hardware is allowed to answer which question. Get this "
                "wrong here and everything built on top of it is worthless.",
          tech="camera for the body - pad for depth, speed and release - defibrillator for the heart",
@@ -146,8 +132,7 @@ STEPS = [
                 "emergency to test any of it on, and we are never going to get one. **So "
                 "where does the data come from?**"),
 
-    dict(id="rescue", phase=1, scene="Three And A Half Minutes", ai="The Simulated Session",
-         step="3 - Collect the data",
+    dict(id="rescue", phase=2, scene="Three And A Half Minutes", ai="The Simulated Session",
          doing="Get the data. Since no real recording exists, we write code that generates "
                "one, with every fault we need to catch deliberately put inside it.",
          tech="two helpers, one pause for the defibrillator, two different ways of being wrong",
@@ -177,8 +162,7 @@ STEPS = [
                 "good push looks exactly like a bad one. **What does a single compression "
                 "actually look like, close up?**"),
 
-    dict(id="pad", phase=1, scene="What The Pad Feels", ai="The Depth Signal",
-         step="4 - Explore the data (EDA)",
+    dict(id="pad", phase=3, scene="What The Pad Feels", ai="The Depth Signal",
          doing="Look at the raw signal before doing anything to it. Zoom in until one push is "
                "readable, and see what changes as the helper tires.",
          tech="fifty readings a second of how far the chest is pressed in",
@@ -207,8 +191,7 @@ STEPS = [
                 "all. **So how does the unit know whether they are pushing with straight arms "
                 "or bent ones?**"),
 
-    dict(id="camera", phase=1, scene="What The Camera Sees", ai="Pose Keypoints",
-         step="4 - Explore the data (EDA)",
+    dict(id="camera", phase=3, scene="What The Camera Sees", ai="Pose Keypoints",
          doing="Look at the other sensor, and see exactly what a camera does and does not "
                "hand us.",
          tech="wrist, elbow and shoulder, as positions in centimetres",
@@ -237,8 +220,7 @@ STEPS = [
                 "perfectly steady. **How much does a few millimetres of wobble actually "
                 "matter?** The answer is the reason depth comes from the pad."),
 
-    dict(id="elbow", phase=1, scene="The Angle At The Elbow", ai="Geometry, And Jitter",
-         step="5 - Clean the measurements",
+    dict(id="elbow", phase=3, scene="The Angle At The Elbow", ai="Geometry, And Jitter",
          doing="Turn raw dots into a usable number, then deal with the noise that comes with "
                "them. This is the cleaning step every data project has.",
          tech="the angle between elbow-to-shoulder and elbow-to-wrist",
@@ -269,8 +251,7 @@ STEPS = [
                 "come from the pad. **But how do we find where the pushes are in that pad "
                 "line at all?**"),
 
-    dict(id="peaks", phase=2, scene="Counting The Pushes", ai="A Hand-Written Peak Finder",
-         step="6 - Feature engineering",
+    dict(id="peaks", phase=4, scene="Counting The Pushes", ai="A Hand-Written Peak Finder",
          doing="Turn a continuous wiggly line into one row per push. Nothing else in the app "
                "can happen until this part works.",
          tech="deeper than both neighbours - past a floor - not too close to the last one",
@@ -302,8 +283,7 @@ STEPS = [
                 "- the chest is not returning to the top. **Is 'how deep it got' really the "
                 "same thing as 'how far it travelled'?**"),
 
-    dict(id="release", phase=2, scene="The Number Between The Peaks", ai="Depth Versus Travel",
-         step="6 - Feature engineering",
+    dict(id="release", phase=4, scene="The Number Between The Peaks", ai="Depth Versus Travel",
          doing="Build a better column out of the raw ones. This single extra number is what "
                "makes four later pages possible.",
          tech="travel = how deep it got, minus what it never came back up from",
@@ -332,8 +312,7 @@ STEPS = [
                 "say out loud?** Eight things can be wrong at once, and a frightened person "
                 "can only act on one of them."),
 
-    dict(id="rules", phase=3, scene="One Message At A Time", ai="The Feedback Rules",
-         step="7 - Build the decision logic",
+    dict(id="rules", phase=5, scene="One Message At A Time", ai="The Feedback Rules",
          doing="Turn measurements into something to say. This is the point where a model "
                "would normally be trained - and here, deliberately, none is.",
          tech="nine rules, ordered by cost to the patient, first one wins",
@@ -361,8 +340,7 @@ STEPS = [
          next_q="Telling somebody 'faster' works for about three pushes and then they drift "
                 "back to where they were. **What would actually hold their speed steady?**"),
 
-    dict(id="metronome", phase=3, scene="A Beat To Follow", ai="The Metronome",
-         step="7 - Build the decision logic",
+    dict(id="metronome", phase=5, scene="A Beat To Follow", ai="The Metronome",
          doing="Replace an instruction with something a person can follow without thinking - "
                "then look at the trap hiding in the obvious version of it.",
          tech="start where the helper is, then walk the beat towards the target",
@@ -391,8 +369,7 @@ STEPS = [
                 "slowly, over a whole minute. **Can a system that only ever looks at the "
                 "current push notice that?**"),
 
-    dict(id="fatigue", phase=4, scene="The Helper Who Cannot Feel It", ai="Detecting A Trend",
-         step="8 - Evaluate over the whole session",
+    dict(id="fatigue", phase=6, scene="The Helper Who Cannot Feel It", ai="Detecting A Trend",
          doing="Test two ways of catching the same fault, and keep the one that failed right "
                "there on the page so you can see why it failed.",
          tech="the travel, against this helper's own first twenty pushes",
@@ -418,35 +395,11 @@ STEPS = [
          notebook="Section 6.1 - is the helper tiring, and the detector that failed first.",
          takeaway="An absolute threshold fires instantly for a small helper and never for a "
                   "strong one. Everybody's baseline is their own.",
-         next_q="The unit now knows helper A is fading. **What should it do about it?** Saying "
-                "'you are tiring' to somebody who cannot stop is worse than saying nothing."),
+         next_q="The unit knows helper A is fading, and the obvious fix is to swap in "
+                "somebody fresh. But a swap means a pause, with nobody pushing at all. "
+                "**Before we call one: how much does a pause actually cost?**"),
 
-    dict(id="switch", phase=4, scene="Time To Swap", ai="The Switch Plan",
-         step="9 - Turn numbers into actions",
-         doing="Turn a detection into an instruction - and work out what that instruction "
-               "costs before issuing it.",
-         tech="whichever comes first: two minutes, or quality falling",
-         site=("The advice is to swap helpers every two minutes.",
-               "Quality drops long before anyone feels tired.",
-               "So the clock matters as much as how they feel."),
-         challenge=("A messy swap costs ten seconds with nobody pushing.",
-                    "Every one of those seconds is blood not moving.",
-                    "So the swap has to be set up before it is called."),
-         ai_link=("Tell the second person to get into position fifteen seconds early.",
-                  "Call the swap on whichever comes first: the clock, or the fading.",
-                  "If there is nobody else in the room, say something completely different."),
-         plain="'Swapping helpers' means handing the pushing over to a second person before "
-               "the first one fades, rather than after. The cost is a pause, so when to call "
-               "it is a genuine trade-off.",
-         notebook="Section 6.2 - calling the switch.",
-         takeaway="If the helper is alone, the correct output is keep going, do not stop. "
-                  "Telling somebody to swap with nobody only tells them they are failing.",
-         next_q="That swap costs seconds. So did the arrival, and so did the defibrillator. "
-                "**How much of this emergency was nobody pushing at all** - and can the unit "
-                "work that out without being told where the pauses were?"),
-
-    dict(id="handsoff", phase=4, scene="Hands Off The Chest", ai="Compression Fraction",
-         step="8 - Evaluate over the whole session",
+    dict(id="handsoff", phase=6, scene="Hands Off The Chest", ai="Compression Fraction",
          doing="Score the whole session on the one number most strongly tied to whether the "
                "patient lives.",
          tech="the share of the whole rescue that somebody was actually pushing",
@@ -470,13 +423,34 @@ STEPS = [
          notebook="Section 6.3 - hands-off time.",
          takeaway="This is the single number most strongly tied to whether the patient lives. "
                   "Guidelines want at least sixty percent.",
-         next_q="One of those red blocks is the defibrillator, and it is the only one the unit "
-                "must never try to shorten. **Whose decision is a shock - and what is the unit "
-                "allowed to say while it happens?**"),
+         next_q="So a pause is expensive, and we can now put a number on one. **Is it worth "
+                "stopping to swap helpers at all** - and if it is, when?"),
 
-    dict(id="aed", phase=4, scene="The One Decision The AI Must Not Make",
+    dict(id="switch", phase=7, scene="Time To Swap", ai="The Switch Plan",
+         doing="Turn a detection into an instruction - and work out what that instruction "
+               "costs before issuing it.",
+         tech="whichever comes first: two minutes, or quality falling",
+         site=("The advice is to swap helpers every two minutes.",
+               "Quality drops long before anyone feels tired.",
+               "So the clock matters as much as how they feel."),
+         challenge=("A messy swap costs ten seconds with nobody pushing.",
+                    "Every one of those seconds is blood not moving.",
+                    "So the swap has to be set up before it is called."),
+         ai_link=("Tell the second person to get into position fifteen seconds early.",
+                  "Call the swap on whichever comes first: the clock, or the fading.",
+                  "If there is nobody else in the room, say something completely different."),
+         plain="'Swapping helpers' means handing the pushing over to a second person before "
+               "the first one fades, rather than after. The cost is a pause, so when to call "
+               "it is a genuine trade-off.",
+         notebook="Section 6.2 - calling the switch.",
+         takeaway="If the helper is alone, the correct output is keep going, do not stop. "
+                  "Telling somebody to swap with nobody only tells them they are failing.",
+         next_q="The unit works to keep every pause as short as it can. There is exactly "
+                "one pause it is not allowed to shorten. **Whose decision is a shock - and "
+                "what may the unit say while it happens?**"),
+
+    dict(id="aed", phase=7, scene="The One Decision The AI Must Not Make",
          ai="Coaching Around The Defibrillator",
-         step="9 - Turn numbers into actions",
          doing="Draw the line around what this system is allowed to decide, and show that the "
                "code has no way of crossing it.",
          tech="four states, and no branch that decides anything about a shock",
@@ -493,8 +467,8 @@ STEPS = [
                "is the box that reads the heart's rhythm and decides on its own whether an "
                "electric shock will help. It makes that decision. Our unit only says when to "
                "stand back, and when to start pushing again.",
-         figure="The same rescue bar as the previous page. The second red block is the pause "
-                "the defibrillator costs, priced in seconds.",
+         figure="The same rescue bar from the hands-off page. The second red block is the "
+                "pause the defibrillator costs, priced in seconds.",
          watch="That block is about twelve seconds long, and it is the one pause on the chart "
                "the unit is not allowed to shorten - all it can do is make sure pushing "
                "restarts the instant it ends. Hover the block to read its exact length.",
@@ -505,9 +479,8 @@ STEPS = [
          next_q="The emergency is over and the ambulance crew is walking in. They have about "
                 "five seconds of attention. **What do you show them?**"),
 
-    dict(id="timeline", phase=5, scene="The Picture The Paramedic Gets",
+    dict(id="timeline", phase=8, scene="The Picture The Paramedic Gets",
          ai="The Quality Timeline",
-         step="10 - Report the result",
          doing="Put everything measured onto one shared clock, so three and a half minutes can "
                "be handed over in about five seconds.",
          tech="depth, speed, lean, posture and the light bar on one time axis",
@@ -536,8 +509,7 @@ STEPS = [
          next_q="Everything so far has worked. **Now the hard question: what would this get "
                 "wrong in a real room?** The next page is the one a demo usually leaves out."),
 
-    dict(id="limits", phase=5, scene="What This Would Get Wrong", ai="The Honest List",
-         step="11 - Be honest about the limits",
+    dict(id="limits", phase=9, scene="What This Would Get Wrong", ai="The Honest List",
          doing="Write down what the system genuinely cannot do. The dangerous version of this "
                "app is the one without this page.",
          tech="invented data - a fragile camera - thresholds that are not people",
@@ -716,3 +688,15 @@ COLUMN_HELP = {
 
 BY_ID = {s["id"]: s for s in STEPS}
 ORDER = [s["id"] for s in STEPS]
+
+# The landing page's phase table, derived rather than written out. It used to be
+# a second hand-maintained list, which is exactly how the two spines drifted
+# apart in the first place: there is now one place to change a phase.
+WORKFLOW = [(f"{i + 1} - {name}", note, [s["id"] for s in STEPS if s["phase"] == i])
+            for i, (name, note) in enumerate(PHASES)]
+
+# Contiguity is what makes "PHASE n OF 10" honest. Asserted at import, so a page
+# inserted into the wrong phase fails here rather than looking odd in a lesson.
+_seen = [s["phase"] for s in STEPS]
+assert _seen == sorted(_seen), f"pages are out of phase order: {_seen}"
+assert {s["phase"] for s in STEPS} == set(range(len(PHASES))), "a phase has no pages"

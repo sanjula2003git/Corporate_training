@@ -73,8 +73,8 @@ half the lesson.
 py -3.13 -m streamlit run app.py
 ```
 
-Sixteen pages plus a landing page, one per teaching step, in the same shape as the other apps
-in this repo. Every page has six parts: what we are doing on this page and why, what is
+Sixteen pages across ten phases, plus a landing page, in the same shape as the other apps in
+this repo. Every page has six parts: what we are doing on this page and why, what is
 happening in the room, why it is hard, where the AI comes in, what it looks like, what the
 picture shows and what changed in it, and then the notebook section, the takeaway and the
 question the next page answers. Deep links are `?stage=<id>`, with the ids in
@@ -112,10 +112,14 @@ defibrillator* and explained on the page where it matters, *sternum* is *the bre
 
 Three things support it:
 
-- **The workflow spine.** `bridge.WORKFLOW` maps all sixteen pages onto the ordinary shape of a
-  data project — understand the problem, decide what to measure, collect, explore, clean,
-  feature-engineer, decide, evaluate, act, report, admit the limits — and the landing page draws
-  it as a table. Each page carries its step as a badge.
+- **One spine, ten phases.** `bridge.PHASES` *is* the method: understand the problem, decide what
+  to measure, collect, explore and clean, feature-engineer, build the decision logic, evaluate,
+  act, report, admit the limits. The sixteen pages sit inside those phases, and the landing page
+  draws them as a table built from `bridge.WORKFLOW`, which is **derived** from `PHASES` rather
+  than written out again. There used to be two numbering systems — six story phases and eleven
+  workflow steps, both printed on every header — and a reader had to hold two positions at once.
+  Phases must stay **contiguous in page order**, since the header prints `PHASE n OF 10`;
+  `bridge.py` asserts that at import, so a page dropped into the wrong phase fails loudly.
 - **It says out loud that nothing is trained.** This build has no model: `requirements.txt` has
   no scikit-learn and no TensorFlow. The push counter is three lines of ordinary code and the
   coaching logic is a ranked checklist. `bridge.WORKFLOW_NOTE` says so under the workflow table,

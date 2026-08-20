@@ -173,16 +173,15 @@ def hover_table(rows, headers, tip_from=None):
 
 def header(st_):
     p = bridge.PHASES[st_["phase"]]
-    # .get, not [...]: Streamlit can hot-reload app.py while still holding an
-    # older bridge in memory, and a page that half-crashes in front of a class
-    # is worse than one missing its badge. A reboot restores the full page.
-    step = st_.get("step", "")
-    badge = f" &nbsp;·&nbsp; DATA-SCIENCE STEP {step.upper()}" if step else ""
+    # One number, not two. This used to print the phase AND a separate
+    # "data-science step" badge, so a reader had to hold two positions at once.
+    # The phase now IS the step of the method, and the sub-line says which.
     st.markdown(
-        f"<div class='hero'><small>PHASE {st_['phase'] + 1} OF {len(bridge.PHASES)} · {p[0]}"
-        f"{badge}</small>"
+        f"<div class='hero'><small>PHASE {st_['phase'] + 1} OF {len(bridge.PHASES)} · "
+        f"{p[0].upper()}</small>"
         f"<h1>🫀 {st_['scene']}</h1><h3><span class='scene'>{st_['scene']}</span> → "
-        f"<span class='ai'>{st_['ai']}</span></h3></div>", unsafe_allow_html=True)
+        f"<span class='ai'>{st_['ai']}</span></h3>"
+        f"<small>{p[1]}</small></div>", unsafe_allow_html=True)
     if st_.get("doing"):
         st.markdown(f"**What we are doing on this page, and why.** {st_['doing']}")
     a, b, c = st.columns(3)
@@ -304,31 +303,32 @@ if stage == "start":
 
     workflow = getattr(bridge, "WORKFLOW", [])
     if workflow:
-        st.subheader("What this app actually does, step by step")
+        st.subheader(f"The {len(bridge.PHASES)} phases")
         st.markdown(
             "Underneath the emergency story this is an ordinary data project, done in the "
-            "ordinary order. Every page below belongs to one of these steps and says which "
-            "one it is at the top.")
+            "ordinary order — and the phases *are* that order. Every page below sits in one "
+            "of them and says which at the top.")
         wf = pd.DataFrame([
-            dict(Step=name, **{"What happens here": what,
-                               "Pages": ", ".join(bridge.BY_ID[i]["scene"] for i in ids
-                                                  if i in bridge.BY_ID)})
+            dict(Phase=name, **{"What happens here": what,
+                                "Pages": ", ".join(bridge.BY_ID[i]["scene"] for i in ids
+                                                   if i in bridge.BY_ID)})
             for name, what, ids in workflow])
         st.dataframe(wf, hide_index=True, width="stretch", height=36 * len(workflow) + 44,
-                     column_config={"Step": st.column_config.TextColumn("Step", width="medium"),
+                     column_config={"Phase": st.column_config.TextColumn("Phase", width="medium"),
                                     "What happens here": st.column_config.TextColumn(width="large")})
         note = getattr(bridge, "WORKFLOW_NOTE", "")
         if note:
             st.info(note)
 
     st.subheader("Learning journey")
-    st.caption("Sixteen pages, in order. Each has the same six parts: what we are doing and "
-               "why, what is happening in the room, why it is hard, where the AI comes in, "
-               "what the picture shows, and the question the next page answers.")
+    st.caption(f"{len(bridge.STEPS)} pages across the {len(bridge.PHASES)} phases, in order. "
+               "Each has the same six parts: what we are doing and why, what is happening in "
+               "the room, why it is hard, where the AI comes in, what the picture shows, and "
+               "the question the next page answers.")
     for i, step in enumerate(bridge.STEPS, 1):
         label = f"**{i}. {step['scene']}** — {step['ai']}"
-        if step.get("step"):
-            label += f"  ·  _{step['step']}_"
+        phase = bridge.PHASES[step["phase"]][0]
+        label += f"  ·  _phase {step['phase'] + 1}, {phase.lower()}_"
         goto(step["id"], label, f"jump_{step['id']}")
 
     advantages = getattr(bridge, "ADVANTAGES", [])
