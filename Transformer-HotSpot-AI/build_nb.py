@@ -40,20 +40,112 @@ def link(stage, label):
 
 
 # ============================================================================
-# THE PHASES  (one substation, one year, in the order a real project runs it)
+# THE TEN PHASES
+# One phase per stage of a real machine-learning project. Every phase ends with
+# a question, and the next phase opens by answering it - so the notebook reads
+# as one argument rather than ten separate topics.
+#   intro    - two sentences, plain English, no unexplained jargon
+#   question - what this phase leaves open
+#   away     - the one sentence to remember
 # ============================================================================
 PHASES = [
-    ("The Transformer In Service", "Why a transformer heats, and why the hot spot decides its life."),
-    ("One Hour Of Operation",      "The thermal model, and the temperature nobody measures."),
-    ("The Monitoring Log",         "The historian export lands and gets checked."),
-    ("Preparing The Data",         "Bad readings out, physics in, the year split honestly."),
-    ("The First Prediction",       "The standard's own model, then a straight line."),
-    ("Models That Bend",           "Three ensembles on the same columns."),
-    ("Reading The Model",          "Which sensors earn their place, and how the prediction moves."),
-    ("The Monitoring Dashboard",   "Predicted against measured, where it matters."),
-    ("What The Model Does Not Know", "The limit, measured rather than asserted."),
-    ("Decision Support",           "One temperature, one recommendation, one fleet view."),
+    ("The Problem",        "What is going wrong, in plain English."),
+    ("The Data",           "What the substation actually records."),
+    ("Exploring The Data", "Looking before touching. What is odd, and what is wrong."),
+    ("Preparing The Data", "Cleaning, encoding, scaling - getting it fit to learn from."),
+    ("How Learning Works", "The words, and the honest test."),
+    ("The First Model",    "The simplest thing that could work, and where it breaks."),
+    ("Training A Model",   "Models that bend, and why we picked this one."),
+    ("Scoring It",         "The marks out of ten, and which one matters here."),
+    ("Where It Fails",     "The errors that count, found on purpose."),
+    ("Using It",           "One temperature, one decision."),
 ]
+
+PHASE_PAGE = ["problem", "data", "explore", "prepare", "learning",
+              "baseline", "training", "scoring", "limits", "use"]
+
+PHASE_TEXT = [
+    dict(
+        intro="""A transformer is a large electrical device that sits in a substation and quietly runs hot.
+Its hottest point is buried deep inside, wrapped in paper that slowly cooks - and almost nobody can measure
+that point, because the sensor has to be built in at the factory.""",
+        question="If we cannot measure the hot spot, what *can* we measure?",
+        away="The temperature that decides how long a transformer lives is the one nobody measures.",
+    ),
+    dict(
+        intro="""Every substation already logs a few ordinary readings once an hour - how much current is
+flowing, how warm the air is, how warm the oil is. We have a year of that for four transformers.""",
+        question="What does a whole year of these readings actually look like?",
+        away="The inputs are cheap sensors already fitted; the answer column is the expensive one.",
+    ),
+    dict(
+        intro="""Before building anything, look at the data. That is **EDA** - exploratory data analysis -
+which means plotting it and asking what is strange. Some of what you find is real, and some of it is a
+broken sensor.""",
+        question="Some of these readings are impossible. How do we get the data fit to learn from?",
+        away="Every dataset arrives with faults in it, and plotting is how you find them.",
+    ),
+    dict(
+        intro="""Raw data is never ready to use. Three jobs: throw out readings that cannot be true, turn
+word-columns into numbers, and put every column on a comparable scale so none of them dominates just
+because its numbers happen to be bigger.""",
+        question="How do we know a model has actually learned, rather than memorised?",
+        away="Preparation is most of the work, and skipping any of the three quietly ruins the result.",
+    ),
+    dict(
+        intro="""A model learns by being shown examples: these readings went with that temperature. To find
+out whether it really learned, you hide some weeks from it and test on those - the same reason you do not
+revise from the exam paper.""",
+        question="What is the simplest model that could possibly work?",
+        away="A score on data the model has already seen is not a score, it is a memory test.",
+    ),
+    dict(
+        intro="""Always start with the simplest thing that works, so you know what "good" means. Here that
+is the industry standard's own hand calculation, and then a **straight line** fitted through the data.""",
+        question="The relationship curves, and a straight line cannot follow it. What can?",
+        away="Without a baseline, any accuracy number sounds impressive and means nothing.",
+    ),
+    dict(
+        intro="""Instead of one equation, these models build hundreds of small yes/no rules and combine
+them. That lets them follow a curve no straight line can, without anybody having to write the curve
+down.""",
+        question="Three models, three sets of predictions. How do we say which one is best?",
+        away="Tree models bend to the shape of the data, which is why they beat the straight line here.",
+    ),
+    dict(
+        intro="""There is more than one way to measure "wrong", and each answers a different question. Pick
+the wrong one and a bad model looks fine. For this job the one that matters is **MAE** - the average miss,
+in degrees.""",
+        question="The average is good. But is it good *where it matters*?",
+        away="A single accuracy number hides where the model fails, and it always fails somewhere.",
+    ),
+    dict(
+        intro="""An average hides its worst days. The hottest 5 % of hours cause most of the damage here,
+so that is exactly where the model has to be checked - not where it is easiest.""",
+        question="Knowing all that, how should an engineer actually use it?",
+        away="Find the model's weak spot yourself, before it finds you.",
+    ),
+    dict(
+        intro="""A temperature on its own is not useful. It becomes useful when it is compared against a
+limit and turned into a recommendation - which a person then accepts or overrules.""",
+        question="",
+        away="The model estimates; the engineer decides. That boundary is the whole design.",
+    ),
+]
+
+# old step id -> new phase
+REPHASE = {
+    "the-asset": 0, "why-heat": 0, "hot-spot": 0, "enter-ai": 0,
+    "thermal-model": 1, "the-target": 1, "log": 1,
+    "inspect": 2, "explore": 2,
+    "clean": 3, "features": 3, "scale": 3, "encode": 3,
+    "ml-terms": 4, "split": 4,
+    "baseline": 5, "linear": 5, "residuals": 5,
+    "forest": 6, "boosting": 6, "xgboost": 6, "leaderboard": 6, "why-model": 6,
+    "why-metric": 7, "metrics": 7, "importance": 7, "sensitivity": 7,
+    "errors": 8, "trend": 8, "hot-tail": 8, "unseen-unit": 8,
+    "predict": 9, "recommend": 9, "dashboard": 9,
+}
 
 NUM = ["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩",
        "⑪","⑫","⑬","⑭","⑮","⑯","⑰","⑱","⑲","⑳",
@@ -68,6 +160,18 @@ NUM = ["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩",
 STEPS = []
 def step(**kw):
     STEPS.append(kw)
+
+
+# the order the steps are written in, kept across the re-phasing sort
+ORDER_IN_PHASE = [
+    "the-asset", "why-heat", "hot-spot", "enter-ai", "thermal-model",
+    "the-target", "log", "inspect", "explore", "clean", "features", "scale",
+    "encode", "ml-terms", "split", "baseline", "linear", "residuals", "forest",
+    "boosting", "xgboost", "leaderboard", "why-model", "why-metric", "metrics",
+    "importance", "sensitivity",
+    "errors", "trend", "hot-tail", "unseen-unit", "predict", "recommend",
+    "dashboard",
+]
 
 
 # ------------------------------------ PHASE 1 - THE TRANSFORMER IN SERVICE
@@ -437,7 +541,7 @@ That is the whole opportunity, and the whole limitation:
 - **Opportunity:** four instrumented units can teach a model that then runs on units without probes.
 - **Limitation:** the model can only be trusted on transformers that behave like the four it learned from.
 
-Step 27 measures exactly how far that trust extends.""",
+Phase 9 measures exactly how far that trust extends.""",
     ai_link="""In supervised learning the measured hot-spot readings are the **labels**.
 
 - Labels are almost always the expensive part of a dataset. Here they need a probe installed at manufacture.
@@ -906,7 +1010,7 @@ advance, and it is not a machine learning insight — it is a thermal one.""",
 - Give it `K^1.6` and a straight line can represent a power law.
 - Give it a rolling mean and a model with no memory can see the recent past.
 
-This is usually worth more than changing the algorithm. Step 20 measures both, side by side.""",
+This is usually worth more than changing the algorithm. Phase 9 measures both, side by side.""",
     bridge=[("Current in amps", "load_pu — per unit of rating"),
             ("The K^1.6 winding law", "load_pu_16 — the physics, as a column"),
             ("A three-hour oil time constant", "load_roll3 — the recent past")],
@@ -1023,7 +1127,7 @@ The model did not get worse. The **test set** got narrower. Autumn has less temp
 full year, and R² is the fraction of the target's variance a model explains. Shrink that variance and R²
 falls even when every prediction is exactly as accurate as before.
 
-Both splits are fitted and scored in step 23, so this is measured rather than asserted. It is worth
+Both splits are fitted and scored in the hot-band step, so this is measured rather than asserted. It is worth
 internalising now: **R² is a property of the test set as much as of the model.**""",
     ai_link="""The choice made here is whole weeks, every fourth one.
 
@@ -1031,7 +1135,7 @@ internalising now: **R² is a property of the test set as much as of the model.*
 - It keeps summer and winter in both sets, so the hot band is testable.
 - It gives a 75 / 25 split without cherry-picking.
 
-The pure-future split is run again in step 23, where there is a model to score with it.""",
+The pure-future split is run again in the hot-band step, where there is a model to score with it.""",
     bridge=[("Holding back a fair test", "The test set"),
             ("Adjacent hours are nearly the same", "Blocked, not random, splitting"),
             ("A narrower test set", "R² falls without the model changing")],
@@ -1052,7 +1156,7 @@ print(f"  hot spot mean       {y_train.mean():6.2f}  {y_test.mean():6.2f}  °C")
 print(f"  hot spot std dev    {y_train.std():6.2f}  {y_test.std():6.2f}  °C")
 print(f"  hours above 110 °C  {int((y_train>110).sum()):6d}  {int((y_test>110).sum()):6d}")
 print()
-print("Both sets span the whole year, so the hot band is present in both. That matters in step 26.")
+print("Both sets span the whole year, so the hot band is present in both. That matters in the hot-band step.")
 ''')],
     built="""A held-out quarter of the year, chosen in whole weeks.
 
@@ -2708,62 +2812,209 @@ print("Environment ready.")
 """)
 
 
-# ============================================================================
-# EMIT THE STEPS
-# ============================================================================
-for i, s in enumerate(STEPS):
-    pname, pdesc = PHASES[s["phase"]]
-    bridge_tbl = "\n".join(f"| {l} | → | {r} |" for l, r in s["bridge"])
-    see = ""
-    if APP:
-        see = (f"\n> 🎬 **See this illustrated:** "
-               f"[{APP}/?stage={s['id']}]({APP}/?stage={s['id']})\n")
 
-    md(rf"""
+# ---------------------------------------------------------------- NEW TOPICS
+# Added when the course was cut to ten phases: the beginner material the
+# original thirty steps assumed the reader already knew.
+
+step(
+    id="ml-terms", phase=4, icon="\U0001f4d0", ai_icon="\U0001f9ea",
+    ee="The Words, Before We Use Them", ai="Features, Labels and Examples",
+    tech="13 feature columns, 1 label column, one example per hour",
+    takeaway="""Everything that follows is just: show it examples, then test it on examples it has never
+seen.""",
+    site="", challenge="", ai_link="", bridge=[], built="",
+    body=[("md", r"""
+Six words carry the whole of the rest of this notebook.
+
+| Word | What it actually means |
+|---|---|
+| **Feature** | An input. Something you measured and can feed in - load current, air temperature. |
+| **Label** | The answer you want. Here, the hot-spot temperature. |
+| **Model** | A rule, learned from examples, that turns features into a label. |
+| **Training** | Showing the model thousands of examples so it can find the pattern. |
+| **Prediction** | Using the trained model on readings it has never seen. |
+| **Overfitting** | Memorising the examples instead of learning the pattern - brilliant on what it has seen, useless on anything new. Like revising by memorising last year's exam paper. |
+
+That last one is why the next step holds part of the year back.
+"""),
+          ("co", '''
+# The six words, on this actual dataset.
+
+print(f"FEATURES  (the inputs)   {len(ENG_FEATURES)} columns")
+for c in ENG_FEATURES:
+    print(f"    - {c}")
+print()
+print(f"LABEL     (the answer)   {TARGET}")
+print(f"EXAMPLES  (rows)         {len(df):,} hours")
+print()
+print("Each row is one example: 'these readings went with that temperature'.")
+print("Training = show it most of those. Testing = check it on the ones we hid.")
+''')],
+)
+
+step(
+    id="encode", phase=3, icon="\U0001f524", ai_icon="✅",
+    ee="Turning Words Into Numbers", ai="Categorical Encoding",
+    tech="One-hot for names, plain integers for ordered categories",
+    takeaway="""Number a category only when 'bigger' genuinely means something; otherwise give each value
+its own yes/no column.""",
+    site="", challenge="", ai_link="", bridge=[], built="",
+    body=[("md", r"""
+A model multiplies and adds. It cannot do arithmetic on the word `"T3"`, so every non-numeric column has to
+be converted first. **How** you convert it matters, and there are two cases.
+
+**Case 1 - the values are just names.** `unit_id` is T1, T2, T3, T4. If you number them 1, 2, 3, 4 you have
+told the model that T4 is *four times* T1, and that T2 sits halfway between T1 and T3. Both are false, and
+the model will happily use them. The fix is **one-hot encoding**: one yes/no column per value.
+
+**Case 2 - the values have a real order.** `cooling_stage` is 0 (no fans), 1 (half), 2 (all). Bigger really
+does mean more cooling, and the steps are evenly spaced, so a plain integer is correct. That is called an
+**ordinal** column.
+
+The test is one question: *does "bigger" mean anything?*
+"""),
+          ("co", '''
+# Case 1 - a name. One-hot it.
+onehot = pd.get_dummies(df["unit_id"], prefix="is").astype(int)
+print("unit_id, one-hot encoded")
+print(pd.concat([df[["unit_id"]], onehot], axis=1).head(4).to_string(index=False))
+print()
+
+# Case 2 - an order. Leave it alone.
+print("cooling_stage is already an ordered number, so it needs no encoding:")
+print(df["cooling_stage"].value_counts().sort_index()
+        .rename_axis("stage").rename("hours").to_string())
+print()
+print("Rule: does 'bigger' mean anything?")
+print("   cooling_stage   bigger = more fans   -> keep the integer")
+print("   unit_id         bigger = nothing     -> one-hot it")
+print()
+print("NOTE: this notebook deliberately does NOT feed unit_id to the model, one-hot or")
+print("otherwise. It has to learn the physics rather than memorise which unit it is")
+print("looking at. The unseen-transformer step measures exactly what that costs.")
+''')],
+)
+
+step(
+    id="why-metric", phase=7, icon="\U0001f9ee", ai_icon="\U0001f4cf",
+    ee="Three Ways To Be Wrong", ai="Choosing An Evaluation Metric",
+    tech="MAE, RMSE and R-squared - and which one this job needs",
+    takeaway="""MAE is the metric here because it is in degrees, and degrees are what the loading limit is
+written in.""",
+    site="", challenge="", ai_link="", bridge=[], built="",
+    body=[("md", r"""
+Before scoring anything, know what the scores mean. All three are computed on the held-out weeks.
+
+| Metric | In plain English | Units |
+|---|---|---|
+| **MAE** - mean absolute error | On average, how far off was it? Direction ignored. | °C |
+| **RMSE** - root mean squared error | Same idea, but big misses are punished much harder. Always at least as large as MAE. | °C |
+| **R²** - r-squared | What share of the variation did the model explain? 0 is useless, 1 is perfect. | none |
+
+**For this job, MAE is the one that matters.** It is in degrees, which is the language the loading limit is
+already written in: *"typically wrong by 1.35 °C"* can be checked straight against the 110 °C limit. RMSE is
+the right choice when one huge mistake is far worse than several small ones. R² is useful for comparing
+models on the *same* test set - and misleading otherwise.
+
+**Why a high R² can mislead.** R² depends on how spread out the test data is, not only on the model. Score
+the same model on a calm autumn instead of a whole year and R² falls sharply while the average miss barely
+moves. The model did not get worse; the exam got easier to fail. The next step measures exactly that.
+""")],
+)
+
+step(
+    id="why-model", phase=6, icon="\U0001f3af", ai_icon="\U0001f680",
+    ee="Why This Model And Not Another", ai="Model Selection",
+    tech="Accuracy, retraining cost, and how much hand-holding it needs",
+    takeaway="""Choose on accuracy, retraining cost and robustness together - the most accurate model is not
+automatically the right one.""",
+    site="", challenge="", ai_link="", bridge=[], built="",
+    body=[("md", r"""
+Four models were fitted on identical columns and scored on identical held-out weeks, so the comparison is
+fair. Accuracy is only the first of three tests a model has to pass before it goes into service.
+
+1. **Is it accurate enough?** Measured against IEEE C57.91, not against zero.
+2. **Can it be retrained cheaply?** A monitoring scheme that takes an hour to refit will not be refitted.
+3. **Does it need hand-holding?** Anything needing careful tuning will drift once its author moves on.
+"""),
+          ("co", '''
+# The decision, written down rather than implied.
+
+mae_by_name = dict(zip(board["Model"], board["MAE (°C)"]))
+best_boost = mae_by_name.get("XGBoost", mae_by_name.get("Gradient Boosting"))
+
+choice = pd.DataFrame([
+    {"Model": "Linear regression", "MAE (°C)": mae_by_name.get("Linear regression (engineered)"),
+     "Bends?": "no",  "Retrain": "instant",         "Verdict": "rejected - wrong shape"},
+    {"Model": "Random Forest",     "MAE (°C)": mae_by_name.get("Random Forest"),
+     "Bends?": "yes", "Retrain": "seconds",         "Verdict": "good, but beaten"},
+    {"Model": "Gradient Boosting", "MAE (°C)": mae_by_name.get("Gradient Boosting"),
+     "Bends?": "yes", "Retrain": "tens of seconds", "Verdict": "accurate, slow to fit"},
+    {"Model": "XGBoost",           "MAE (°C)": best_boost,
+     "Bends?": "yes", "Retrain": "a few seconds",   "Verdict": "CHOSEN"},
+])
+print(choice.round(3).to_string(index=False))
+print()
+print("XGBoost and Gradient Boosting agree on accuracy to within a few hundredths of a")
+print("degree. XGBoost wins the second test: it refits in a few seconds, so the substation")
+print("can refresh the model as new data arrives instead of once a quarter.")
+''')],
+)
+
+
+# ============================================================================
+# EMIT  -  ten phases, each opening by answering the previous phase's question
+# ============================================================================
+for s in STEPS:
+    s["phase"] = REPHASE[s["id"]]
+STEPS.sort(key=lambda s: (s["phase"], ORDER_IN_PHASE.index(s["id"])))
+
+_seen = set()
+for i, s in enumerate(STEPS):
+    p = s["phase"]
+    if p not in _seen:
+        _seen.add(p)
+        pname, pdesc = PHASES[p]
+        t = PHASE_TEXT[p]
+        prev_q = PHASE_TEXT[p - 1]["question"] if p > 0 else ""
+        answering = f"> **Answering:** {prev_q}\n>\n" if prev_q else ""
+        see = ""
+        if APP:
+            see = (f"\n> \U0001f3ac **See this illustrated:** "
+                   f"[{APP}/?stage={PHASE_PAGE[p]}]({APP}/?stage={PHASE_PAGE[p]})\n")
+        md(rf"""
 ---
 
-# {NUM[i]} {s['icon']} {s['ee']}
-### Phase {s['phase']+1} of {len(PHASES)} · {pname} — *{pdesc}*
+# {NUM[p]} {pname}
 
-> The electrical engineering activity on this page is also, exactly, the AI concept
-> **{s['ai']}**. Here is why.
+**Phase {p+1} of {len(PHASES)}** · *{pdesc}*
 
-## Part 1 · In the substation
-
-{s['site'].strip()}
-
-## Part 2 · The engineering challenge
-
-{s['challenge'].strip()}
-""")
+{answering}{t['intro'].strip()}
+{see}""")
 
     md(rf"""
-## Part 3 · Where the AI comes in
+### {s['icon']} {s['ee']}
 
-{s['ai_link'].strip()}
+*{s['tech']}* — in machine learning, **{s['ai']}**.
 
-| ⚡ **In the substation** | → | 🤖 **In the AI** |
-|---|:-:|---|
-{bridge_tbl}
-
-**{s['ee']}** → *becomes* → **{s['ai']}** → *which is computed as* → `{s['tech']}`
-{see}
-## Part 4 · The technical explanation
-
-You now know what **{s['ee']}** is, why it is hard, and why it needs **{s['ai']}**. Only now, the
-mechanism.
+{s['takeaway'].strip()}
 """)
 
     for kind, text in s["body"]:
         (md if kind == "md" else co)(text)
 
-    md(rf"""
-## Part 5 · What you just built
-
-{s['built'].strip()}
-
-> **Key takeaway.** {s['takeaway'].strip()}
-""")
+    # close the phase after its last step
+    last = (i == len(STEPS) - 1) or STEPS[i + 1]["phase"] != p
+    if last:
+        t = PHASE_TEXT[p]
+        q = t["question"]
+        tail = (f"\n> **The question this leaves.** {q}\n"
+                if q else "\n> **That is the course.** Ten questions, ten answers, "
+                          "one working system.\n")
+        md(rf"""
+> **Key takeaway.** {t['away'].strip()}
+{tail}""")
 
 
 # ============================================================================
@@ -2843,8 +3094,7 @@ Those five are what separate a model from a condition-monitoring scheme.
 
 Stated plainly, because a monitoring scheme that oversells itself gets switched off:
 
-- It **does not transfer to an unseen transformer design** without a calibration period. Step 27 measures
-  the penalty: 2.4 to 5.6 °C of constant offset.
+- It **does not transfer to an unseen transformer design** without a calibration period. Phase 9 measures the penalty: 2.4 to 5.6 °C of constant offset.
 - It is **least accurate in the hot band**, and biased low there. That is the opposite of what you want,
   and it is a consequence of having few training hours above 110 °C.
 - It **requires a working top-oil thermometer.** Remove that input and the problem becomes substantially

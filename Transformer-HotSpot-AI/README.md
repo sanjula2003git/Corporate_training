@@ -8,8 +8,8 @@ because a real power-systems problem required it — not because it is on a syll
 
 | | Deliverable | Teaches | Entry point |
 |---|---|---|---|
-| 📓 | **Colab notebook** | **Implementation** — runnable code, 30 steps, 41 cells | `Transformer_HotSpot_Temperature_AI.ipynb` |
-| 🖥️ | **Streamlit application** | **Conceptual understanding** — 31 interactive pages | `streamlit run app.py` |
+| 📓 | **Colab notebook** | **Implementation** — runnable code, 10 phases, 44 code cells | `Transformer_HotSpot_Temperature_AI.ipynb` |
+| 🖥️ | **Streamlit application** | **Conceptual understanding** — 10 interactive pages | `streamlit run app.py` |
 
 They tell the same educational story and are **completely independent**: the app imports nothing from the
 notebook and reads none of its files. Both reproduce the same IEEE C57.91 engineering from scratch, which
@@ -23,9 +23,13 @@ Two deliberate differences, both so the app stays inside a 1 GB Streamlit Cloud 
 - The app substitutes `HistGradientBoostingRegressor` for the notebook's `GradientBoostingRegressor`.
   Same algorithm, binned — it lands at 1.347 °C against the notebook's 1.348 °C.
 
-Structurally the notebook follows the **Smart Construction / Building Energy** layout: one intro block
-(problem → what we build → workflow → Engineering-to-AI map), then 30 steps, each written as the same five
-parts. The app mirrors those 30 steps one-for-one, plus a landing page.
+Both deliverables are **ten phases, one per stage of a real machine-learning project**, and the app
+gives each phase exactly one page. Every phase ends with a question and the next opens by answering it, so
+the course reads as one argument rather than ten topics. Sub-topics sit behind tabs in the app and behind
+short step headings in the notebook.
+
+The writing rule is that a non-electrical reader has to be able to follow it: every piece of jargon is
+glossed where it first appears, and page length is budgeted (`text_budget.py`) rather than left to taste.
 
 ## The problem
 
@@ -80,16 +84,25 @@ and 0.66 °C. None of them dominates.
 
 ## The learning journey
 
-10 phases · 30 steps · one substation, one year:
+Ten phases, one substation, one year. Each row's question is answered by the row below it.
 
-the transformer in service (why it heats, why the hot spot) → one hour of operation (the IEEE thermal
-model, and the temperature nobody measures) → the historian export → cleaning and preparing → the
-standard's own model, then a straight line → three ensembles → reading the model → the monitoring
-dashboard → what the model does not know → decision support.
+| # | Phase | Ends by asking |
+|---|---|---|
+| 1 | The Problem | If we cannot measure the hot spot, what *can* we measure? |
+| 2 | The Data | What does a whole year of these readings look like? |
+| 3 | Exploring The Data (EDA) | Some readings are impossible. How do we make the data fit to learn from? |
+| 4 | Preparing The Data | How do we know a model learned rather than memorised? |
+| 5 | How Learning Works | What is the simplest model that could work? |
+| 6 | The First Model | The relationship curves. What can follow it? |
+| 7 | Training A Model | Three models. How do we say which is best? |
+| 8 | Scoring It | The average is good — but is it good *where it matters*? |
+| 9 | Where It Fails | Knowing that, how should an engineer use it? |
+| 10 | Using It | — |
 
-Each step: **Part 1 in the substation → Part 2 the engineering challenge → Part 3 where the AI comes in
-(with the Engineering↔AI bridge table) → Part 4 the technical explanation (runnable code) → Part 5 what you
-just built + a one-line key takeaway.**
+Phases 3, 4, 5, 7 and 8 carry the beginner material the original build assumed you already had: EDA,
+cleaning, **encoding** (one-hot for names, integers for ordered categories, and why numbering categories
+is wrong), standardisation, a glossary of the six ML words before anything uses them, the justification for
+the chosen model, and what each evaluation metric means with the case for MAE here.
 
 ## Five places the engineering discipline shows, not the ML
 
@@ -136,7 +149,9 @@ nameplate model cannot see and the fitted model can.
 
 ## The Streamlit application
 
-31 pages: a landing page plus one per notebook step, routed by `?stage=<id>` so every page is linkable.
+11 pages: a landing page plus one per phase, routed by `?stage=<id>` so every page is linkable. The
+old 30-step ids are aliased onto the ten pages, so links written against the previous version still land
+somewhere sensible.
 
 **The landing page** has the four sections the brief asks for — the engineering problem (with the
 interactive cutaway), the project goal, a **clickable mind map** that opens any page, and the
@@ -160,7 +175,7 @@ Visuals built for this app:
 | File | What it is |
 |---|---|
 | `app.py` | Router, landing page, and one renderer per stage |
-| `bridge.py` | The `STEPS` registry (30 entries) + the five-part scaffold, mind map and mapping figure |
+| `bridge.py` | The `STEPS` registry (10 entries) + the page scaffold, question chain, mind map and mapping figure |
 | `story.py` | The substation: physics, data, models, decision rules. **Every number the app prints comes from here** |
 | `prep_artifacts.py` | Builds `artifacts/` — the precomputed data and model results the app loads |
 | `artifacts/` | 15 files, 4.9 MB. Committed, and regenerated by the script above |
@@ -199,12 +214,14 @@ no build step, and deleting the folder restores the original behaviour exactly.
 | File | What it is |
 |---|---|
 | `build_nb.py` | The notebook generator. **Edit the `STEPS` registry here, never the `.ipynb`.** |
-| `Transformer_HotSpot_Temperature_AI.ipynb` | The notebook — 136 cells, 41 code, 30 steps, 10 phases |
+| `Transformer_HotSpot_Temperature_AI.ipynb` | The notebook — 107 cells, 44 code, 34 steps, 10 phases |
 | `substation_thermal_log.csv` | Written by the notebook when it runs; a reference copy is kept here |
 | `app.py`, `bridge.py`, `story.py` | The Streamlit application |
 | `prep_artifacts.py`, `artifacts/` | The offline build and its output |
 | `verify_artifacts.py` | Refits everything live and asserts it matches `artifacts/` |
-| `smoke_pages.py` | Renders all 31 stages through `AppTest` |
+| `smoke_pages.py` | Renders all 11 stages through `AppTest` |
+| `text_budget.py` | Counts the words on every page, so "too long" stays a number |
+| `run_notebook.py` | Executes all 44 notebook code cells in one namespace |
 
 Rebuild the notebook with `py -3.13 build_nb.py`.
 
@@ -221,7 +238,9 @@ Rebuild the notebook with `py -3.13 build_nb.py`.
 
 ```
 python -X utf8 verify_artifacts.py   # 24 checks: artifacts == live computation
-python -X utf8 smoke_pages.py        # all 31 stages render without an exception
+python -X utf8 smoke_pages.py        # all 11 stages render without an exception
+python -X utf8 text_budget.py        # no page is a wall of text
+python -X utf8 run_notebook.py       # every notebook code cell still runs
 ```
 
 `verify_artifacts.py` refits every model from scratch and compares the result against what `artifacts/`
