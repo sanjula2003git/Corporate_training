@@ -43,10 +43,10 @@ def main():
     # The sidebar edges, on the pages that consume them.
     edges = [
         ("release", {"Who is on the floor?": "Child (4-5 cm)"}),
-        ("peaks", {"How hard rescuer A tires": 0.0}),
-        ("peaks", {"How hard rescuer A tires": 1.5}),
-        ("fatigue", {"How hard rescuer A tires": 0.0}),
-        ("switch", {"How hard rescuer A tires": 1.5}),
+        ("peaks", {"How much helper A tires": 0.0}),
+        ("peaks", {"How much helper A tires": 1.5}),
+        ("fatigue", {"How much helper A tires": 0.0}),
+        ("switch", {"How much helper A tires": 1.5}),
         ("timeline", {"Pad slipping (cm per minute)": 1.0}),
         ("rules", {"Pad slipping (cm per minute)": 1.0}),
     ]

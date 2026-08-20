@@ -59,8 +59,9 @@ correct output instead: keep the beat going, do not stop.
 | `AI_CPR_Guardian.ipynb` | The notebook, executed, with all figures embedded |
 | `build_nb.py` | Builds the notebook. Run with `python -X utf8 build_nb.py` |
 | `story.py` | The simulated rescue, the coaching rules and the figures, for the app |
-| `bridge.py` | The teaching registry: 16 steps, five parts each |
+| `bridge.py` | The teaching registry: 16 steps, six parts each, plus the workflow spine and the tooltips |
 | `app.py` | The illustration app, one page per step, routed by `?stage=` |
+| `smoke_test.py` | Walks every page and sidebar edge with AppTest. Run after any prose edit |
 
 The notebook needs only numpy, pandas and matplotlib — all pre-installed in Colab. The peak
 finder is written by hand rather than imported, because seeing how compressions get counted is
@@ -73,8 +74,10 @@ py -3.13 -m streamlit run app.py
 ```
 
 Sixteen pages plus a landing page, one per teaching step, in the same shape as the other apps
-in this repo: what is happening in the room, why it is hard, where the AI comes in, what it
-looks like, and what the notebook section says. Deep links are `?stage=<id>`, with the ids in
+in this repo. Every page has six parts: what we are doing on this page and why, what is
+happening in the room, why it is hard, where the AI comes in, what it looks like, what the
+picture shows and what changed in it, and then the notebook section, the takeaway and the
+question the next page answers. Deep links are `?stage=<id>`, with the ids in
 `bridge.ORDER`. Navigation inside the app is by button, never by markdown link — Streamlit
 renders every markdown link with `target="_blank"`, so a link opens a new browser tab on every
 click.
@@ -87,7 +90,7 @@ and each is one of the notebook's closing exercises:
 | Dial | What it does |
 |---|---|
 | Patient | switches the depth band from an adult's 5–6 cm to a child's 4–5 cm |
-| How hard rescuer A tires | 1.0 is the notebook; at 0 rescuer A never tires and both detectors stay silent |
+| How much helper A tires | 1.0 is the notebook; at 0 helper A never tires and both detectors stay silent |
 | Pad slipping | adds false depth over time, as a pad sliding on the chest would |
 | The helper is alone | switches the switch plan to *keep going, do not stop* |
 
@@ -99,6 +102,33 @@ Two figure traps worth knowing if you edit `story.py`:
   guideline bands. Traces go on first, bands and reference lines afterwards.
 - A figure with both a main title and subplot titles needs its top margin raised, or the two
   land on top of each other.
+
+## Written for a reader with no medical background
+
+The app is taught to engineering students, so every clinical word is spelled out where it
+first appears and the abbreviations are gone from the page text: **AED** is written as *the
+defibrillator* and explained on the page where it matters, *sternum* is *the breastbone*, and
+*recoil* is *letting the chest come back up*. Keep that rule in any future edit to `bridge.py`.
+
+Three things support it:
+
+- **The workflow spine.** `bridge.WORKFLOW` maps all sixteen pages onto the ordinary shape of a
+  data project — understand the problem, decide what to measure, collect, explore, clean,
+  feature-engineer, decide, evaluate, act, report, admit the limits — and the landing page draws
+  it as a table. Each page carries its step as a badge.
+- **It says out loud that nothing is trained.** This build has no model: `requirements.txt` has
+  no scikit-learn and no TensorFlow. The push counter is three lines of ordinary code and the
+  coaching logic is a ranked checklist. `bridge.WORKFLOW_NOTE` says so under the workflow table,
+  because a student who leaves thinking every problem needs a trained model has learned the
+  wrong thing. **Do not quietly add a model to make the workflow look more conventional.**
+- **Hover explains every name.** Column headings in every table carry a tooltip from
+  `bridge.COLUMN_HELP`, and the ten per-push measurements are rendered by `app.hover_table` as
+  HTML with a `title` attribute, because `st.dataframe` can only put a tooltip on a *header*,
+  never on a cell. Nothing is hidden behind the hover — the same words are still in the visible
+  columns; the tooltip is a second way in, not the only one.
+
+The landing page closes with a **what the project is worth** dashboard: four live metrics and
+`bridge.ADVANTAGES`, each pairing what happens without the unit against what it adds.
 
 ## Sources for the guideline numbers
 
