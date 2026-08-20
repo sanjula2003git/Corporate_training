@@ -28,6 +28,32 @@ from bridge import EE, AISIDE, TECH, GREEN, RED, MUTED, TEXT, INK, EDGE, AMBERHO
 
 st.set_page_config(page_title="AI for Transformer Hot-Spot Prediction", page_icon="⚡",
                    layout="wide", initial_sidebar_state="expanded")
+
+# ---------------------------------------------------------------------------
+# Streamlit Cloud reruns the script after a push WITHOUT restarting the process,
+# so `import bridge` can hand back the copy that was already in sys.modules from
+# before the push: new app.py, old bridge.py.
+#
+# This app.py and this bridge.py were rebuilt together into ten phases, one page
+# each. A stale bridge is therefore not merely missing a constant - it carries
+# the previous THIRTY-step schema, with no `question` on a step, and the landing
+# page dies on a KeyError that Cloud redacts into something nobody can act on.
+#
+# So check the schema once, say plainly what to do, and stop. A sentence the
+# reader can act on beats a traceback only the logs can see. Deliberately placed
+# before inject_css(): the goal is to reach this message, not to look pretty.
+_NEEDED = {"id", "phase", "question", "ee", "ee_icon", "ai", "tech"}
+_steps = getattr(bridge, "STEPS", None)
+if not _steps or not _NEEDED.issubset(_steps[0]):
+    st.error(
+        "**This app is running new code against an older copy of its teaching text.** "
+        "Streamlit Cloud reran it after a push without restarting the process, so the two "
+        "halves of the app no longer match.\n\n"
+        "Open **Manage app** at the lower right and choose **Reboot**.\n\n"
+        "Nothing is wrong with the code and no setting needs changing — the running copy is "
+        "simply out of date.")
+    st.stop()
+
 bridge.inject_css()
 
 
