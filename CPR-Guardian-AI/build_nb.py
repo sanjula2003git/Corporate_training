@@ -786,9 +786,9 @@ deeper" at someone compressing an eighty-year-old correctly is an instruction to
 on the sternum and not sliding. A displaced pad reports confident nonsense, and nothing in this
 notebook detects that.
 
-**Being told you are failing has a cost.** A helper who gets a red light every second may stop.
-"Keep going, help is coming" is sometimes the output with the highest survival value, even when
-the compressions are mediocre — and mediocre compressions are enormously better than none.
+**Being told you are getting it wrong has a cost.** A helper who gets a red light every second
+may stop altogether. "Keep going, help is on its way" is sometimes the most useful thing the
+unit can say — pushing that is not perfect is worth far more than no pushing at all.
 
 **And the boundary that does not move:** the coach never decides about a shock. That belongs to
 a regulated AED, and this notebook models only the stand-clear state around it.""")

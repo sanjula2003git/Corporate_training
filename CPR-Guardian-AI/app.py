@@ -216,7 +216,10 @@ def picture(st_):
 def footer(st_):
     st.markdown("#### 6 · In the notebook")
     st.write(st_["notebook"])
-    st.success(st_["takeaway"])
+    # Optional: not every page ends on a line worth putting in a green box, and
+    # a page that has nothing to add should say nothing rather than pad.
+    if st_.get("takeaway"):
+        st.success(st_["takeaway"])
     if st_.get("next_q"):
         st.markdown("##### Before you click next")
         st.info(st_["next_q"])
@@ -292,8 +295,8 @@ if stage == "start":
     st.subheader("The session, at your current settings")
     st.markdown(
         "**One row per helper, scoring everything they did.** Read the two rows against each "
-        "other: they end up at roughly the same green share while failing at completely "
-        "different things — A never lets the chest come back up, B pushes far too slowly. "
+        "other: they end up at roughly the same green share while going wrong in completely "
+        "different ways — A never lets the chest come back up, B pushes far too slowly. "
         "That is the point of the whole project, and it is why the unit judges push by push "
         "rather than reporting an average.")
     report_table()
@@ -672,7 +675,7 @@ else:
         st.caption("Hover any column heading for what it means.")
         st.markdown(
             "**Read the two rows of the table against each other.** Both helpers land at about "
-            "the same green share while failing at completely different things — A on letting "
+            "the same green share while going wrong in completely different ways — A on letting "
             "the chest come back up, B on speed. Neither set of averages looks disastrous, "
             "which is exactly why the unit works push by push instead of reporting means.")
 
@@ -694,8 +697,9 @@ else:
             "**A pad has to be placed correctly to measure anything.** Every depth number "
             "assumes the pad is on the breastbone and not sliding. A pad that has slipped "
             "reports confident nonsense, and nothing here notices.\n\n"
-            "**Being told you are failing has a cost.** A helper who gets a red light every "
-            "second may stop, and mediocre pushing is enormously better than none.")
+            "**Being told you are getting it wrong has a cost.** A helper who gets a red light "
+            "every second may stop altogether — and pushing that is not perfect is worth far "
+            "more than no pushing at all.")
         st.info("Two of those are dials in the sidebar. **Who is on the floor** switches the "
                 "depth band to a child's, and **pad slipping** slides the pad. Turn either one "
                 "and watch the green share below collapse — the unit has no idea anything has "

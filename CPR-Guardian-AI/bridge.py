@@ -100,12 +100,12 @@ STEPS = [
          site=("Someone collapses in a busy station.",
                "A stranger kneels down to help.",
                "They have never done this before."),
-         challenge=("The ambulance is minutes away.",
-                    "Whatever happens in those minutes, this stranger has to do.",
-                    "Nobody tells them whether it is working."),
-         ai_link=("The unit is not trying to work out what is wrong with the patient.",
+         challenge=("The ambulance is still minutes away.",
+                    "Whatever happens in those minutes is down to this stranger.",
+                    "And nobody tells them whether it is working."),
+         ai_link=("The unit does not try to work out what is wrong with the patient.",
                   "It watches how this one person is pushing.",
-                  "Then it says the single most useful thing to change."),
+                  "Then it says the one thing most worth changing."),
          plain="'Chest compressions' means pushing down hard and fast in the middle of "
                "someone's chest to keep their blood moving while their heart has stopped. "
                "Anyone can do it, and most people who end up doing it have never been taught.",
@@ -116,8 +116,6 @@ STEPS = [
                "all of that gap was created by an untrained stranger, before any professional "
                "arrived. Hover either line to read its number at that minute.",
          notebook="The opening - what the unit is and what the four minutes are for.",
-         takeaway="Mediocre compressions are enormously better than none. The job is to nudge "
-                  "them upward without stopping them.",
          next_q="So the unit has to judge how well this stranger is pushing. It has a camera "
                 "on the wall and a pressure pad on the patient's chest. **Which of the two "
                 "should measure how far down the chest goes?** The obvious answer is the "
@@ -128,17 +126,16 @@ STEPS = [
          doing="Decide which piece of hardware is allowed to answer which question. Get this "
                "wrong here and everything built on top of it is worthless.",
          tech="camera for the body - pad for depth, speed and release - defibrillator for the heart",
-         site=("The easy design points one camera at everything.",
-               "One sensor, one wire, all the answers.",
-               "That design is wrong."),
-         challenge=("A camera counts pixels, not centimetres.",
-                    "Turning pixels into centimetres depends on the lens, the angle, the "
-                    "distance, the clothing and the size of the person.",
-                    "Being twenty percent out is the difference between useful pushing and "
-                    "useless pushing."),
-         ai_link=("Give each question to the part that can actually answer it.",
-                  "Camera for where the arms and shoulders are. Pad for how far the chest moves.",
-                  "And refuse to let the convenient sensor answer the hard question."),
+         site=("The easy idea: point one camera at everything.",
+               "One camera, one wire, every answer.",
+               "It does not work."),
+         challenge=("A camera sees pixels, not centimetres.",
+                    "Turning one into the other is a sum.",
+                    "That sum changes with the lens, the angle, and the size of the person.",
+                    "Get it wrong by a fifth and the pushing does nothing."),
+         ai_link=("Ask each part only what it can actually answer.",
+                  "Camera: where the arms and shoulders are.",
+                  "Pad: how far the chest moves."),
          plain="A 'sensor' is anything that measures the world and turns it into numbers - a "
                "camera, a pressure pad, a thermometer. The whole question on this page is "
                "which of those numbers you are entitled to believe.",
@@ -154,15 +151,15 @@ STEPS = [
          doing="Get the data. Since no real recording exists, we write code that generates "
                "one, with every fault we need to catch deliberately put inside it.",
          tech="two helpers, one pause for the defibrillator, two different ways of being wrong",
-         site=("Helper A starts well and then tires.",
-               "The defibrillator interrupts for twelve seconds.",
-               "Helper B takes over fresh, and pushes far too slowly."),
-         challenge=("Nobody records real emergencies for teaching.",
-                    "Practice data comes from a dummy in a classroom.",
-                    "There, nobody is frightened and nothing goes wrong by surprise."),
-         ai_link=("We generate the session in code instead.",
-                  "Every fault the unit must catch is put in on purpose.",
-                  "So we always know the right answer to check the unit against."),
+         site=("Helper A starts well, then gets tired.",
+               "The defibrillator stops everything for twelve seconds.",
+               "Helper B takes over, and pushes far too slowly."),
+         challenge=("Nobody films real emergencies for us to study.",
+                    "The only practice data comes from a dummy in a classroom.",
+                    "Nothing goes wrong there, so there is nothing to learn from."),
+         ai_link=("So we write code that invents the three and a half minutes.",
+                  "We put every fault in ourselves, on purpose.",
+                  "That way we always know the right answer."),
          plain="'Simulated' means every number in this app was produced by code, not recorded "
                "from a real person. It lets us study the method without ever touching "
                "anybody's medical records.",
@@ -185,15 +182,15 @@ STEPS = [
          doing="Look at the raw signal before doing anything to it. Zoom in until one push is "
                "readable, and see what changes as the helper tires.",
          tech="fifty readings a second of how far the chest is pressed in",
-         site=("One push is one press and one release.",
-               "The pad reports where the chest is, fifty times a second.",
-               "So one push is a bump in a line."),
-         challenge=("Zoomed out, every push is a single vertical stroke.",
-                    "Nothing can be read from it at all.",
-                    "The problem is the zoom, not the sensor."),
-         ai_link=("Zoom in on five seconds and three faults become visible at once.",
-                  "Lower peaks, and closer together.",
-                  "And a line that no longer comes back down to the floor between pushes."),
+         site=("Push down, let go. That is one compression.",
+               "The pad measures the chest fifty times a second.",
+               "Drawn out, one push is one bump."),
+         challenge=("Zoomed out, hundreds of bumps are squashed together.",
+                    "You cannot tell a good one from a bad one.",
+                    "The sensor is fine. The zoom is the problem."),
+         ai_link=("Zoom in on five seconds instead.",
+                  "Now three faults are obvious at once.",
+                  "Lower bumps, closer together, never coming back to the top."),
          plain="The 'depth signal' is one number, fifty times a second: how far down the chest "
                "is at this instant. Everything the unit ever says is worked out from that "
                "single wiggly line.",
@@ -215,15 +212,15 @@ STEPS = [
          doing="Look at the other sensor, and see exactly what a camera does and does not "
                "hand us.",
          tech="wrist, elbow and shoulder, as positions in centimetres",
-         site=("A vision model returns dots placed on a body.",
-               "We use three of them: wrist, elbow, shoulder.",
-               "Everything the camera contributes is arithmetic on those three."),
-         challenge=("A camera cannot say the chest went down five centimetres.",
-                    "It can say perfectly well whether the arms are straight.",
-                    "Those are two completely different jobs."),
-         ai_link=("Keep the camera on the questions it is good at.",
-                  "Its answers correct the helper's own body.",
-                  "They never measure the patient's chest."),
+         site=("The camera puts dots on the body it can see.",
+               "We use only three: wrist, elbow, shoulder.",
+               "Everything else is maths on those three dots."),
+         challenge=("The camera cannot tell you the chest moved five centimetres.",
+                    "It can easily tell you the arms are bent.",
+                    "Two very different questions."),
+         ai_link=("Only ask it the question it is good at.",
+                  "Its answers fix the helper's own arms and shoulders.",
+                  "They never touch the patient's chest."),
          plain="'Pose keypoints' are the dots a vision model puts on a body - shoulder, elbow, "
                "wrist and so on. The computer does not see a person. It sees a handful of "
                "labelled dots and where each one is.",
@@ -245,15 +242,15 @@ STEPS = [
          doing="Turn raw dots into a usable number, then deal with the noise that comes with "
                "them. This is the cleaning step every data project has.",
          tech="the angle between elbow-to-shoulder and elbow-to-wrist",
-         site=("Three dots make one angle.",
-               "Straight arms come out near 180 degrees.",
-               "Bent arms drop below it."),
+         site=("Three dots, one angle.",
+               "A straight arm measures about 180 degrees.",
+               "A bent arm measures less."),
          challenge=("The three dots sit almost in a straight line.",
-                    "So a few millimetres sideways swings the angle a long way.",
-                    "The measurement jumps about while the arm is still."),
-         ai_link=("Average the angle over about half a second.",
-                  "It costs a little lag.",
-                  "It buys back most of the accuracy."),
+                    "So a tiny sideways shift swings the angle a long way.",
+                    "The number jumps about while the arm is holding still."),
+         ai_link=("Average the angle over half a second.",
+                  "The reading now lags slightly behind the arm.",
+                  "In return, most of the jumping goes away."),
          plain="'Jitter' is the small random wobble in a measurement from one moment to the "
                "next. The dots are never perfectly still, so any angle worked out from them is "
                "never perfectly still either.",
@@ -277,15 +274,16 @@ STEPS = [
          doing="Turn a continuous wiggly line into one row per push. Nothing else in the app "
                "can happen until this part works.",
          tech="deeper than both neighbours - past a floor - not too close to the last one",
-         site=("Everything the unit says is about one push.",
-               "So first it has to find them.",
-               "Fifty readings a second, and hundreds of pushes."),
-         challenge=("Pad noise creates hundreds of tiny bumps.",
-                    "Most of them are not pushes.",
-                    "And two bumps a hundredth of a second apart are one push counted twice."),
-         ai_link=("Three lines of plain rule, written out rather than imported.",
-                  "Deeper than both neighbours, past a floor, not too close to the last one.",
-                  "No model, no training and no training data needed."),
+         site=("Every message the unit gives is about one push.",
+               "So the code has to find the pushes first.",
+               "Fifty readings a second, hundreds of pushes."),
+         challenge=("The signal is not smooth. It has hundreds of tiny bumps.",
+                    "Most of those bumps are not pushes.",
+                    "And one real push can easily get counted twice."),
+         ai_link=("Three lines of ordinary code, written out in full.",
+                  "A push is deeper than the readings either side.",
+                  "Big enough to count, and not too close to the last one.",
+                  "No model. No training. No training data."),
          plain="A 'peak finder' walks along the signal and marks every point that is deeper "
                "than the point before it and the point after it. It is ordinary code - there "
                "is no learning and no model anywhere in it.",
@@ -309,15 +307,15 @@ STEPS = [
          doing="Build a better column out of the raw ones. This single extra number is what "
                "makes four later pages possible.",
          tech="travel = how deep it got, minus what it never came back up from",
-         site=("For every push we also record the shallowest point after it.",
-               "That is how far down the helper is still leaning.",
-               "It should be nearly zero."),
-         challenge=("A chest that never comes back up cannot refill with blood.",
-                    "And the depth number looks completely fine while that is happening.",
-                    "So the fault is invisible in the obvious measurement."),
-         ai_link=("Record two numbers per push instead of one.",
-                  "How deep it got, and how far it actually travelled.",
-                  "They are equal only when the helper lets go properly."),
+         site=("After each push we note how far back up the chest gets.",
+               "If the helper is leaning, it never gets all the way.",
+               "That number should be almost zero."),
+         challenge=("A chest held down cannot refill with blood.",
+                    "But the depth reading still looks fine.",
+                    "So the fault hides behind the obvious number."),
+         ai_link=("Keep two numbers per push instead of one.",
+                  "How deep it went, and how far it really moved.",
+                  "They match only when the helper lets go properly."),
          plain="'Letting the chest come back up' between pushes is what lets the heart refill. "
                "It sounds like a detail. It is the difference between blood moving and blood "
                "not moving.",
@@ -339,15 +337,15 @@ STEPS = [
          doing="Turn measurements into something to say. This is the point where a model "
                "would normally be trained - and here, deliberately, none is.",
          tech="nine rules, ordered by cost to the patient, first one wins",
-         site=("Hands off centre, too shallow, too deep, leaning on the chest.",
+         site=("Eight things can go wrong: hands off centre, too shallow, too deep, leaning.",
                "Too slow, too fast, bent arms, shoulders too far back.",
-               "Or a green light and keep going."),
-         challenge=("A frightened untrained person given four instructions follows none.",
+               "Or nothing is wrong, and the light turns green."),
+         challenge=("Give a frightened person four instructions and they follow none of them.",
                     "Say everything and you have said nothing.",
-                    "So only one sentence is allowed at a time."),
-         ai_link=("Order the eight faults by how much each one costs the patient.",
-                  "Speak only the first one that fires, and ignore the rest.",
-                  "Depth and release move blood; a bent arm only tires the helper sooner."),
+                    "So the unit gets one sentence at a time."),
+         ai_link=("Put the eight faults in order of what each one costs the patient.",
+                  "Say the first one on the list that is true. Ignore the rest.",
+                  "Depth and letting go move blood. A bent arm only tires the helper."),
          plain="A 'rule engine' is a checklist tried in a fixed order, where the first match "
                "wins and the rest are ignored. Nothing here is learned from data: a person "
                "decided both the rules and the order they are tried in.",
@@ -368,15 +366,15 @@ STEPS = [
          doing="Replace an instruction with something a person can follow without thinking - "
                "then look at the trap hiding in the obvious version of it.",
          tech="start where the helper is, then walk the beat towards the target",
-         site=("Told to press faster, a person speeds up briefly and drifts back.",
-               "Given a beat to follow, they lock onto it.",
-               "Nobody has to remember anything."),
-         challenge=("A beat that jumps straight to the target is one the helper loses.",
-                    "A beat that follows the helper down is not a reference at all.",
-                    "It has to lead without leaving them behind."),
-         ai_link=("Start the beat as close to the helper's own speed as the safe range allows.",
-                  "Then walk it steadily towards the middle of that range.",
-                  "And never follow them back out of it."),
+         site=("Tell someone to speed up and they do, for about three pushes.",
+               "Give them a beat and they follow it without thinking.",
+               "There is nothing to remember."),
+         challenge=("A beat that starts at the target is too far away to catch.",
+                    "A beat that slows down to match them is no use at all.",
+                    "It has to lead, and still stay within reach."),
+         ai_link=("Start the beat near the helper's own speed.",
+                  "Then move it slowly to where it should be.",
+                  "And never let it follow them back down."),
          plain="A 'metronome' is the steady click musicians practise to. Ours is adaptive: it "
                "starts where the helper already is, and walks them to where they should be.",
          figure="The helper's actual speed in blue, and the beat the unit is playing in "
@@ -398,16 +396,15 @@ STEPS = [
          doing="Test two ways of catching the same fault, and keep the one that failed right "
                "there on the page so you can see why it failed.",
          tech="the travel, against this helper's own first twenty pushes",
-         site=("Helper A has been going for a minute.",
-               "Shallower, faster, leaning more of their weight on the chest.",
-               "They cannot feel any of it happening."),
-         challenge=("The obvious detector watches the depth falling - and depth barely moves.",
-                    "As they stop coming all the way up, each push starts from lower down.",
-                    "So the chest still reaches about the right place while doing less and "
-                    "less work."),
-         ai_link=("Watch how far the chest travelled instead.",
-                  "Compare it against this helper's own first twenty pushes.",
-                  "Not against a fixed number that suits nobody in particular."),
+         site=("Helper A has been pushing for a minute.",
+               "Shallower, faster, leaning more weight on the chest.",
+               "They cannot feel any of it."),
+         challenge=("The obvious check watches the depth drop. The depth barely drops.",
+                    "They stop letting go, so each push starts from further down.",
+                    "The chest still reaches the right place, on much less work."),
+         ai_link=("Watch how far the chest moves instead.",
+                  "Compare it with this helper's own first twenty pushes.",
+                  "Not with a fixed number that fits nobody."),
          plain="A 'trend' is the direction a number is moving over time, rather than its value "
                "right now. Somebody tiring looks fine on any single push and clearly worse "
                "across fifty of them.",
@@ -429,15 +426,15 @@ STEPS = [
          doing="Turn a detection into an instruction - and work out what that instruction "
                "costs before issuing it.",
          tech="whichever comes first: two minutes, or quality falling",
-         site=("Guidance says swap helpers about every two minutes.",
-               "Quality falls long before anybody feels tired.",
-               "So the clock matters as much as the feeling does."),
-         challenge=("A swap done badly costs ten seconds with nobody pushing.",
+         site=("The advice is to swap helpers every two minutes.",
+               "Quality drops long before anyone feels tired.",
+               "So the clock matters as much as how they feel."),
+         challenge=("A messy swap costs ten seconds with nobody pushing.",
                     "Every one of those seconds is blood not moving.",
                     "So the swap has to be set up before it is called."),
-         ai_link=("Warn the standby person fifteen seconds early, so they are already kneeling.",
-                  "Call the swap on whichever arrives first: the clock, or the fading.",
-                  "And if there is nobody else in the room, say something else entirely."),
+         ai_link=("Tell the second person to get into position fifteen seconds early.",
+                  "Call the swap on whichever comes first: the clock, or the fading.",
+                  "If there is nobody else in the room, say something completely different."),
          plain="'Swapping helpers' means handing the pushing over to a second person before "
                "the first one fades, rather than after. The cost is a pause, so when to call "
                "it is a genuine trade-off.",
@@ -453,15 +450,15 @@ STEPS = [
          doing="Score the whole session on the one number most strongly tied to whether the "
                "patient lives.",
          tech="the share of the whole rescue that somebody was actually pushing",
-         site=("Add up every second nobody's hands were on the chest.",
-               "The arrival, the defibrillator, the changeover.",
+         site=("Add up every second nobody was pushing.",
+               "The helper arriving, the defibrillator, the changeover.",
                "And the pause while somebody fetches something."),
          challenge=("Pauses feel short from the inside.",
                     "They are never as short as they feel.",
-                    "And nobody involved is counting."),
-         ai_link=("Work the share out from the signal itself.",
-                  "Without being handed a list of where the pauses were.",
-                  "Because the real unit is never handed one."),
+                    "And nobody in the room is counting."),
+         ai_link=("Work the share out from the signal on its own.",
+                  "Nobody hands the code a list of the pauses.",
+                  "Because nobody would hand the real unit one either."),
          plain="'Compression fraction' is simply the share of the whole emergency during which "
                "somebody was actually pushing. Every second nobody is pushing, blood is not "
                "moving.",
@@ -483,17 +480,15 @@ STEPS = [
          doing="Draw the line around what this system is allowed to decide, and show that the "
                "code has no way of crossing it.",
          tech="four states, and no branch that decides anything about a shock",
-         site=("While the defibrillator checks the heart and delivers a shock, nobody may "
-               "touch the patient.",
-               "The moment it is finished, hands go straight back on.",
-               "Both of those have to be said out loud, by somebody."),
-         challenge=("Every extra second after a shock before pushing restarts is where rescues "
-                    "are lost.",
-                    "A frightened helper waits for permission to touch the patient again.",
-                    "Nobody in the room gives it."),
-         ai_link=("Read what the defibrillator is doing and coach around it.",
+         site=("While the defibrillator works, nobody may touch the patient.",
+               "The second it finishes, hands go straight back on.",
+               "Somebody has to say both of those out loud."),
+         challenge=("The seconds after a shock are where rescues are lost.",
+                    "A frightened helper waits to be told it is safe to touch them.",
+                    "Nobody in the room tells them."),
+         ai_link=("Watch what the defibrillator is doing and work around it.",
                   "Keep everybody's hands off while it works.",
-                  "Then say 'start pushing' louder than anything else the unit ever says."),
+                  "Then say 'start pushing' louder than anything else."),
          plain="A 'defibrillator' - often written AED, for automated external defibrillator - "
                "is the box that reads the heart's rhythm and decides on its own whether an "
                "electric shock will help. It makes that decision. Our unit only says when to "
@@ -516,13 +511,13 @@ STEPS = [
          doing="Put everything measured onto one shared clock, so three and a half minutes can "
                "be handed over in about five seconds.",
          tech="depth, speed, lean, posture and the light bar on one time axis",
-         site=("The crew arrives.",
+         site=("The ambulance crew arrives.",
                "Somebody has to explain three and a half minutes.",
                "They have about five seconds to do it."),
-         challenge=("Averages hide everything.",
-                    "Both helpers here score about the same overall.",
-                    "They failed at completely different things."),
-         ai_link=("Put every measurement on one shared time axis.",
+         challenge=("An average hides everything.",
+                    "Both helpers score about the same overall.",
+                    "They went wrong in completely different ways."),
+         ai_link=("Put every measurement on one shared clock.",
                   "Colour each push by what the unit said about it.",
                   "Summarise nothing away."),
          plain="A 'handover' is the moment the ambulance crew takes charge. Everything on this "
@@ -546,15 +541,14 @@ STEPS = [
          doing="Write down what the system genuinely cannot do. The dangerous version of this "
                "app is the one without this page.",
          tech="invented data - a fragile camera - thresholds that are not people",
-         site=("A device that coaches a frightened stranger earns a harder look than a demo "
-               "usually gets.",
-               "Every number here came from a generator.",
-               "The generator was written by somebody who already knew what it should find."),
-         challenge=("Real helpers fail in ways nobody thought to simulate.",
-                    "Real rooms have bad light, bad angles and people walking through them.",
+         site=("A device that coaches a frightened stranger deserves a hard look.",
+               "Every number here was invented by code.",
+               "The person who wrote that code already knew what it should find."),
+         challenge=("Real helpers go wrong in ways nobody thought to invent.",
+                    "Real rooms have bad light, bad angles, people walking through.",
                     "None of that is in here."),
-         ai_link=("List what would break, in order.",
-                  "Be specific enough that somebody could go and test each one.",
+         ai_link=("List what would break, worst first.",
+                  "Be exact enough that somebody could go and test each one.",
                   "Two of them are dials in the sidebar, so you can break it yourself."),
          plain="A 'limitation' is something the system genuinely cannot do, written down "
                "honestly rather than hidden. Every real project has a page like this, and the "
@@ -566,8 +560,8 @@ STEPS = [
                "confidently correcting a helper who is doing it right. Hover any bar to read "
                "the count.",
          notebook="Section 8 - what this would get wrong, and section 9 - your turn.",
-         takeaway="Being told you are failing has a cost. Sometimes the output with the "
-                  "highest survival value is keep going, help is coming."),
+         takeaway="Being told you are getting it wrong has a cost. Sometimes the most "
+                  "useful thing the unit can say is keep going, help is on its way."),
 ]
 
 # --------------------------------------------------- what the project is worth
