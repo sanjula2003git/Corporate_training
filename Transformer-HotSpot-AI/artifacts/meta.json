@@ -1,0 +1,44 @@
+{
+  "built": "2026-08-20 09:48:15Z",
+  "best": "xgb",
+  "best_model_file": "best_model.ubj",
+  "rows_before_cleaning": 35100,
+  "forest": {
+    "rules": [
+      {
+        "feature": "oil_temp_c",
+        "threshold": 52.14999961853027
+      },
+      {
+        "feature": "cooling_stage",
+        "threshold": 0.5
+      },
+      {
+        "feature": "ambient_temp_c",
+        "threshold": 19.75
+      },
+      {
+        "feature": "load_roll3",
+        "threshold": 0.5290476083755493
+      },
+      {
+        "feature": "oil_temp_c",
+        "threshold": 34.95000076293945
+      }
+    ],
+    "trees": 150,
+    "mean_depth": 20.826666666666668,
+    "one_tree_mae": 2.151333804383662
+  },
+  "rows": {
+    "raw": 35100,
+    "clean": 34872,
+    "test": 8708
+  },
+  "versions": {
+    "pandas": "3.0.3",
+    "numpy": "2.4.2",
+    "scikit-learn": "1.8.0",
+    "xgboost": "3.4.1"
+  }
+}

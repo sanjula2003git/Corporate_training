@@ -12,12 +12,69 @@ tell the same story:
   * IEEE C57.91 clause 5 - ageing acceleration factor F_AA
   * IEEE C57.91 table 8  - hot-spot limits 110 / 120 / 140 C
 
-Everything is cached. The year of substation history is simulated once per
-session; the models are fitted once per session.
+Everything is cached, and the expensive work is precomputed: prep_artifacts.py
+writes artifacts/ offline, and the loaders below prefer it. With the folder
+absent every value is computed live instead, exactly as it always was.
 """
+import json
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import streamlit as st
+
+# ============================================================================
+# PRECOMPUTED ARTIFACTS
+# ============================================================================
+# Streamlit Community Cloud gives this app a fraction of one CPU, and it sleeps
+# the container on inactivity - so every wake-up used to re-simulate the year
+# and refit every model, which is what got the app CPU-throttled.
+#
+# prep_artifacts.py runs that work once, offline, and writes the results to
+# artifacts/. Everything below prefers those files and falls back to computing
+# from scratch when they are absent, so a fresh clone still runs with no build
+# step. Delete the folder and the app behaves exactly as it did before.
+#
+# The fitted Random Forest is deliberately NOT shipped: it pickles to 72 MB.
+# Only the numbers the forest page actually reads off it are precomputed.
+ART = Path(__file__).resolve().parent / "artifacts"
+
+
+def artifacts_present():
+    """True when the precomputed artifacts are available to load."""
+    return (ART / "meta.json").exists()
+
+
+def _table(name):
+    """Load a precomputed table, or None when it has not been built."""
+    p = ART / f"{name}.parquet"
+    if not p.exists():
+        return None
+    try:
+        return pd.read_parquet(p)
+    except Exception:
+        return None
+
+
+def precomputed(name):
+    """A page's precomputed table by name, or None when it has not been built.
+
+    The heavy per-page experiments in app.py go through this: the result is a
+    small table either way, so they load it when it exists and refit when it
+    does not.
+    """
+    return _table(name)
+
+
+def _meta():
+    p = ART / "meta.json"
+    if not p.exists():
+        return {}
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
 
 # ============================================================================
 # NAMEPLATE  -  a 40 MVA 132/33 kV ONAN/ONAF transformer
@@ -110,6 +167,11 @@ HOURS = 8760
 @st.cache_data(show_spinner="Simulating a year of substation history…")
 def get_raw_log():
     """The historian export, faults and all. One row per unit per hour."""
+    art = _table("raw_log")
+    return art if art is not None else _compute_raw_log()
+
+
+def _compute_raw_log():
     idx = pd.date_range("2025-01-01", periods=HOURS, freq="h")
     doy, hod, dow = idx.dayofyear.to_numpy(), idx.hour.to_numpy(), idx.dayofweek.to_numpy()
     rng = np.random.default_rng(42)
@@ -209,6 +271,13 @@ def _frozen_run(s, min_len=6):
 @st.cache_data(show_spinner=False)
 def get_clean_log():
     """The export after cleaning, plus the audit trail of what was done."""
+    clean, report = _table("clean_log"), _table("clean_report")
+    if clean is not None and report is not None:
+        return clean, report, int(_meta()["rows_before_cleaning"])
+    return _compute_clean_log()
+
+
+def _compute_clean_log():
     log = get_raw_log()
     clean = log.copy()
     before = len(clean)
@@ -251,6 +320,11 @@ def get_clean_log():
 @st.cache_data(show_spinner=False)
 def get_features():
     """The cleaned log with the engineering features added, and the week-block split."""
+    art = _table("features")
+    return art if art is not None else _compute_features()
+
+
+def _compute_features():
     df, _, _ = get_clean_log()
     df = df.sort_values(["unit_id", "timestamp"]).reset_index(drop=True)
     g = df.groupby("unit_id", sort=False)
@@ -281,7 +355,22 @@ def _metrics(y, p):
 
 @st.cache_resource(show_spinner="Fitting the models…")
 def get_models():
-    """Fit every model in the leaderboard. Returns predictions and scores."""
+    """Every model in the leaderboard: predictions and scores.
+
+    Loads the precomputed leaderboard when artifacts/ is present. In that mode
+    ``fitted`` is empty - nothing is refitted just to read a coefficient off it,
+    and the pages that used to do so go through the helpers below instead.
+    """
+    board, preds = _table("board"), _table("preds")
+    if board is not None and preds is not None:
+        te = get_features().test.to_numpy()
+        return {"board": board, "best": _meta()["best"], "fitted": {},
+                "preds": {c: preds[c].to_numpy() for c in preds.columns if c != "y_test"},
+                "y_test": preds["y_test"].to_numpy(), "test_mask": te}
+    return _compute_models()
+
+
+def _compute_models():
     from sklearn.linear_model import LinearRegression
     from sklearn.preprocessing import StandardScaler
     from sklearn.ensemble import RandomForestRegressor, HistGradientBoostingRegressor
@@ -338,12 +427,115 @@ def get_models():
             "y_test": y_te.to_numpy(), "test_mask": te}
 
 
+@st.cache_resource(show_spinner=False)
+def _load_best_model():
+    """The one fitted model the interactive pages need, read off disk.
+
+    Sliders on four pages predict live, so this model - and only this one - has
+    to exist as an object. XGBoost is stored in its own portable format; the
+    sklearn fallback is joblib. Returns None when there is nothing to load.
+    """
+    meta = _meta()
+    name = meta.get("best_model_file")
+    if not name or not (ART / name).exists():
+        return None
+    p = ART / name
+    try:
+        if p.suffix == ".ubj":
+            from xgboost import XGBRegressor
+            m = XGBRegressor()
+            m.load_model(str(p))
+            return m
+        import joblib
+        return joblib.load(p)
+    except Exception:
+        return None
+
+
+@st.cache_resource(show_spinner="Fitting the models…")
+def _fitted_models():
+    """The fitted objects themselves, for the paths that genuinely need one.
+
+    In artifact mode get_models() returns an empty ``fitted``, so anything that
+    still wants a real model refits here. Nothing on the deployed app should
+    reach this - it exists so a half-built or unreadable artifacts/ degrades to
+    the original behaviour instead of raising KeyError.
+    """
+    g = get_models()
+    return g if g["fitted"] else _compute_models()
+
+
 def best_model():
-    m = get_models()
-    return m["fitted"][m["best"]], m["best"]
+    """The best model as a fitted object, plus its key."""
+    if artifacts_present():
+        m = _load_best_model()
+        if m is not None:
+            return m, _meta()["best"]
+    g = _fitted_models()
+    return g["fitted"][g["best"]], g["best"]
 
 
 BEST_LABEL = {"xgb": "XGBoost", "gb": "Gradient Boosting"}
+
+
+# ---- numbers the pages used to read off a fitted model ----------------------
+# Each helper prefers its artifact and otherwise derives the value live, so the
+# app renders identically with or without a build step.
+def lin_raw_coefs():
+    """Linear-on-raw-sensors coefficients, in °C per standard deviation."""
+    art = _table("lin_raw_coefs")
+    if art is not None:
+        return pd.Series(art["coef"].to_numpy(), index=art["feature"])
+    mdl, _sc, feats = _fitted_models()["fitted"]["lin_raw"]
+    return pd.Series(mdl.coef_, index=feats)
+
+
+def importances():
+    """Feature importances for the best model and the forest, side by side."""
+    art = _table("importances")
+    if art is not None:
+        return art.set_index("feature")
+    m = _fitted_models()
+    best = m["fitted"][m["best"]]
+    return pd.DataFrame({
+        BEST_LABEL.get(m["best"], "Best model"):
+            pd.Series(getattr(best, "feature_importances_",
+                              np.zeros(len(ENG_FEATURES))), index=ENG_FEATURES),
+        "Random Forest": pd.Series(m["fitted"]["rf"].feature_importances_,
+                                   index=ENG_FEATURES),
+    })
+
+
+def forest_facts():
+    """What the forest page reads off the fitted Random Forest.
+
+    The forest itself is 72 MB and is never shipped, so the first tree's split
+    chain, the tree count, the mean depth and the one-tree error are all
+    precomputed. ``curve`` is test MAE against the number of trees averaged,
+    indexed 1..RF_TREES, which is all the tree-count slider needs.
+    """
+    meta, curve = _meta().get("forest"), _table("rf_curve")
+    if meta is not None and curve is not None:
+        return {**meta, "curve": pd.Series(curve["mae"].to_numpy(),
+                                           index=curve["trees"].to_numpy())}
+    m = _fitted_models()
+    rf = m["fitted"]["rf"]
+    t0 = rf.estimators_[0].tree_
+    node, rules = 0, []
+    for _ in range(5):
+        if t0.children_left[node] == -1:
+            break
+        rules.append({"feature": ENG_FEATURES[t0.feature[node]],
+                      "threshold": float(t0.threshold[node])})
+        node = t0.children_left[node]
+    Xte = get_features().loc[m["test_mask"], ENG_FEATURES].values
+    each = np.array([t.predict(Xte) for t in rf.estimators_])
+    running = np.cumsum(each, axis=0) / np.arange(1, len(each) + 1)[:, None]
+    mae = np.abs(running - m["y_test"]).mean(axis=1)
+    return {"rules": rules, "trees": len(rf.estimators_),
+            "mean_depth": float(np.mean([t.get_depth() for t in rf.estimators_])),
+            "one_tree_mae": float(mae[0]),
+            "curve": pd.Series(mae, index=np.arange(1, len(mae) + 1))}
 
 
 def feature_row(load_a, ambient_c, oil_c, volt_kv=132.0, humidity=60.0,
@@ -437,3 +629,96 @@ def fleet_snapshot():
                      "Life used (days)": round(ageing[r.unit_id] / 24, 1),
                      "Urgency": d["urgency"], "Action": d["action"], "tone": d["tone"]})
     return pd.DataFrame(rows).sort_values("Headroom (K)").reset_index(drop=True), peak
+
+
+# ============================================================================
+# THE PER-PAGE EXPERIMENTS
+# ============================================================================
+# These four refit the model in a different shape to make a teaching point.
+# They live here rather than in app.py so prep_artifacts.py can precompute them
+# from the same code the app falls back to - there is one definition of each
+# experiment, not two that can drift apart.
+
+def _compute_boost_curve():
+    """Test MAE against tree count, measured on a live boosting run."""
+    from sklearn.ensemble import GradientBoostingRegressor
+    from sklearn.metrics import mean_absolute_error
+    df = get_features()
+    te = df.test.to_numpy()
+    # a subsample keeps the app responsive; the shape of the curve is the lesson
+    tr = df.loc[~te].sample(9000, random_state=0)
+    gb = GradientBoostingRegressor(n_estimators=200, learning_rate=0.08, max_depth=4,
+                                   subsample=0.8, random_state=42
+                                   ).fit(tr[ENG_FEATURES], tr[TARGET])
+    Xte, yte = df.loc[te, ENG_FEATURES], df.loc[te, TARGET]
+    maes = [mean_absolute_error(yte, p) for p in gb.staged_predict(Xte)]
+    idx = list(range(1, len(maes) + 1))
+    s = pd.Series(maes, index=idx)
+    return s[s.index % 5 == 0]
+
+def _compute_instrument_drops():
+    """Refit without everything derived from each instrument, and measure."""
+    from sklearn.ensemble import HistGradientBoostingRegressor
+    from sklearn.metrics import mean_absolute_error
+    df = get_features()
+    te = df.test.to_numpy()
+    y_tr, y_te = df.loc[~te, TARGET], df.loc[te, TARGET]
+
+    def fit(cols):
+        f = [c for c in ENG_FEATURES if c not in cols]
+        mdl = HistGradientBoostingRegressor(max_iter=120, learning_rate=0.10, max_depth=6,
+                                            random_state=42).fit(df.loc[~te, f], y_tr)
+        return mean_absolute_error(y_te, mdl.predict(df.loc[te, f]))
+
+    base = fit([])
+    groups = {
+        "Humidity sensor": ["humidity_pct"],
+        "Voltage transformer": ["voltage_kv"],
+        "Fan status contacts": ["cooling_stage"],
+        "Top-oil thermometer": ["oil_temp_c", "oil_rise_c", "oil_ramp_1h"],
+        "Current transformer": ["load_current_a", "load_pu_16", "load_roll3", "load_ramp_1h"],
+    }
+    # fit() is the expensive call - run it once per group, not twice
+    rows = []
+    for k, v in groups.items():
+        mae = fit(v)
+        rows.append({"Instrument removed": k, "MAE (°C)": mae, "Penalty (°C)": mae - base})
+    return pd.DataFrame(rows).sort_values("Penalty (°C)")
+
+def _compute_split_comparison():
+    """The same model scored on two different test sets."""
+    from sklearn.ensemble import HistGradientBoostingRegressor
+    from sklearn.metrics import mean_absolute_error, r2_score
+    df = get_features()
+    rows = []
+    for label, mask in [("Every 4th week (all seasons)", df.test.to_numpy()),
+                        ("October–December only", (df.timestamp >= "2025-10-01").to_numpy())]:
+        mdl = HistGradientBoostingRegressor(max_iter=300, learning_rate=0.06, max_depth=6,
+                                            random_state=42
+                                            ).fit(df.loc[~mask, ENG_FEATURES],
+                                                  df.loc[~mask, TARGET])
+        p, yv = mdl.predict(df.loc[mask, ENG_FEATURES]), df.loc[mask, TARGET]
+        rows.append({"Test set": label, "Hours": int(mask.sum()),
+                     "Test std dev (°C)": yv.std(),
+                     "MAE (°C)": mean_absolute_error(yv, p), "R²": r2_score(yv, p)})
+    return pd.DataFrame(rows)
+
+def _compute_holdout_units():
+    """Four models, each trained blind to one transformer."""
+    from sklearn.ensemble import HistGradientBoostingRegressor
+    from sklearn.metrics import mean_absolute_error
+    df = get_features()
+    rows = []
+    for held in sorted(df.unit_id.unique()):
+        tr, te = (df.unit_id != held), (df.unit_id == held)
+        mdl = HistGradientBoostingRegressor(max_iter=200, learning_rate=0.08, max_depth=6,
+                                            random_state=42
+                                            ).fit(df.loc[tr, ENG_FEATURES],
+                                                  df.loc[tr, TARGET])
+        e = mdl.predict(df.loc[te, ENG_FEATURES]) - df.loc[te, TARGET].to_numpy()
+        rows.append({"Held-out unit": held,
+                     "Age": int(df.loc[te, "transformer_age_years"].iloc[0]),
+                     "MAE (°C)": float(np.abs(e).mean()), "Bias (°C)": float(e.mean()),
+                     "Scatter (°C)": float(e.std())})
+    return pd.DataFrame(rows)
+

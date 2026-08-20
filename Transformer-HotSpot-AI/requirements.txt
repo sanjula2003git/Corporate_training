@@ -3,4 +3,5 @@ numpy
 pandas
 plotly
 scikit-learn
-xgboost
+xgboost>=3.0,<4
+pyarrow

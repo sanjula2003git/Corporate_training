@@ -737,8 +737,7 @@ def render_linear():
     board = m["board"].set_index("Model")
     c1, c2 = st.columns([1, 1.1])
     with c1:
-        mdl, sc, feats = m["fitted"]["lin_raw"]
-        coefs = pd.Series(mdl.coef_, index=feats).sort_values(key=abs)
+        coefs = story.lin_raw_coefs().sort_values(key=abs)
         fig = go.Figure(go.Bar(x=coefs.values,
                                y=[story.FEATURE_LABELS[c] for c in coefs.index],
                                orientation="h",
@@ -813,15 +812,9 @@ def render_forest():
     c1, c2 = st.columns([1, 1.1])
     with c1:
         st.markdown("**One tree is a chain of engineering rules**")
-        rf = m["fitted"]["rf"]
-        t0 = rf.estimators_[0].tree_
-        node, lines = 0, []
-        for _ in range(5):
-            if t0.children_left[node] == -1:
-                break
-            f = story.FEATURE_LABELS[story.ENG_FEATURES[t0.feature[node]]]
-            lines.append(f"if <b style='color:{EE}'>{f}</b> ≤ {t0.threshold[node]:.2f}")
-            node = t0.children_left[node]
+        forest = story.forest_facts()
+        lines = [f"if <b style='color:{EE}'>{story.FEATURE_LABELS[r['feature']]}</b> "
+                 f"≤ {r['threshold']:.2f}" for r in forest["rules"]]
         st.markdown(f"<div class='relay' style='font-family:{MONOF};font-size:13.5px'>"
                     + "<br>&nbsp;&nbsp;".join(lines)
                     + f"<br>&nbsp;&nbsp;→ predict a hot-spot temperature</div>",
@@ -829,14 +822,12 @@ def render_forest():
         st.caption("Read from the first tree in the forest. Every split is a threshold an "
                    "engineer could have written down — the forest just found 200 sets of them.")
         a, b = st.columns(2)
-        a.metric("Trees", len(rf.estimators_))
-        b.metric("Mean depth", f"{np.mean([t.get_depth() for t in rf.estimators_]):.0f}")
+        a.metric("Trees", forest["trees"])
+        b.metric("Mean depth", f"{forest['mean_depth']:.0f}")
     with c2:
         n = st.slider("How many trees are averaged?", 1, story.RF_TREES,
                       story.RF_TREES, key="rf_n")
-        Xte = story.get_features().loc[m["test_mask"], story.ENG_FEATURES]
-        preds = np.mean([t.predict(Xte.values) for t in rf.estimators_[:n]], axis=0)
-        mae = float(np.abs(preds - m["y_test"]).mean())
+        mae = float(forest["curve"].loc[n])
         fig = go.Figure(go.Bar(
             x=["Linear<br>engineered", f"Forest of {n}", "Full forest"],
             y=[board.loc["Linear regression (engineered)", "MAE (°C)"], mae,
@@ -848,7 +839,7 @@ def render_forest():
         fig.update_layout(title="Averaging more disagreeing trees lowers the error",
                           yaxis_title="MAE (°C)")
         st.plotly_chart(style(fig, 360), width="stretch")
-        st.caption(f"One tree alone scores about {float(np.abs(rf.estimators_[0].predict(Xte.values) - m['y_test']).mean()):.2f} °C. "
+        st.caption(f"One tree alone scores about {forest['one_tree_mae']:.2f} °C. "
                    "It memorises. The average of many does not.")
 
 
@@ -892,20 +883,10 @@ def render_boosting():
 @st.cache_data(show_spinner=False)
 def _boost_curve():
     """Test MAE against tree count, measured on a live boosting run."""
-    from sklearn.ensemble import GradientBoostingRegressor
-    from sklearn.metrics import mean_absolute_error
-    df = story.get_features()
-    te = df.test.to_numpy()
-    # a subsample keeps the app responsive; the shape of the curve is the lesson
-    tr = df.loc[~te].sample(9000, random_state=0)
-    gb = GradientBoostingRegressor(n_estimators=200, learning_rate=0.08, max_depth=4,
-                                   subsample=0.8, random_state=42
-                                   ).fit(tr[story.ENG_FEATURES], tr[story.TARGET])
-    Xte, yte = df.loc[te, story.ENG_FEATURES], df.loc[te, story.TARGET]
-    maes = [mean_absolute_error(yte, p) for p in gb.staged_predict(Xte)]
-    idx = list(range(1, len(maes) + 1))
-    s = pd.Series(maes, index=idx)
-    return s[s.index % 5 == 0]
+    art = story.precomputed("boost_curve")
+    if art is not None:
+        return pd.Series(art["mae"].to_numpy(), index=art["trees"].to_numpy())
+    return story._compute_boost_curve()
 
 
 def render_xgboost():
@@ -990,14 +971,7 @@ def render_importance():
     m = story.get_models()
     c1, c2 = st.columns([1.15, 1])
     with c1:
-        best = m["fitted"][m["best"]]
-        ranks = pd.DataFrame({
-            story.BEST_LABEL.get(m["best"], "Best model"):
-                pd.Series(getattr(best, "feature_importances_",
-                                  np.zeros(len(story.ENG_FEATURES))), index=story.ENG_FEATURES),
-            "Random Forest": pd.Series(m["fitted"]["rf"].feature_importances_,
-                                       index=story.ENG_FEATURES),
-        })
+        ranks = story.importances()
         ranks = ranks.sort_values(ranks.columns[0])
         fig = go.Figure()
         fig.add_trace(go.Bar(x=ranks.iloc[:, 0], y=[story.FEATURE_LABELS[c] for c in ranks.index],
@@ -1032,32 +1006,10 @@ def render_importance():
 @st.cache_data(show_spinner=False)
 def _instrument_drops():
     """Refit without everything derived from each instrument, and measure."""
-    from sklearn.ensemble import HistGradientBoostingRegressor
-    from sklearn.metrics import mean_absolute_error
-    df = story.get_features()
-    te = df.test.to_numpy()
-    y_tr, y_te = df.loc[~te, story.TARGET], df.loc[te, story.TARGET]
-
-    def fit(cols):
-        f = [c for c in story.ENG_FEATURES if c not in cols]
-        mdl = HistGradientBoostingRegressor(max_iter=120, learning_rate=0.10, max_depth=6,
-                                            random_state=42).fit(df.loc[~te, f], y_tr)
-        return mean_absolute_error(y_te, mdl.predict(df.loc[te, f]))
-
-    base = fit([])
-    groups = {
-        "Humidity sensor": ["humidity_pct"],
-        "Voltage transformer": ["voltage_kv"],
-        "Fan status contacts": ["cooling_stage"],
-        "Top-oil thermometer": ["oil_temp_c", "oil_rise_c", "oil_ramp_1h"],
-        "Current transformer": ["load_current_a", "load_pu_16", "load_roll3", "load_ramp_1h"],
-    }
-    # fit() is the expensive call - run it once per group, not twice
-    rows = []
-    for k, v in groups.items():
-        mae = fit(v)
-        rows.append({"Instrument removed": k, "MAE (°C)": mae, "Penalty (°C)": mae - base})
-    return pd.DataFrame(rows).sort_values("Penalty (°C)")
+    art = story.precomputed("instrument_drops")
+    if art is not None:
+        return art
+    return story._compute_instrument_drops()
 
 
 def render_sensitivity():
@@ -1149,21 +1101,10 @@ def render_metrics():
 
 @st.cache_data(show_spinner=False)
 def _split_comparison():
-    from sklearn.ensemble import HistGradientBoostingRegressor
-    from sklearn.metrics import mean_absolute_error, r2_score
-    df = story.get_features()
-    rows = []
-    for label, mask in [("Every 4th week (all seasons)", df.test.to_numpy()),
-                        ("October–December only", (df.timestamp >= "2025-10-01").to_numpy())]:
-        mdl = HistGradientBoostingRegressor(max_iter=300, learning_rate=0.06, max_depth=6,
-                                            random_state=42
-                                            ).fit(df.loc[~mask, story.ENG_FEATURES],
-                                                  df.loc[~mask, story.TARGET])
-        p, yv = mdl.predict(df.loc[mask, story.ENG_FEATURES]), df.loc[mask, story.TARGET]
-        rows.append({"Test set": label, "Hours": int(mask.sum()),
-                     "Test std dev (°C)": yv.std(),
-                     "MAE (°C)": mean_absolute_error(yv, p), "R²": r2_score(yv, p)})
-    return pd.DataFrame(rows)
+    art = story.precomputed("split_comparison")
+    if art is not None:
+        return art
+    return story._compute_split_comparison()
 
 
 def render_errors():
@@ -1301,22 +1242,10 @@ def render_hot_tail():
 # ============================================================================
 @st.cache_data(show_spinner="Training four models, each blind to one transformer…")
 def _holdout_units():
-    from sklearn.ensemble import HistGradientBoostingRegressor
-    from sklearn.metrics import mean_absolute_error
-    df = story.get_features()
-    rows = []
-    for held in sorted(df.unit_id.unique()):
-        tr, te = (df.unit_id != held), (df.unit_id == held)
-        mdl = HistGradientBoostingRegressor(max_iter=200, learning_rate=0.08, max_depth=6,
-                                            random_state=42
-                                            ).fit(df.loc[tr, story.ENG_FEATURES],
-                                                  df.loc[tr, story.TARGET])
-        e = mdl.predict(df.loc[te, story.ENG_FEATURES]) - df.loc[te, story.TARGET].to_numpy()
-        rows.append({"Held-out unit": held,
-                     "Age": int(df.loc[te, "transformer_age_years"].iloc[0]),
-                     "MAE (°C)": float(np.abs(e).mean()), "Bias (°C)": float(e.mean()),
-                     "Scatter (°C)": float(e.std())})
-    return pd.DataFrame(rows)
+    art = story.precomputed("holdout_units")
+    if art is not None:
+        return art
+    return story._compute_holdout_units()
 
 
 def render_unseen_unit():
