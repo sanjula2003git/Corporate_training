@@ -207,240 +207,6 @@ def transformer_section(load_pu, ambient_c, oil_c, hotspot_c, stage, h=470, arro
 # ============================================================================
 # PHASE 1  -  THE TRANSFORMER IN SERVICE
 # ============================================================================
-def render_the_asset():
-    df = story.get_features()
-    c1, c2 = st.columns([1.05, 1])
-    with c1:
-        st.markdown("**Ashgrove substation — four 40 MVA 132/33 kV transformers**")
-        fleet = (df.groupby("unit_id")
-                   .agg(Age=("transformer_age_years", "first"),
-                        **{"Mean load (A)": ("load_current_a", "mean"),
-                           "Peak load (A)": ("load_current_a", "max"),
-                           "Mean hot spot (°C)": ("hotspot_temp_c", "mean"),
-                           "Peak hot spot (°C)": ("hotspot_temp_c", "max"),
-                           "Hours > 110 °C": ("hotspot_temp_c", lambda s: int((s > 110).sum()))})
-                   .round(1).reset_index().rename(columns={"unit_id": "Unit"}))
-        st.dataframe(fleet, width="stretch", hide_index=True)
-        a, b, c = st.columns(3)
-        a.metric("Readings a year", f"{len(df):,}")
-        b.metric("Rated current", f"{story.I_RATED:.0f} A")
-        c.metric("Installed spares", "0")
-        st.caption("Every one of those readings is an hour in which the winding temperature "
-                   "mattered and nobody could see it.")
-    with c2:
-        unit = st.selectbox("Look at one unit's year", sorted(df.unit_id.unique()), index=2)
-        sub = df[df.unit_id == unit]
-        fig = go.Figure()
-        fig.add_trace(go.Scattergl(x=sub.timestamp, y=sub.hotspot_temp_c, mode="markers",
-                                   marker=dict(size=2, color=sub.hotspot_temp_c,
-                                               colorscale="Turbo", cmin=30, cmax=140),
-                                   name="hot spot", hoverinfo="skip"))
-        fig.add_hline(y=110, line=dict(color=RED, dash="dash"),
-                      annotation_text="110 °C limit")
-        fig.update_layout(title=f"{unit}: every hour of 2025",
-                          yaxis_title="Hot-spot temperature (°C)")
-        st.plotly_chart(style(fig, 380), width="stretch")
-        st.caption(f"{unit} spends {int((sub.hotspot_temp_c > 110).sum())} hours above 110 °C. "
-                   "Those are the hours that decide when it is replaced.")
-
-
-def render_why_heat():
-    c1, c2 = st.columns([1, 1.25])
-    with c1:
-        K = st.slider("Load, per unit of rating", 0.20, 1.40, 1.00, 0.05)
-        load, noload = story.loss_split(K)
-        st.metric("Load (copper) loss", f"{load:.2f} pu", f"{load / 0.857:.2f}× the rated-load value")
-        st.metric("No-load (core) loss", f"{noload:.2f} pu", "set by voltage, not load")
-        st.metric("Total heat", f"{load + noload:.2f} pu")
-        st.caption(f"At {K:.2f} pu, load loss is **{load / max(noload, 1e-9):.1f}×** the core loss. "
-                   "They are equal at 0.41 pu.")
-    with c2:
-        Ks = np.linspace(0.2, 1.4, 200)
-        ll, nl = story.loss_split(Ks)
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=Ks, y=nl, name="No-load (core)", line=dict(color=MUTED, width=2)))
-        fig.add_trace(go.Scatter(x=Ks, y=ll, name="Load (copper)", line=dict(color=EE, width=2)))
-        fig.add_trace(go.Scatter(x=Ks, y=ll + nl, name="Total", line=dict(color=RED, width=3)))
-        fig.add_vline(x=K, line=dict(color=TEXT, dash="dot"))
-        fig.add_vline(x=1.0, line=dict(color=MUTED, dash="dash"), annotation_text="rated")
-        fig.update_layout(title="Losses become heat, and load loss rises with the square of load",
-                          xaxis_title="Load K (per unit)", yaxis_title="Loss (pu of total at rated)")
-        st.plotly_chart(style(fig, 420), width="stretch")
-    r = (1.0 ** 2 * story.R_RATIO + 1) / (0.5 ** 2 * story.R_RATIO + 1)
-    st.info(f"**Half load to full load doubles the current and multiplies the heat by "
-            f"{r:.1f}.** That is why the last 20 % of loading is the expensive part.")
-
-
-def render_hot_spot():
-    c1, c2 = st.columns([1, 1.15])
-    with c1:
-        st.markdown("**Move the load and watch the three temperatures separate**")
-        K = st.slider("Load, per unit", 0.30, 1.35, 1.00, 0.05, key="hs_k")
-        amb = st.slider("Ambient temperature (°C)", 0, 48, 30, key="hs_a")
-        age = st.select_slider("Transformer age (years)", [3, 9, 16, 22], value=16, key="hs_age")
-        oil = amb + float(story.top_oil_rise(K, 1.0, 2, age))
-        hs = oil + float(story.hotspot_gradient(K, amb, 2, age))
-        m1, m2, m3 = st.columns(3)
-        m1.metric("Ambient", f"{amb:.0f} °C")
-        m2.metric("Top oil", f"{oil:.0f} °C", f"+{oil - amb:.0f} K")
-        m3.metric("Hot spot", f"{hs:.0f} °C", f"+{hs - oil:.0f} K over oil")
-        st.caption(f"The gauge on the tank reads **{oil:.0f} °C**. The winding is at "
-                   f"**{hs:.0f} °C**. That **{hs - oil:.0f} K** gap is what this course predicts.")
-        limit_chips()
-    with c2:
-        st.plotly_chart(transformer_section(K, amb, oil, hs, 2), width="stretch")
-
-    st.divider()
-    c3, c4 = st.columns([1.2, 1])
-    with c3:
-        t = np.linspace(70, 150, 300)
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=t, y=story.ageing_factor(t), line=dict(color=RED, width=3),
-                                 fill="tozeroy", fillcolor="rgba(239,83,80,.12)", name="F_AA"))
-        fig.add_trace(go.Scatter(x=[hs], y=[story.ageing_factor(hs)], mode="markers",
-                                 marker=dict(size=16, color=temp_colour(hs),
-                                             line=dict(color=TEXT, width=2)),
-                                 name="you are here"))
-        for lim, lab in [(110, "110 normal life"), (120, "120 beyond nameplate"),
-                         (140, "140 emergency")]:
-            fig.add_vline(x=lim, line=dict(color=MUTED, dash="dot"), annotation_text=lab)
-        fig.update_layout(title="Insulation ageing against hot-spot temperature (IEEE C57.91)",
-                          xaxis_title="Hot-spot temperature (°C)",
-                          yaxis_title="Ageing acceleration F_AA", yaxis_type="log")
-        st.plotly_chart(style(fig, 400), width="stretch")
-    with c4:
-        faa = float(story.ageing_factor(hs))
-        st.metric("Ageing rate at this hot spot", f"{faa:.2f} ×",
-                  "1.00 = the design rate at 110 °C")
-        rows = [{"Hot spot (°C)": v, "F_AA": round(float(story.ageing_factor(v)), 2),
-                 "One hour costs": f"{float(story.ageing_factor(v)):.2f} h of design life"}
-                for v in (86, 98, 110, 122, 140)]
-        st.dataframe(pd.DataFrame(rows), width="stretch", hide_index=True)
-        u = 100 * (1 - float(story.ageing_factor(108)) / float(story.ageing_factor(110)))
-        st.warning(f"Predicting **108 °C** when the truth is **110 °C** understates the ageing "
-                   f"rate by **{u:.0f} %**. A small error in degrees is not a small error in life.")
-
-
-def render_enter_ai():
-    c1, c2 = st.columns([1, 1])
-    with c1:
-        st.markdown("**What the standard knows, and what it cannot know**")
-        st.dataframe(pd.DataFrame([
-            {"Knows": "The design as tested at the factory", "Source": "Nameplate", "In the model?": "Yes"},
-            {"Knows": "This unit's real hot-spot factor", "Source": "Only measurement", "In the model?": "No"},
-            {"Knows": "Twenty-two years of radiator fouling", "Source": "Only measurement", "In the model?": "No"},
-            {"Knows": "The thermometer's own lag", "Source": "Only measurement", "In the model?": "No"},
-        ]), width="stretch", hide_index=True)
-        st.caption("None of the last three are errors in IEEE C57.91. They are things it was "
-                   "never given.")
-    with c2:
-        m = story.get_models()
-        b = m["board"].set_index("Model")["MAE (°C)"]
-        fig = go.Figure(go.Bar(
-            x=[b.get("IEEE C57.91 (nameplate)"), b.min()],
-            y=["IEEE C57.91<br>nameplate only", "Fitted to<br>this fleet"],
-            orientation="h", marker_color=[MUTED, AISIDE],
-            text=[f"{b.get('IEEE C57.91 (nameplate)'):.2f} °C", f"{b.min():.2f} °C"],
-            textposition="outside"))
-        fig.update_layout(title="Mean error on hours neither model was fitted on",
-                          xaxis_title="MAE (°C)")
-        st.plotly_chart(style(fig, 300), width="stretch")
-        st.success(f"The whole course is the gap between those two bars: "
-                   f"**{b.get('IEEE C57.91 (nameplate)') - b.min():.2f} °C**, or "
-                   f"**{100 * (1 - b.min() / b.get('IEEE C57.91 (nameplate)')):.0f} %** "
-                   "of the standard's error. Every step from here earns part of it.")
-
-
-# ============================================================================
-# PHASE 2  -  ONE HOUR OF OPERATION
-# ============================================================================
-def render_thermal_model():
-    c1, c2 = st.columns([1, 1.2])
-    with c1:
-        st.markdown("**IEEE C57.91, in two steps**")
-        K = st.slider("Load, per unit", 0.30, 1.35, 1.03, 0.01, key="tm_k")
-        amb = st.slider("Ambient (°C)", 0, 48, 36, key="tm_a")
-        stage = st.radio("Cooling stage", [0, 1, 2], index=2, horizontal=True,
-                         format_func=lambda s: ["fans off", "stage 1", "stage 2"][s], key="tm_s")
-        age = st.select_slider("Age (years)", [3, 9, 16, 22], value=16, key="tm_age")
-        rise = float(story.top_oil_rise(K, 1.0, stage, age))
-        grad = float(story.hotspot_gradient(K, amb, stage, age))
-        st.markdown(
-            f"<div class='relay tech' style='font-family:{MONOF};font-size:14px'>"
-            f"step 1 &nbsp; top-oil rise &nbsp;= {story.DTO_R:.0f} × "
-            f"((K²·{story.R_RATIO:.0f}+1)/{story.R_RATIO + 1:.0f})^{story.N_EXP} "
-            f"= <b style='color:{EE}'>{rise:.1f} K</b><br>"
-            f"step 2 &nbsp; winding gradient = {story.DTH_R:.0f} × K^1.6 "
-            f"= <b style='color:{AMBERHOT}'>{grad:.1f} K</b><br>"
-            f"θ_hotspot = {amb} + {rise:.1f} + {grad:.1f} "
-            f"= <b style='color:{temp_colour(amb + rise + grad)}'>{amb + rise + grad:.1f} °C</b>"
-            f"</div>", unsafe_allow_html=True)
-        st.caption("This is the steady state — the transformer having sat at this load forever. "
-                   "Real ones never do, which is the next page's problem.")
-    with c2:
-        # heat-flow animation: packets travelling winding -> oil -> radiator -> air
-        st.markdown("**Where the heat goes** — press Play")
-        path_x = [0.615, 0.68, 0.75, 0.83, 0.90]
-        path_y = [0.66, 0.70, 0.66, 0.52, 0.40]
-        fig = transformer_section(K, amb, amb + rise, amb + rise + grad, stage, h=430,
-                                  arrows=False)
-        fig.add_trace(go.Scatter(x=[path_x[0]], y=[path_y[0]], mode="markers",
-                                 marker=dict(size=13, color=AMBERHOT, symbol="circle",
-                                             line=dict(color=TEXT, width=1)),
-                                 name="heat", showlegend=False, hoverinfo="skip"))
-        frames = []
-        for i in range(28):
-            f = i / 27
-            seg = min(int(f * 4), 3)
-            u = f * 4 - seg
-            x = path_x[seg] + (path_x[seg + 1] - path_x[seg]) * u
-            y = path_y[seg] + (path_y[seg + 1] - path_y[seg]) * u
-            frames.append(go.Frame(data=[go.Scatter(
-                x=[x], y=[y], mode="markers",
-                marker=dict(size=13 - 4 * f, color=AMBERHOT, opacity=1 - 0.6 * f,
-                            line=dict(color=TEXT, width=1)))]))
-        st.plotly_chart(animate(fig, frames, ms=70), width="stretch")
-        st.caption("Winding → oil → tank and radiators → ambient air. Every step needs a "
-                   "temperature difference to drive it, which is why the winding must run "
-                   "hottest.")
-
-
-def render_the_target():
-    c1, c2 = st.columns([1.15, 1])
-    with c1:
-        st.markdown("**What the substation records, and what it costs**")
-        cat = pd.DataFrame([
-            ("load_current_a", "Current transformer, 33 kV side", "Input", "Already fitted"),
-            ("voltage_kv", "Voltage transformer, 132 kV side", "Input", "Already fitted"),
-            ("ambient_temp_c", "Substation weather station", "Input", "Already fitted"),
-            ("humidity_pct", "Substation weather station", "Input", "Already fitted"),
-            ("oil_temp_c", "Top-oil dial thermometer", "Input", "Already fitted"),
-            ("cooling_stage", "Fan contactor auxiliary contacts", "Input", "Already fitted"),
-            ("transformer_age_years", "Asset register", "Input", "Free"),
-            ("hotspot_temp_c", "Fibre-optic winding probe", "TARGET", "Factory-fit only"),
-        ], columns=["Column", "Where it comes from", "Role", "Cost to obtain"])
-        st.dataframe(cat, width="stretch", hide_index=True,
-                     column_config={"Role": st.column_config.TextColumn(width="small")})
-        st.success("**Seven cheap inputs, one expensive label.** That asymmetry is the entire "
-                   "business case: replace an instrument that cannot be retrofitted with "
-                   "arithmetic on instruments that are already there.")
-    with c2:
-        fig = go.Figure()
-        fig.add_trace(go.Bar(x=[7, 1], y=["Inputs<br>already fitted", "Target<br>needs a probe"],
-                             orientation="h", marker_color=[AISIDE, RED],
-                             text=["7 channels", "1 channel"], textposition="inside"))
-        fig.update_layout(title="The asymmetry that makes a model worth building",
-                          xaxis_title="Number of channels")
-        st.plotly_chart(style(fig, 240), width="stretch")
-        st.markdown(
-            f"<div class='relay warn'>A fibre-optic probe is installed between the winding "
-            f"discs at manufacture. Retrofitting it means untanking the transformer. "
-            f"<b>Most units in service will never have one.</b></div>", unsafe_allow_html=True)
-
-
-# ============================================================================
-# PHASE 3  -  THE MONITORING LOG
-# ============================================================================
 def render_log():
     log = story.get_raw_log()
     a, b, c, d = st.columns(4)
@@ -456,53 +222,74 @@ def render_log():
 
 def render_inspect():
     log = story.get_raw_log()
-    st.markdown("**Four checks, and what each one finds**")
+    st.markdown("**Six things wrong with this data — hover any red ring to see why**")
     amb = log.sort_values(["unit_id", "timestamp"]).groupby("unit_id", sort=False).ambient_temp_c
     runs = amb.transform(lambda s: s.groupby((s != s.shift()).cumsum()).transform("size"))
     checks = [
-        ("Missing values", int(log.isna().sum().sum()),
-         "Comms dropouts on the oil thermometer, and probe outages.", "summary"),
+        ("Missing readings", int(log.isna().sum().sum()),
+         "The sensor dropped out. No value was recorded at all."),
         ("Humidity above 100 %", int((log.humidity_pct > 100).sum()),
-         "A failed RH transmitter reporting a raw byte value of 255.", "summary"),
-        ("Load current below 10 A", int((log.load_current_a < 10).sum()),
-         "The unit was switched out. The winding was cooling to ambient — different physics.",
-         "needs thought"),
-        ("Ambient frozen 6 h or more", int((runs >= 6).sum()),
-         "The sensor stopped updating. Every value is plausible; the sequence is not.",
-         "invisible in a summary"),
-        ("Exact duplicate rows", int(log.duplicated().sum()),
-         "The historian exported part of the year twice.", "summary"),
-        ("Constant columns", len([c for c in log.columns if log[c].nunique(dropna=True) == 1]),
-         "`cooling_type` is the same for all four units, so it can teach nothing.", "summary"),
+         "Impossible. A broken sensor is sending 255."),
+        ("Load below 10 A", int((log.load_current_a < 10).sum()),
+         "The transformer was switched off. It was cooling down, not working."),
+        ("Air temperature stuck", int((runs >= 6).sum()),
+         "Same value for hours. Each reading looks fine; the run of them does not."),
+        ("Duplicated rows", int(log.duplicated().sum()),
+         "The export ran twice and pasted part of the year in again."),
+        ("Columns that never change", len([c for c in log.columns
+                                           if log[c].nunique(dropna=True) == 1]),
+         "A column with one value in it cannot teach a model anything."),
     ]
     cols = st.columns(3)
-    for i, (name, n, why, kind) in enumerate(checks):
+    for i, (name, n, why) in enumerate(checks):
         with cols[i % 3]:
             st.metric(name, f"{n:,}")
-            st.caption(f"{why}  \n*found by: {kind}*")
+            st.caption(why)
     st.divider()
+
     c1, c2 = st.columns([1, 1])
     with c1:
         fig = go.Figure(go.Histogram(x=log.humidity_pct, nbinsx=80, marker_color=EE))
-        fig.add_vline(x=100, line=dict(color=RED, dash="dash"),
-                      annotation_text="physically impossible above here")
-        fig.update_layout(title="Humidity — the fault is visible in the summary",
-                          xaxis_title="Humidity (%)")
-        st.plotly_chart(style(fig, 330), width="stretch")
+        fig.add_vrect(x0=100, x1=270, fillcolor=RED, opacity=0.10, line_width=0)
+        fig.add_vline(x=100, line=dict(color=RED, dash="dash"))
+        bad = int((log.humidity_pct > 100).sum())
+        mark_wrong(fig, 255, bad * 0.6, "Impossible values",
+                   f"{bad} readings say humidity is 255 %.<br>"
+                   "Air cannot be more than 100 % humid.<br>"
+                   "A failed sensor sends 255 when it has nothing to report.")
+        fig.update_layout(title="Humidity — one glance finds it",
+                          xaxis_title="Humidity (%)", yaxis_title="Number of hours")
+        st.plotly_chart(style(fig, 340), width="stretch")
+        figlab("Humidity readings for the whole year",
+               "everything in the red band cannot physically happen")
+        wrongkey([("Red band", "above 100 % humidity — physically impossible"),
+                  ("Red ring", "hover it for what went wrong")])
     with c2:
         u = log[log.unit_id == "T1"].sort_values("timestamp")
-        bad = u[runs.loc[u.index] >= 6]
-        w = u[(u.timestamp >= bad.timestamp.min() - pd.Timedelta(hours=40)) &
-              (u.timestamp <= bad.timestamp.max() + pd.Timedelta(hours=40))] if len(bad) else u.head(80)
+        bad_rows = u[runs.loc[u.index] >= 6]
+        w = (u[(u.timestamp >= bad_rows.timestamp.min() - pd.Timedelta(hours=40)) &
+               (u.timestamp <= bad_rows.timestamp.max() + pd.Timedelta(hours=40))]
+             if len(bad_rows) else u.head(80))
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=w.timestamp, y=w.ambient_temp_c, mode="lines+markers",
-                                 line=dict(color=EE, width=2), name="ambient"))
-        if len(bad):
-            fig.add_trace(go.Scatter(x=bad.timestamp, y=bad.ambient_temp_c, mode="markers",
-                                     marker=dict(size=9, color=RED), name="frozen"))
-        fig.update_layout(title="Ambient sensor — the fault is only visible in the sequence",
+                                 line=dict(color=EE, width=2), name="air temperature"))
+        if len(bad_rows):
+            fig.add_trace(go.Scatter(x=bad_rows.timestamp, y=bad_rows.ambient_temp_c,
+                                     mode="markers", marker=dict(size=9, color=RED),
+                                     name="stuck"))
+            mid = bad_rows.iloc[len(bad_rows) // 2]
+            mark_wrong(fig, mid.timestamp, mid.ambient_temp_c, "Sensor stuck",
+                       f"{len(bad_rows)} hours in a row report exactly "
+                       f"{mid.ambient_temp_c:.1f} °C.<br>"
+                       "Outdoor air never holds that still.<br>"
+                       "The sensor froze - but no single reading looks wrong.")
+        fig.update_layout(title="Air temperature — only the sequence gives it away",
                           yaxis_title="°C")
-        st.plotly_chart(style(fig, 330), width="stretch")
+        st.plotly_chart(style(fig, 340), width="stretch")
+        figlab("Air temperature around a sensor fault",
+               "a flat line where there should be a daily rise and fall")
+        wrongkey([("Red dots", "the stuck run"),
+                  ("Why it is sneaky", "a summary table would never catch this")])
 
 
 def render_explore():
@@ -525,7 +312,9 @@ def render_explore():
         fig.update_layout(title=f"{unit}, one week in June — load leads, oil follows",
                           hovermode="x unified")
         st.plotly_chart(style(fig, 400), width="stretch")
-        st.caption("The oil lags the load by hours. The winding does not — which is why the "
+        figlab("One week of readings for one transformer",
+               "load on the right axis, temperatures on the left")
+        st.caption("Load rises, the oil follows slowly, the winding follows at once — so the "
                    "gap between the amber and red lines opens at every peak.")
     with c2:
         band = st.slider("Hold the load in this band (A)", 300, 950, (680, 720), 10)
@@ -543,11 +332,13 @@ def render_explore():
         fig.update_layout(title="Same load, tens of degrees of spread",
                           xaxis_title="Load current (A)", yaxis_title="Hot spot (°C)")
         st.plotly_chart(style(fig, 400), width="stretch")
+        figlab("Every hour of the year: load against hot-spot temperature",
+               "colour is the air temperature")
         if len(sel):
-            st.info(f"Between **{band[0]} and {band[1]} A** the hot spot ranges from "
-                    f"**{sel.hotspot_temp_c.min():.0f} °C to {sel.hotspot_temp_c.max():.0f} °C** "
-                    f"— **{sel.hotspot_temp_c.max() - sel.hotspot_temp_c.min():.0f} °C of spread** "
-                    "at essentially the same load. One sensor cannot explain that.")
+            st.info(f"At the **same load**, the hot spot still ranges over "
+                    f"**{sel.hotspot_temp_c.max() - sel.hotspot_temp_c.min():.0f} °C**. So load "
+                    "alone cannot tell you the temperature — which is exactly why the model "
+                    "needs more than one input.")
 
 
 # ============================================================================
@@ -590,6 +381,7 @@ def render_clean():
             fig.update_layout(title="The rows that must be deleted, not repaired",
                               xaxis_title="Load current (A)", yaxis_title="Hot spot (°C)")
             st.plotly_chart(style(fig, 300), width="stretch")
+            figlab("The rows that must be deleted, not repaired")
 
 
 def render_features():
@@ -619,6 +411,7 @@ def render_features():
                                 "(violet = raw sensor, cyan = engineered)",
                           xaxis_title="|correlation|", xaxis_range=[0, 1.08])
         st.plotly_chart(style(fig, 470), width="stretch")
+        figlab("Absolute correlation with the hot spot")
         st.info("**`load_roll3`, the 3-hour mean load, correlates more strongly than any raw "
                 "sensor.** It is not a new measurement — it is the same current, remembered. "
                 "That memory is what fills the gap left by the oil thermometer's lag.")
@@ -636,6 +429,7 @@ def render_scale():
                                  boxpoints=False))
         fig.update_layout(title="Raw values", yaxis_type="log", showlegend=False)
         st.plotly_chart(style(fig, 360), width="stretch")
+        figlab("Raw values")
         st.dataframe(df[cols].describe().T[["mean", "std", "min", "max"]].round(2),
                      width="stretch")
     with c2:
@@ -647,6 +441,7 @@ def render_scale():
                                  boxpoints=False))
         fig.update_layout(title="Standardised values", showlegend=False)
         st.plotly_chart(style(fig, 360), width="stretch")
+        figlab("Standardised values")
         st.markdown(
             f"<div class='relay ai'><b>Linear models care. Trees do not.</b> A tree split at "
             f"<code>load_current_a &gt; 640</code> is the same split as "
@@ -671,6 +466,7 @@ def render_split():
                           xaxis_title="ISO week", yaxis=dict(visible=False), showlegend=False,
                           bargap=0.15)
         st.plotly_chart(style(fig, 250), width="stretch")
+        figlab("The calendar year — every fourth week held out (cyan)")
         st.caption("Whole weeks, not random rows — so 14:00 Tuesday cannot sit in training "
                    "while 15:00 Tuesday sits in test. Both seasons appear in both sets.")
     with c2:
@@ -717,6 +513,7 @@ def render_baseline():
         fig.update_layout(title="Mean error per unit — the standard assumes all four are identical",
                           yaxis_title="Predicted − measured (°C)")
         st.plotly_chart(style(fig, 350), width="stretch")
+        figlab("Mean error per unit — the standard assumes all four are identical")
         st.warning("These are **biases**, not noise, and they point in opposite directions all "
                    "year. That is the per-unit hot-spot factor — and it is exactly the "
                    "information a fitted model can pick up.")
@@ -730,6 +527,7 @@ def render_baseline():
         fig.update_layout(title="IEEE C57.91 predicted against measured",
                           xaxis_title="Measured (°C)", yaxis_title="Predicted (°C)")
         st.plotly_chart(style(fig, 350), width="stretch")
+        figlab("IEEE C57.91 predicted against measured")
 
 
 def render_linear():
@@ -746,6 +544,7 @@ def render_linear():
         fig.update_layout(title="Coefficients: °C of hot spot per standard deviation of the sensor",
                           xaxis_title="°C")
         st.plotly_chart(style(fig, 330), width="stretch")
+        figlab("Coefficients: °C of hot spot per standard deviation of the sensor")
         st.caption("Load current comes first, oil temperature second, ambient a distant third. "
                    "Humidity is near zero and voltage is essentially zero — the model has "
                    "decided those two sensors tell it nothing.")
@@ -760,6 +559,7 @@ def render_linear():
         fig.update_layout(title="Mean absolute error (°C, lower is better)",
                           yaxis_title="MAE (°C)")
         st.plotly_chart(style(fig, 330), width="stretch")
+        figlab("Mean absolute error (°C, lower is better)")
         st.success(f"**Fitting to this fleet at all is worth {vals[0] - vals[1]:.2f} °C.** "
                    f"Adding the engineered columns — same algorithm, no new sensors — is worth "
                    f"another **{vals[1] - vals[2]:.2f} °C**.")
@@ -786,6 +586,7 @@ def render_residuals():
         fig.update_layout(title="Residual against load — it curves, so the relationship bends",
                           xaxis_title="Load (per unit)", yaxis_title="Prediction error (°C)")
         st.plotly_chart(style(fig, 380), width="stretch")
+        figlab("Residual against load — it curves, so the relationship bends")
     with c2:
         fig = go.Figure()
         for s, colr in zip([0, 1, 2], [AISIDE, EE, RED]):
@@ -795,12 +596,11 @@ def render_residuals():
         fig.update_layout(title="Residual by cooling stage — it steps, so there is an interaction",
                           yaxis_title="Prediction error (°C)", showlegend=False)
         st.plotly_chart(style(fig, 380), width="stretch")
+        figlab("Residual by cooling stage — it steps, so there is an interaction")
     st.markdown(
-        f"<div class='relay tech'><b>Residuals should look like noise.</b> These do not. "
-        f"Curvature means the relationship bends, so the next model must be able to bend. "
-        f"Level shifts by category mean an interaction, so it must be able to split. "
-        f"Tree ensembles do both natively — which is the whole reason for the next phase.</div>",
-        unsafe_allow_html=True)
+        "<div class='relay tech'><b>Leftover errors should look like random noise.</b> These "
+        "form a curve instead — proof the straight line is the wrong shape, and that the next "
+        "model has to be able to bend.</div>", unsafe_allow_html=True)
 
 
 # ============================================================================
@@ -839,6 +639,7 @@ def render_forest():
         fig.update_layout(title="Averaging more disagreeing trees lowers the error",
                           yaxis_title="MAE (°C)")
         st.plotly_chart(style(fig, 360), width="stretch")
+        figlab("Averaging more disagreeing trees lowers the error")
         st.caption(f"One tree alone scores about {forest['one_tree_mae']:.2f} °C. "
                    "It memorises. The average of many does not.")
 
@@ -862,6 +663,7 @@ def render_boosting():
         fig.update_layout(title="Test error as trees are added",
                           xaxis_title="Trees added", yaxis_title="Test MAE (°C)")
         st.plotly_chart(style(fig, 400), width="stretch")
+        figlab("Test error as trees are added")
     with c2:
         lin = board.loc["Linear regression (engineered)", "MAE (°C)"]
         rf = board.loc["Random Forest", "MAE (°C)"]
@@ -874,10 +676,9 @@ def render_boosting():
         if pass_rf:
             st.metric("Trees needed to pass the forest", pass_rf)
         st.markdown(
-            f"<div class='relay warn'><b>The first few dozen trees are worse than the straight "
-            f"line.</b> Boosting starts from a crude guess and works towards the answer, so "
-            f"stopping early would have been a disaster. That is the opposite of a forest, "
-            f"where every tree is already a full model.</div>", unsafe_allow_html=True)
+            "<div class='relay warn'><b>The first few dozen trees are worse than the straight "
+            "line.</b> Boosting starts from a rough guess and improves it, so stopping it early "
+            "would have looked like failure.</div>", unsafe_allow_html=True)
 
 
 @st.cache_data(show_spinner=False)
@@ -887,42 +688,6 @@ def _boost_curve():
     if art is not None:
         return pd.Series(art["mae"].to_numpy(), index=art["trees"].to_numpy())
     return story._compute_boost_curve()
-
-
-def render_xgboost():
-    m = story.get_models()
-    board = m["board"]
-    c1, c2 = st.columns([1, 1.1])
-    with c1:
-        st.markdown("**Why a second boosting implementation exists**")
-        st.markdown(
-            f"<div class='relay ai'>A condition-monitoring model is not fitted once. It is "
-            f"refitted as the fleet changes — new units, new probes, a year of fresh readings. "
-            f"<b>If refitting takes an hour it happens annually. If it takes a second it happens "
-            f"whenever the data changes.</b></div>", unsafe_allow_html=True)
-        st.write("")
-        st.dataframe(pd.DataFrame([
-            {"Improvement": "Histogram splits", "What it does":
-                "Bucket each column once, so a split is a lookup instead of a sort"},
-            {"Improvement": "Parallel and cache-aware", "What it does":
-                "Uses every core on the machine"},
-            {"Improvement": "Built-in regularisation", "What it does":
-                "Penalises tree complexity, so more trees is safer"},
-        ]), width="stretch", hide_index=True)
-    with c2:
-        ens = board[board.Family == "Ensemble"]
-        fig = go.Figure(go.Bar(x=ens.Model, y=ens["MAE (°C)"],
-                               marker_color=[GREEN if v == ens["MAE (°C)"].min() else EE
-                                             for v in ens["MAE (°C)"]],
-                               text=ens["MAE (°C)"].round(3), textposition="outside"))
-        fig.update_layout(title="The three ensembles are within hundredths of a degree",
-                          yaxis_title="MAE (°C)")
-        st.plotly_chart(style(fig, 360), width="stretch")
-        spread = ens["MAE (°C)"].max() - ens["MAE (°C)"].min()
-        st.info(f"The three ensembles span **{spread:.3f} °C** — less than the width of the "
-                "sensor noise. When two models are equally accurate, choose on the properties "
-                "that are not accuracy: fit time, memory, and whether anyone can retrain it "
-                "without booking an afternoon.")
 
 
 def render_leaderboard():
@@ -943,6 +708,7 @@ def render_leaderboard():
                           yaxis_title="MAE (°C)", xaxis_tickangle=-18,
                           margin=dict(b=130))
         st.plotly_chart(style(fig, 470), width="stretch")
+        figlab("Mean absolute error on the held-out weeks (lower is better)")
     with c2:
         s = board.set_index("Model")["MAE (°C)"]
         levers = {
@@ -958,6 +724,7 @@ def render_leaderboard():
                           xaxis_title="°C of error removed",
                           xaxis_range=[0, max(levers.values()) * 1.4])
         st.plotly_chart(style(fig, 300), width="stretch")
+        figlab("Three separate levers, measured")
         st.success(f"**{base:.2f} °C → {s.min():.2f} °C, a "
                    f"{100 * (1 - s.min() / base):.0f} % cut against the model the industry "
                    f"uses.** No lever dominates — and the middle one costs nothing but domain "
@@ -982,6 +749,7 @@ def render_importance():
         fig.update_layout(title="The two models do not agree on what matters",
                           barmode="group", xaxis_title="Relative importance")
         st.plotly_chart(style(fig, 500), width="stretch")
+        figlab("The two models do not agree on what matters")
         st.caption(f"{ranks.columns[0]} puts **{story.FEATURE_LABELS[ranks.iloc[:, 0].idxmax()]}** "
                    f"first; the forest puts **{story.FEATURE_LABELS[ranks['Random Forest'].idxmax()]}** "
                    "first. A ranking describes how one model carved up the information — not "
@@ -997,6 +765,7 @@ def render_importance():
                           xaxis_title="Extra error (°C)",
                           xaxis_range=[0, max(drops["Penalty (°C)"]) * 1.35])
         st.plotly_chart(style(fig, 330), width="stretch")
+        figlab("Remove a whole instrument, refit, and measure")
         st.warning("**Two of the five specified sensors contribute nothing the model can use.** "
                    "Dropping a single *column* proves nothing — the columns are redundant by "
                    "construction. Dropping an *instrument* is the test with an answer in "
@@ -1012,94 +781,6 @@ def _instrument_drops():
     return story._compute_instrument_drops()
 
 
-def render_sensitivity():
-    st.markdown("**Push one input at a time and check the response against the physics**")
-    c1, c2 = st.columns([1, 1.3])
-    with c1:
-        age = st.select_slider("Transformer age (years)", [3, 9, 16, 22], value=16, key="se_age")
-        ambs = st.multiselect("Ambient temperatures to draw", [5, 15, 25, 30, 35, 42],
-                              default=[15, 30, 42], key="se_amb")
-        st.markdown(
-            f"<div class='relay tech'>A model can score well on average and still be wrong "
-            f"where it matters. If it flattens above 1.2 pu it under-predicts every overload — "
-            f"the only hours anyone cares about. The average error would never show it.</div>",
-            unsafe_allow_html=True)
-    with c2:
-        loads = np.arange(300, 970, 20)
-        fig = go.Figure()
-        colours = [AISIDE, EE, RED, GREEN, TECH, AMBERHOT]
-        for i, amb in enumerate(sorted(ambs)):
-            oils = amb + story.top_oil_rise(loads / story.I_RATED, 1.0, 2, age)
-            rows = pd.concat([story.feature_row(l, amb, o, age=age)
-                              for l, o in zip(loads, oils)], ignore_index=True)
-            mdl, _ = story.best_model()
-            p = mdl.predict(rows)
-            fig.add_trace(go.Scatter(x=loads, y=p, name=f"ambient {amb} °C",
-                                     line=dict(color=colours[i % len(colours)], width=3)))
-        fig.add_hline(y=110, line=dict(color=RED, dash="dash"), annotation_text="110 °C")
-        fig.update_layout(title="The model reproduced the transformer loading chart",
-                          xaxis_title="Load current (A)",
-                          yaxis_title="Predicted hot spot (°C)")
-        st.plotly_chart(style(fig, 430), width="stretch")
-    mdl, _ = story.best_model()
-    pts = {}
-    for l in (400, 700, 900):
-        o = 30 + float(story.top_oil_rise(l / story.I_RATED, 1.0, 2, 16))
-        pts[l] = float(mdl.predict(story.feature_row(l, 30, o, age=16))[0])
-    a, b, c = st.columns(3)
-    a.metric("400 → 700 A at 30 °C", f"+{pts[700] - pts[400]:.1f} °C",
-             f"{(pts[700] - pts[400]) / 3:.1f} °C per 100 A")
-    b.metric("700 → 900 A at 30 °C", f"+{pts[900] - pts[700]:.1f} °C",
-             f"{(pts[900] - pts[700]) / 2:.1f} °C per 100 A")
-    o1 = 15 + float(story.top_oil_rise(1.0, 1.0, 2, 16))
-    o2 = 35 + float(story.top_oil_rise(1.0, 1.0, 2, 16))
-    s1 = float(mdl.predict(story.feature_row(700, 15, o1, age=16))[0])
-    s2 = float(mdl.predict(story.feature_row(700, 35, o2, age=16))[0])
-    c.metric("+20 °C of ambient", f"+{s2 - s1:.1f} °C", f"slope {(s2 - s1) / 20:.2f}")
-    st.success("**The curve steepens, as K^1.6 requires** — the second 100 A costs more than "
-               "the first. And ambient shifts it up almost one-for-one, because the transformer "
-               "cools to ambient and every degree of air temperature is a degree the oil cannot "
-               "lose. Nothing told the model either of those things.")
-
-
-# ============================================================================
-# PHASE 8  -  THE MONITORING DASHBOARD
-# ============================================================================
-def render_metrics():
-    m = story.get_models()
-    best = m["board"].iloc[0]
-    y, p = m["y_test"], m["preds"][m["best"]]
-    a, b, c, d = st.columns(4)
-    a.metric("MAE", f"{best['MAE (°C)']:.2f} °C", "typical error")
-    b.metric("RMSE", f"{best['RMSE (°C)']:.2f} °C",
-             f"ratio to MAE {best['RMSE (°C)'] / best['MAE (°C)']:.2f}")
-    c.metric("R²", f"{best['R²']:.4f}", f"test std dev {y.std():.1f} °C")
-    d.metric("95 % of errors within", f"±{np.percentile(np.abs(p - y), 95):.2f} °C")
-    st.divider()
-    c1, c2 = st.columns([1, 1.1])
-    with c1:
-        st.markdown("**The same model, two different test sets**")
-        cmp = _split_comparison()
-        st.dataframe(cmp.round(3), width="stretch", hide_index=True)
-        st.warning("**Identical accuracy in degrees. Very different R².** Autumn's hot-spot "
-                   "temperatures vary less than the full year's, and R² is measured against "
-                   "that variation. Quote MAE in °C to an engineer; quote R² only alongside the "
-                   "standard deviation of the test set.")
-    with c2:
-        fig = make_subplots(specs=[[{"secondary_y": True}]])
-        fig.add_trace(go.Bar(x=cmp["Test set"], y=cmp["MAE (°C)"], name="MAE (°C)",
-                             marker_color=EE, text=cmp["MAE (°C)"].round(2),
-                             textposition="outside"), secondary_y=False)
-        fig.add_trace(go.Scatter(x=cmp["Test set"], y=cmp["R²"], name="R²", mode="lines+markers",
-                                 line=dict(color=AISIDE, width=3),
-                                 marker=dict(size=13)), secondary_y=True)
-        fig.update_yaxes(title_text="MAE (°C)", secondary_y=False, range=[0, 2.4])
-        fig.update_yaxes(title_text="R²", secondary_y=True, range=[0.95, 1.0], showgrid=False)
-        fig.update_layout(title="MAE holds. R² moves. The model did not change.")
-        st.plotly_chart(style(fig, 380), width="stretch")
-
-
-@st.cache_data(show_spinner=False)
 def _split_comparison():
     art = story.precomputed("split_comparison")
     if art is not None:
@@ -1124,63 +805,22 @@ def render_errors():
         fig.update_layout(title="Predicted against measured hot-spot temperature",
                           xaxis_title="Measured (°C)", yaxis_title="Predicted (°C)")
         st.plotly_chart(style(fig, 420), width="stretch")
+        figlab("Predicted against measured hot-spot temperature")
     with c2:
         fig = go.Figure(go.Histogram(x=err, nbinsx=90, marker_color=EE))
         fig.add_vline(x=0, line=dict(color=TEXT, dash="dash"))
         fig.update_layout(title="Distribution of the error",
                           xaxis_title="Predicted − measured (°C)")
         st.plotly_chart(style(fig, 420), width="stretch")
+        figlab("Distribution of the error")
     a, b, c, d = st.columns(4)
     a.metric("Bias", f"{err.mean():+.2f} °C")
     b.metric("Within ±1 °C", f"{100 * np.mean(np.abs(err) <= 1):.0f} %")
     c.metric("Within ±3 °C", f"{100 * np.mean(np.abs(err) <= 3):.0f} %")
     d.metric("Worst miss", f"{np.abs(err).max():.1f} °C")
-    st.info("**Predicting too high costs money** — loading is restricted that need not have "
-            "been. **Predicting too low costs insulation life**, silently, and nobody finds out "
-            "for years. So a histogram centred on zero is necessary but not sufficient: it has "
-            "to be centred on zero *in the hot band as well*.")
-
-
-def render_trend():
-    m = story.get_models()
-    df = story.get_features()
-    te = m["test_mask"]
-    rows = df.loc[te].copy()
-    rows["predicted"] = m["preds"][m["best"]]
-    unit = rows.groupby("unit_id").hotspot_temp_c.max().idxmax()
-    sub = rows[rows.unit_id == unit]
-    peak = sub.loc[sub.hotspot_temp_c.idxmax(), "timestamp"]
-    days = st.slider("Days either side of the annual peak", 1, 6, 3, key="tr_d")
-    w = sub[(sub.timestamp >= peak - pd.Timedelta(days=days)) &
-            (sub.timestamp <= peak + pd.Timedelta(days=days))].sort_values("timestamp")
-
-    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.7, 0.3],
-                        vertical_spacing=0.07,
-                        subplot_titles=(f"{unit}: predicted against measured",
-                                        "Prediction error (°C)"))
-    fig.add_trace(go.Scatter(x=w.timestamp, y=w.hotspot_temp_c, name="Measured (probe)",
-                             line=dict(color=RED, width=3)), row=1, col=1)
-    fig.add_trace(go.Scatter(x=w.timestamp, y=w.predicted, name="Predicted (model)",
-                             line=dict(color=AISIDE, width=2, dash="dot")), row=1, col=1)
-    fig.add_trace(go.Scatter(x=w.timestamp, y=w.oil_temp_c, name="Top oil (measured)",
-                             line=dict(color=EE, width=1.5)), row=1, col=1)
-    fig.add_hline(y=110, line=dict(color=RED, dash="dash"), row=1, col=1)
-    fig.add_trace(go.Bar(x=w.timestamp, y=w.predicted - w.hotspot_temp_c, marker_color=MUTED,
-                         name="error"), row=2, col=1)
-    fig.update_yaxes(title_text="°C", row=1, col=1)
-    fig.update_yaxes(title_text="Error (°C)", row=2, col=1)
-    st.plotly_chart(style(fig, 560), width="stretch")
-
-    e = (w.predicted - w.hotspot_temp_c)
-    a, b, c, d = st.columns(4)
-    a.metric("Measured peak", f"{w.hotspot_temp_c.max():.1f} °C")
-    b.metric("Predicted peak", f"{w.predicted.max():.1f} °C",
-             f"{w.predicted.max() - w.hotspot_temp_c.max():+.1f} °C")
-    c.metric("MAE this window", f"{e.abs().mean():.2f} °C")
-    d.metric("Largest miss", f"{e.abs().max():.2f} °C")
-    st.warning("**The model tracks the plant closely all week and then under-reads the peak.** "
-               "That is not bad luck — it is the same effect the next page measures "
-               "deliberately, and it always points the same way.")
+    st.info("**Too high** costs money: load is cut when it need not be. **Too low** costs "
+            "insulation, silently. So being right *on average* is not enough — it has to be "
+            "right when it is hot.")
 
 
 def render_hot_tail():
@@ -1208,9 +848,21 @@ def render_hot_tail():
                                  mode="lines+markers", line=dict(color=AISIDE, width=3),
                                  marker=dict(size=11)))
         fig.add_hline(y=0, line=dict(color=TEXT, dash="dot"))
+        if len(band):
+            worst = band.iloc[-1]
+            mark_wrong(fig, worst["Band (°C)"], worst["MAE (°C)"],
+                       "Weakest where it matters most",
+                       f"In the hottest band the average miss is "
+                       f"{worst['MAE (°C)']:.2f} °C and the bias is "
+                       f"{worst['Bias (°C)']:+.2f} °C.<br>"
+                       "A negative bias means it reads LOW when the transformer is hottest -<br>"
+                       "the one direction that quietly costs insulation life.")
         fig.update_layout(title="Error grows with temperature — and the bias turns negative",
                           yaxis_title="°C")
         st.plotly_chart(style(fig, 330), width="stretch")
+        figlab("Accuracy by temperature band",
+               "hover the red ring for the problem")
+        wrongkey([("Red ring", "where the model is weakest and reads low")])
     with c2:
         faa = story.ageing_factor(y)
         order = np.argsort(faa)[::-1]
@@ -1228,6 +880,7 @@ def render_hot_tail():
                           xaxis_title="Hours, hottest first (%)",
                           yaxis_title="Cumulative life consumed (%)")
         st.plotly_chart(style(fig, 380), width="stretch")
+        figlab("Insulation ageing is concentrated in a handful of hours")
         a, b = st.columns(2)
         a.metric("Hottest 1 % of hours carry", f"{100 * cum[int(0.01 * len(cum)) - 1]:.0f} %")
         b.metric("Hottest 5 % carry", f"{100 * cum[int(0.05 * len(cum)) - 1]:.0f} %")
@@ -1265,6 +918,7 @@ def render_unseen_unit():
         fig.update_layout(title="Almost all of the failure is bias, not scatter",
                           yaxis_title="°C", barmode="group")
         st.plotly_chart(style(fig, 380), width="stretch")
+        figlab("Almost all of the failure is bias, not scatter")
     with c2:
         fig = go.Figure(go.Bar(
             x=["Seen this unit"] + [f"Never seen {u}" for u in h["Held-out unit"]],
@@ -1273,13 +927,13 @@ def render_unseen_unit():
             text=[f"{base:.2f}"] + [f"{v:.2f}" for v in h["MAE (°C)"]], textposition="outside"))
         fig.update_layout(title="Mean absolute error (°C)", yaxis_title="MAE (°C)")
         st.plotly_chart(style(fig, 380), width="stretch")
+        figlab("Mean absolute error (°C)")
     st.markdown(
-        f"<div class='relay warn'><b>This is the most important limitation in the project, and "
-        f"it is measured rather than assumed.</b> The model interpolates within the fleet it "
-        f"learned; it does not extrapolate to a new winding design. The scatter barely moves, "
-        f"which tells you it learned the physics correctly and missed only the unit-specific "
-        f"constant — so a short calibration period on a new unit would recover most of the "
-        f"accuracy.</div>", unsafe_allow_html=True)
+        "<div class='relay warn'><b>This is the model's biggest limitation — and we measured it "
+        "rather than assumed it.</b> On a transformer it has never seen, it is wrong by a fairly "
+        "steady amount rather than wildly scattered. That means it did learn the physics, and "
+        "only missed the one thing unique to that unit — so a few weeks of readings from a new "
+        "transformer would fix most of it.</div>", unsafe_allow_html=True)
 
 
 # ============================================================================
@@ -1302,6 +956,7 @@ def render_predict():
         g1, g2 = st.columns([1.1, 1])
         with g1:
             st.plotly_chart(gauge(d["hotspot_c"]), width="stretch")
+            figlab("Mean absolute error (°C)")
         with g2:
             st.metric("Headroom to 110 °C", f"{d['headroom_k']:.1f} K")
             st.metric("Ageing rate", f"{d['faa']:.2f} ×", "1.00 = design rate")
@@ -1309,6 +964,7 @@ def render_predict():
             st.metric("Loading", f"{d['load_pu']:.2f} pu")
         st.plotly_chart(transformer_section(d["load_pu"], amb, oil, d["hotspot_c"], d["stage"],
                                             h=330), width="stretch")
+        figlab("Chart")
     st.divider()
     st.markdown("**Engineering interpretation**")
     notes = [
@@ -1362,6 +1018,7 @@ def render_recommend():
     c1, c2 = st.columns([1, 1.25])
     with c1:
         st.plotly_chart(gauge(d["hotspot_c"], h=280), width="stretch")
+        figlab("Chart")
         a, b = st.columns(2)
         a.metric("Headroom", f"{d['headroom_k']:.1f} K")
         b.metric("Ageing", f"{d['faa']:.2f} ×")
@@ -1399,12 +1056,11 @@ def render_recommend():
         ]), width="stretch", hide_index=True)
     with c4:
         st.markdown(
-            f"<div class='relay tech'><b>Note where the machine learning stops.</b><br>"
-            f"· The model predicts a temperature. That is all it does.<br>"
-            f"· The thresholds come from a published standard.<br>"
-            f"· The cause diagnosis is engineering logic, written by hand and readable by "
-            f"anyone.<br><br>Keeping those three separate is what makes the system auditable. "
-            f"<b>Nobody has to trust the model to check the rule.</b></div>",
+            "<div class='relay tech'><b>Where the AI stops.</b><br>"
+            "· The model predicts a temperature. That is all it does.<br>"
+            "· The limits come from a published standard.<br>"
+            "· The advice is ordinary engineering logic anyone can read.<br><br>"
+            "<b>You do not have to trust the model to check the rule.</b></div>",
             unsafe_allow_html=True)
 
 
@@ -1419,6 +1075,7 @@ def render_dashboard():
         with col:
             st.plotly_chart(gauge(r["Hot spot (°C)"], f"{r['Unit']} — {r['Age']} years", h=250),
                             width="stretch", key=f"g_{r['Unit']}")
+            figlab("Chart")
     st.dataframe(board.drop(columns=["tone"]), width="stretch", hide_index=True,
                  column_config={"Headroom (K)": st.column_config.NumberColumn(
                      help="Kelvin below the 110 °C normal-life limit. Negative means above it.")})
@@ -1441,6 +1098,7 @@ def render_dashboard():
         fig.update_layout(title="Insulation life consumed this year",
                           yaxis_title="Equivalent days of design life")
         st.plotly_chart(style(fig, 350), width="stretch")
+        figlab("Insulation life consumed this year")
     with c2:
         fig = go.Figure()
         for lim, colr in [(98, EE), (110, RED), (120, "#7b1fa2")]:
@@ -1449,6 +1107,7 @@ def render_dashboard():
         fig.update_layout(title="Hours above each limit", yaxis_title="Hours in the year",
                           barmode="group")
         st.plotly_chart(style(fig, 350), width="stretch")
+        figlab("Hours above each limit")
     st.success("**None of these four transformers reports a hot-spot temperature to this "
                "dashboard.** Every number in that column was predicted, from instruments that "
                "were already fitted. A person still reads it, still decides, and still signs "
@@ -1459,66 +1118,47 @@ def render_dashboard():
 # THE LANDING PAGE
 # ============================================================================
 def render_start():
-    st.markdown("# ⚡ AI for Transformer Hot-Spot Temperature Prediction")
-    st.markdown("### An interactive course for Electrical Power Engineers")
-    st.markdown(
-        f"<div class='brief'><div class='brief-bar'>⟨ THE BRIEF ⟩</div>"
-        f"You are not here to learn Artificial Intelligence. You are here to solve a "
-        f"<b>power systems problem</b> — one an engineer genuinely cannot solve by hand, for "
-        f"reasons that are arithmetic rather than effort. AI turns up in the middle of it, "
-        f"because the engineering requires it. Not before.</div>", unsafe_allow_html=True)
-    st.write("")
+    reset_figures()
+    st.markdown("# \u26a1 AI for Transformer Hot-Spot Temperature Prediction")
 
     # ---- SECTION 1 -------------------------------------------------------
-    bridge._bus("01", "The Engineering Problem", EE)
+    bridge._bus("01", "The Problem", EE)
     c1, c2 = st.columns([1.1, 1])
     with c1:
         st.markdown(
-            "A power transformer converts voltage, not power. Everything it fails to pass on "
-            "becomes **heat**.\n\n"
-            "That heat is not the problem. **Time spent hot** is the problem.\n\n"
-            "- Insulating paper degrades chemically, and the rate roughly **doubles every 6 °C**.\n"
-            "- The damage is cumulative and cannot be reversed.\n"
-            "- Nothing visible happens until the unit fails.\n\n"
-            "The temperature that governs this is the **winding hot spot** — typically "
-            "**25 to 30 °C above** the top-oil temperature on the dial thermometer.\n\n"
-            "**Almost no transformer in service measures it.** A fibre-optic probe has to be "
-            "installed between the winding discs at manufacture, and it cannot be retrofitted "
-            "without untanking the transformer.")
+            "<div style='font-size:19px;line-height:1.65'>A transformer is slowly destroyed by "
+            "its own heat, and the temperature that decides how long it lives is "
+            "<b>deep inside it, where nothing can measure it</b>. The gauge on the outside reads "
+            "about <b>30 °C too low</b>.<br><br>So we predict that hidden temperature from "
+            "the ordinary sensors every substation already has.</div>",
+            unsafe_allow_html=True)
+        st.write("")
         limit_chips()
     with c2:
-        st.plotly_chart(transformer_section(1.03, 36, 68, 97.8, 2, h=430),
-                        width="stretch")
-        st.caption("The gauge on the tank reads 68 °C. The winding is at about 98 °C. "
-                   "Everything in this course lives in that 30 K gap.")
+        st.plotly_chart(transformer_section(1.03, 36, 68, 97.8, 2, h=400), width="stretch")
+        figlab("Inside a loaded transformer",
+               "outside gauge 68 °C, winding about 98 °C")
 
     # ---- SECTION 2 -------------------------------------------------------
-    bridge._bus("02", "The Project Goal", AISIDE)
+    bridge._bus("02", "What This Course Builds", AISIDE)
     m = story.get_models()
     s = m["board"].set_index("Model")["MAE (°C)"]
     base = s["IEEE C57.91 (nameplate)"]
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("The standard's error", f"{base:.2f} °C", "IEEE C57.91, nameplate")
+    c1.metric("Today's method is out by", f"{base:.2f} °C", "the industry standard")
     c2.metric("After machine learning", f"{s.min():.2f} °C",
               f"-{100 * (1 - s.min() / base):.0f} %")
-    c3.metric("Steps in this course", len(bridge.STEPS))
-    c4.metric("Hours of history used", f"{len(story.get_features()):,}")
-    st.markdown(
-        f"<div class='relay ai'>AI predicts the transformer hot-spot temperature from sensors "
-        f"that are <b>already fitted</b>, so engineers can prevent overheating before it "
-        f"damages insulation. Nothing here trips a breaker or changes a tap. The protection "
-        f"engineer stays in charge and still owns every loading decision. The system does the "
-        f"one thing a person cannot: <b>it estimates the temperature inside every winding, "
-        f"every hour, and never looks away.</b></div>", unsafe_allow_html=True)
-    st.write("")
+    c3.metric("Phases", len(bridge.PHASES))
+    c4.metric("Hours of history", f"{len(story.get_features()):,}")
 
     # ---- SECTION 3 -------------------------------------------------------
-    bridge._bus("03", "The Engineering Mind Map", TECH)
-    st.caption("Click any node to open its page.")
+    bridge._bus("03", "The Ten Phases", TECH)
+    st.caption("Each phase ends with a question. The next phase answers it.")
     c1, c2 = st.columns([1, 1.15])
     with c1:
         ev = st.plotly_chart(bridge.mind_map(style), width="stretch",
                              on_select="rerun", key="mindmap")
+        figlab("The whole project as one map", "click any node to open that phase")
         try:
             pts = ev.selection["points"]
             if pts:
@@ -1526,57 +1166,406 @@ def render_start():
         except (KeyError, TypeError, AttributeError):
             pass
     with c2:
-        st.markdown("**Or jump straight to a phase**")
-        for i, (pname, pdesc) in enumerate(bridge.PHASES):
-            steps = bridge.phase_steps(i)
-            with st.expander(f"**{i+1} · {pname}** — {pdesc}"):
-                for s_ in steps:
-                    if st.button(f"{s_['ee_icon']}  {s_['ee']}",
-                                 key=f"jump_{s_['id']}", width="stretch"):
-                        bridge.goto(s_["id"])
+        for i, st_ in enumerate(bridge.STEPS):
+            q = st_["question"] or "—"
+            if st.button(f"{i+1}\u2003{st_['ee_icon']}  {st_['ee']}",
+                         key=f"jump_{st_['id']}", width="stretch"):
+                bridge.goto(st_["id"])
+            st.markdown(f"<div class='muted' style='margin:-6px 0 8px 6px'>{q}</div>",
+                        unsafe_allow_html=True)
 
     # ---- SECTION 4 -------------------------------------------------------
-    bridge._bus("04", "Electrical Engineering → AI", GREEN)
-    st.markdown(
-        "Read down the left column and you have described a transformer condition-monitoring "
-        "scheme. Read down the right column and you have described a complete machine learning "
-        "pipeline. **They are the same column.**")
+    bridge._bus("04", "Electrical Engineering \u2192 AI", GREEN)
+    st.markdown("Read the left column and it is a transformer monitoring scheme. Read the right "
+                "column and it is a machine learning pipeline. **They are the same column.**")
     st.plotly_chart(bridge.mapping_figure(style), width="stretch")
+    figlab("Chart")
 
     st.divider()
-    st.markdown(
-        f"<div class='brief'><div class='brief-bar'>⟨ THE ONE IDEA THIS COURSE PROVES ⟩</div>"
-        f"<span style='font-size:19px;line-height:1.6'><b>Machine Learning learns the "
-        f"relationship between transformer operating conditions and hot-spot temperature, so "
-        f"engineers can predict overheating before it happens and protect the asset.</b></span>"
-        f"<br><br><span class='muted'>Do not take it on trust. Step "
-        f"{bridge.ORDER.index('leaderboard')+1} measures it against the thermal model the "
-        f"industry already uses, and step {bridge.ORDER.index('unseen-unit')+1} measures where "
-        f"it stops working.</span></div>", unsafe_allow_html=True)
-    st.write("")
-    if st.button("▶  Start at step 1 — A Transformer Under Load", width="stretch"):
+    if st.button(f"\u25b6  Start at phase 1 — {bridge.STEPS[0]['ee']}", width="stretch",
+                 type="primary"):
         bridge.goto(bridge.ORDER[0])
 
 
 # ============================================================================
 # THE ROUTER
 # ============================================================================
+
+# ============================================================================
+# BEGINNER HELPERS
+# ============================================================================
+_FIGN = {"n": 0}
+
+
+def figlab(title, what=""):
+    """Label a figure. Every chart and image on a page gets one, numbered."""
+    _FIGN["n"] += 1
+    extra = f" &nbsp;\u00b7&nbsp; {what}" if what else ""
+    st.markdown(f"<div class='figlab'><b>FIGURE {_FIGN['n']}</b> &nbsp;{title}{extra}</div>",
+                unsafe_allow_html=True)
+
+
+def reset_figures():
+    _FIGN["n"] = 0
+
+
+def term(word, plain, example=""):
+    """One piece of jargon, translated. Used wherever a new word first appears."""
+    ex = f"<div class='term-e'>{example}</div>" if example else ""
+    st.markdown(f"<div class='term'><span class='term-w'>{word}</span>"
+                f"<div class='term-p'>{plain}</div>{ex}</div>", unsafe_allow_html=True)
+
+
+def wrongkey(items):
+    """The key under a chart that has problems marked on it."""
+    rows = "".join(f"<div><b>{k}</b> &nbsp;{v}</div>" for k, v in items)
+    st.markdown(f"<div class='wrongkey'>{rows}</div>", unsafe_allow_html=True)
+
+
+def mark_wrong(fig, x, y, label, why, color=None):
+    """Ring a problem on a chart and explain it on hover.
+
+    Students should not have to be told in prose which dot is the broken one.
+    The marker carries the explanation in its tooltip.
+    """
+    fig.add_trace(go.Scatter(
+        x=[x], y=[y], mode="markers", name=label, showlegend=False,
+        marker=dict(size=26, color="rgba(0,0,0,0)", line=dict(color=color or RED, width=2.5)),
+        hovertemplate=f"<b>{label}</b><br>{why}<extra></extra>"))
+    return fig
+
+
+def bridge_panel(stage):
+    """The engineering-to-AI mapping, tucked away so the page stays short."""
+    step = bridge.BY_ID.get(stage)
+    if step is None:
+        return
+    with st.expander(f"How this maps to the AI concept — {step['ai']}"):
+        st.plotly_chart(bridge.bridge_figure(step, style, animate), width="stretch",
+                        key=f"bridge_{stage}")
+        figlab("The engineering step and the AI concept are the same idea",
+               "amber is the substation, cyan is the AI")
+
+
+# ============================================================================
+# NEW CONTENT THE TEN-PAGE COURSE NEEDS
+# ============================================================================
+def pane_columns():
+    """What each column in the log actually is, in plain words."""
+    st.markdown("**Every column, in plain English**")
+    rows = [
+        ("load_current_a", "Load current",
+         "How much electricity is flowing through it right now, in amps. Busier = hotter."),
+        ("ambient_temp_c", "Air temperature",
+         "How warm the air outside the transformer is."),
+        ("oil_temp_c", "Oil temperature",
+         "The dial thermometer on the tank. Warm oil, but not the hottest point."),
+        ("voltage_kv", "Voltage", "The voltage on the incoming side."),
+        ("humidity_pct", "Humidity", "How damp the air is."),
+        ("cooling_stage", "Fan setting",
+         "Which cooling fans are running: 0 none, 1 half, 2 all of them."),
+        ("transformer_age_years", "Age", "How old this transformer is, in years."),
+        ("unit_id", "Which transformer", "T1, T2, T3 or T4 - a name, not a number."),
+    ]
+    st.dataframe(pd.DataFrame(rows, columns=["Column", "Means", "In plain English"]),
+                 width="stretch", hide_index=True)
+    st.markdown(f"<div class='relay ai'><b>hotspot_temp_c</b> is the answer column - the "
+                f"temperature deep inside the winding. On these four research units it was "
+                f"measured with a special probe. On every other transformer it is missing, and "
+                f"that is exactly what we are building.</div>", unsafe_allow_html=True)
+
+
+def pane_encoding():
+    """Turning word-columns into numbers, which every model requires."""
+    st.markdown("**Models do arithmetic. They cannot add up the word \"T3\".**")
+    term("Encoding",
+         "Turning a column of words or categories into numbers, because a model can only "
+         "multiply and add.",
+         "\"T3\" is not a quantity. It has to become numbers before it can be used.")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("**Wrong: just number them**")
+        st.dataframe(pd.DataFrame({"unit_id": ["T1", "T2", "T3", "T4"],
+                                   "as a number": [1, 2, 3, 4]}),
+                     width="stretch", hide_index=True)
+        st.markdown("<div class='relay warn'>This tells the model T4 is <b>four times</b> T1, "
+                    "and that T2 sits halfway between T1 and T3. None of that is true - they are "
+                    "just names.</div>", unsafe_allow_html=True)
+    with c2:
+        st.markdown("**Right: one column per category (one-hot)**")
+        st.dataframe(pd.DataFrame({"unit_id": ["T1", "T2", "T3", "T4"],
+                                   "is_T1": [1, 0, 0, 0], "is_T2": [0, 1, 0, 0],
+                                   "is_T3": [0, 0, 1, 0], "is_T4": [0, 0, 0, 1]}),
+                     width="stretch", hide_index=True)
+        st.markdown("<div class='relay ok'>Each transformer gets its own yes/no column. No fake "
+                    "ordering, no fake arithmetic.</div>", unsafe_allow_html=True)
+    st.divider()
+    st.markdown("**When numbering IS right: the fan setting**")
+    st.markdown(
+        "`cooling_stage` is 0, 1 or 2 - no fans, half, all. Here the order is real and the gaps "
+        "mean something, so it can stay as a plain number. That kind of column is called "
+        "**ordinal**. The test is simple: *does 'bigger' mean anything?* For fans yes, for "
+        "transformer names no.")
+    st.markdown(f"<div class='relay ai'>In this project the model is trained per-reading and "
+                f"<b>not</b> given the unit name, on purpose - so it has to learn the physics "
+                f"rather than memorise which transformer it is looking at. Page "
+                f"<b>Where It Fails</b> shows what that costs.</div>", unsafe_allow_html=True)
+
+
+def pane_mlterms():
+    """The words, before anything uses them."""
+    st.markdown("**Six words, and then we can talk about models**")
+    c1, c2 = st.columns(2)
+    with c1:
+        term("Feature", "An input. Something you measured and can feed in.",
+             "Load current, air temperature, oil temperature.")
+        term("Label", "The answer you want. The thing you are trying to predict.",
+             "The hot-spot temperature.")
+        term("Model", "A rule, learned from examples, that turns features into a label.",
+             "Give it today's readings, it gives back a temperature.")
+    with c2:
+        term("Training", "Showing the model thousands of examples so it can find the pattern.",
+             "26,000 hours where we know both the readings and the answer.")
+        term("Prediction", "Using the trained model on readings it has not seen.",
+             "A temperature for an hour nobody measured.")
+        term("Overfitting",
+             "When a model memorises the examples instead of learning the pattern. It scores "
+             "brilliantly on what it has seen and badly on anything new.",
+             "Like revising by memorising last year's exam paper.")
+
+
+def pane_whymodel():
+    """Justifying the model choice, which is the part students skip."""
+    m = story.get_models()
+    s = m["board"].set_index("Model")["MAE (°C)"]
+    st.markdown("**Why this model, and not one of the others**")
+    rows = [
+        ("Linear regression", f"{s['Linear regression (engineered)']:.2f} °C",
+         "Fits one straight line. Fast and easy to explain, but the real relationship curves, "
+         "so it is wrong at both ends.", "Rejected - cannot bend"),
+        ("Random Forest", f"{s['Random Forest']:.2f} °C",
+         "Hundreds of independent rule-trees, averaged. Bends nicely and is hard to break.",
+         "Good, but beaten"),
+        ("Gradient Boosting", f"{s['Gradient Boosting']:.2f} °C",
+         "Trees built one after another, each fixing the last one's mistakes. More accurate "
+         "than the forest here.", "Nearly the winner"),
+    ]
+    if "XGBoost" in s.index:
+        rows.append(("XGBoost", f"{s['XGBoost']:.2f} °C",
+                     "The same idea as gradient boosting, written to run fast. Same accuracy, "
+                     "a fraction of the training time.", "CHOSEN"))
+    st.dataframe(pd.DataFrame(rows, columns=["Model", "Average miss", "What it does",
+                                             "Verdict"]),
+                 width="stretch", hide_index=True)
+    best = story.BEST_LABEL.get(m["best"], "the best model")
+    st.markdown(
+        f"<div class='relay ok'><b>{best} wins on three counts.</b> It is the most accurate. It "
+        f"retrains in seconds rather than minutes, so the substation can refresh it as new data "
+        f"arrives. And it handles the awkward parts of this data - fan settings that jump in "
+        f"steps, sensors that disagree - without anyone hand-tuning it.</div>",
+        unsafe_allow_html=True)
+
+
+def pane_whymetric():
+    """What each score means, and why MAE is the one that matters here."""
+    m = story.get_models()
+    b = m["board"].set_index("Model")
+    best = story.BEST_LABEL.get(m["best"], "Best")
+    row = b.loc[b.index[0]]
+    st.markdown("**Three ways of saying \"how wrong\"**")
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.metric("MAE", f"{row['MAE (°C)']:.2f} °C")
+        term("Mean Absolute Error",
+             "Average of how far off it was, ignoring direction. In the same unit as the thing "
+             "you measured, so you can read it directly.",
+             "MAE of 1.35 means: typically wrong by about 1.35 °C.")
+    with c2:
+        st.metric("RMSE", f"{row['RMSE (°C)']:.2f} °C")
+        term("Root Mean Squared Error",
+             "Like MAE, but big misses are punished much harder than small ones. Always equal to "
+             "or larger than MAE.",
+             "Use it when one huge mistake is far worse than several small ones.")
+    with c3:
+        st.metric("R\u00b2", f"{row['R\u00b2']:.4f}")
+        term("R-squared",
+             "The share of the variation the model explains, from 0 to 1. A percentage-style "
+             "score with no unit.",
+             "0.99 sounds perfect - but see the warning below.")
+    st.divider()
+    st.markdown(f"<div class='relay ok'><b>For this job, MAE is the one that matters.</b> It is "
+                f"in degrees, which is the language the engineer already thinks in. \"Typically "
+                f"wrong by {row['MAE (°C)']:.2f} °C\" can be checked straight against "
+                f"the 110 °C limit. RMSE and R\u00b2 are useful, but neither answers the "
+                f"question an operator is actually asking.</div>", unsafe_allow_html=True)
+    st.markdown("<div class='relay warn'><b>Why a high R\u00b2 can lie.</b> R\u00b2 depends on "
+                "how spread out the test data is, not only on the model. Test the same model on "
+                "a calm autumn instead of a whole year and R\u00b2 drops sharply while the "
+                "average miss barely moves - the model did not get worse, the exam got easier to "
+                "fail. That is why a score in degrees is worth more than a score out of one."
+                "</div>", unsafe_allow_html=True)
+    st.dataframe(_split_comparison().round(3), width="stretch", hide_index=True)
+    figlab("The same model, scored on two different test sets",
+           "MAE holds steady, R\u00b2 moves a lot")
+
+
+# ============================================================================
+# THE TEN PAGES
+# ============================================================================
+def render_problem():
+    reset_figures()
+    c1, c2 = st.columns([1, 1])
+    with c1:
+        st.plotly_chart(transformer_section(1.03, 36, 68, 97.8, 2, h=400), width="stretch")
+        figlab("Inside a loaded transformer",
+               "the tank gauge reads 68 °C, the winding is at about 98 °C")
+    with c2:
+        st.markdown("**The 30-degree gap nobody sees**")
+        st.markdown(
+            "- The gauge on the outside reads the **oil**.\n"
+            "- The paper insulation is cooking at the **hot spot**, about **25-30 °C "
+            "hotter**.\n"
+            "- Damage **adds up and never reverses**. Nothing looks wrong until it fails.\n"
+            "- Roughly, **every 6 °C hotter halves its remaining life**.")
+        limit_chips()
+        st.markdown("<div class='relay ai'>So the number that decides the transformer's life is "
+                    "the one number nobody has. That is the whole problem, and it is why this "
+                    "needs a prediction rather than a better gauge.</div>",
+                    unsafe_allow_html=True)
+    bridge_panel("problem")
+
+
+def render_data():
+    reset_figures()
+    t1, t2 = st.tabs(["The log", "What each column means"])
+    with t1:
+        render_log()
+    with t2:
+        pane_columns()
+    bridge_panel("data")
+
+
+def render_explore_page():
+    reset_figures()
+    t1, t2 = st.tabs(["A week of readings", "What is wrong in this data"])
+    with t1:
+        render_explore()
+    with t2:
+        render_inspect()
+    bridge_panel("explore")
+
+
+def render_prepare():
+    reset_figures()
+    t1, t2, t3, t4 = st.tabs(["Cleaning", "Encoding", "Scaling", "New columns from physics"])
+    with t1:
+        render_clean()
+    with t2:
+        pane_encoding()
+    with t3:
+        render_scale()
+    with t4:
+        render_features()
+    bridge_panel("prepare")
+
+
+def render_learning():
+    reset_figures()
+    t1, t2 = st.tabs(["The words", "The honest test"])
+    with t1:
+        pane_mlterms()
+    with t2:
+        render_split()
+    bridge_panel("learning")
+
+
+def render_first_model():
+    reset_figures()
+    t1, t2, t3 = st.tabs(["The baseline", "A straight line", "Where the line fails"])
+    with t1:
+        render_baseline()
+    with t2:
+        render_linear()
+    with t3:
+        render_residuals()
+    bridge_panel("baseline")
+
+
+def render_training():
+    reset_figures()
+    t1, t2, t3, t4 = st.tabs(["Random Forest", "Boosting", "The results",
+                              "Why we picked this one"])
+    with t1:
+        render_forest()
+    with t2:
+        render_boosting()
+    with t3:
+        render_leaderboard()
+    with t4:
+        pane_whymodel()
+    bridge_panel("training")
+
+
+def render_scoring():
+    reset_figures()
+    t1, t2 = st.tabs(["The three scores", "Which sensors earn their place"])
+    with t1:
+        pane_whymetric()
+    with t2:
+        render_importance()
+    bridge_panel("scoring")
+
+
+def render_limits():
+    reset_figures()
+    t1, t2, t3 = st.tabs(["The shape of the error", "The hours that matter",
+                          "A transformer it has never seen"])
+    with t1:
+        render_errors()
+    with t2:
+        render_hot_tail()
+    with t3:
+        render_unseen_unit()
+    bridge_panel("limits")
+
+
+def render_use():
+    reset_figures()
+    t1, t2, t3 = st.tabs(["Ask it a question", "Turn it into a decision", "The fleet"])
+    with t1:
+        render_predict()
+    with t2:
+        render_recommend()
+    with t3:
+        render_dashboard()
+    bridge_panel("use")
+
+
+
 RENDERERS = {
-    "the-asset": render_the_asset, "why-heat": render_why_heat, "hot-spot": render_hot_spot,
-    "enter-ai": render_enter_ai, "thermal-model": render_thermal_model,
-    "the-target": render_the_target, "log": render_log, "inspect": render_inspect,
-    "explore": render_explore, "clean": render_clean, "features": render_features,
-    "scale": render_scale, "split": render_split, "baseline": render_baseline,
-    "linear": render_linear, "residuals": render_residuals, "forest": render_forest,
-    "boosting": render_boosting, "xgboost": render_xgboost, "leaderboard": render_leaderboard,
-    "importance": render_importance, "sensitivity": render_sensitivity,
-    "metrics": render_metrics, "errors": render_errors, "trend": render_trend,
-    "hot-tail": render_hot_tail, "unseen-unit": render_unseen_unit, "predict": render_predict,
-    "recommend": render_recommend, "dashboard": render_dashboard,
+    "problem": render_problem, "data": render_data, "explore": render_explore_page,
+    "prepare": render_prepare, "learning": render_learning, "baseline": render_first_model,
+    "training": render_training, "scoring": render_scoring, "limits": render_limits,
+    "use": render_use,
 }
-ALIASES = {"overview": "start", "home": "start", "gauge": "predict",
-           "cross-section": "hot-spot", "ageing": "hot-spot", "models": "leaderboard",
-           "evaluate": "metrics", "decision": "recommend", "fleet": "dashboard"}
+# Old page ids from the 30-step version, so existing links keep working.
+ALIASES = {
+    "overview": "start", "home": "start",
+    "the-asset": "problem", "why-heat": "problem", "hot-spot": "problem",
+    "enter-ai": "problem", "cross-section": "problem", "ageing": "problem",
+    "thermal-model": "data", "the-target": "data", "log": "data",
+    "inspect": "explore", "explore": "explore",
+    "clean": "prepare", "features": "prepare", "scale": "prepare",
+    "split": "learning",
+    "linear": "baseline", "residuals": "baseline",
+    "forest": "training", "boosting": "training", "xgboost": "training",
+    "leaderboard": "training", "models": "training",
+    "importance": "scoring", "sensitivity": "scoring", "metrics": "scoring",
+    "evaluate": "scoring",
+    "errors": "limits", "trend": "limits", "hot-tail": "limits", "unseen-unit": "limits",
+    "predict": "use", "gauge": "use", "recommend": "use", "decision": "use",
+    "dashboard": "use", "fleet": "use",
+}
 
 stage = st.query_params.get("stage", "start")
 stage = ALIASES.get(stage, stage)
@@ -1585,8 +1574,7 @@ if stage != "start" and stage not in RENDERERS:
 
 with st.sidebar:
     st.markdown("### ⚡ A Thermal Problem")
-    st.caption("You are keeping four power transformers alive, and AI keeps turning out to be "
-               "the thing that supplies the one temperature nobody can measure.")
+    st.caption("Predicting the one temperature inside a transformer that nobody can measure.")
     keys = ["start"] + bridge.ORDER
     labels = {"start": "🗺️  Project overview"}
     labels.update({s["id"]: f"{bridge.ORDER.index(s['id'])+1:02d} · {s['ee_icon']} {s['ee']}"
@@ -1602,13 +1590,12 @@ with st.sidebar:
         pos = bridge.ORDER.index(stage) + 1
         pname = bridge.PHASES[step["phase"]][0]
         st.progress(pos / len(bridge.ORDER),
-                    text=f"step {pos}/{len(bridge.ORDER)} · phase "
-                         f"{step['phase']+1}/{len(bridge.PHASES)} · {pname}")
+                    text=f"phase {pos}/{len(bridge.PHASES)} · {pname}")
         st.markdown(
             f"<div style='font-size:12px;line-height:1.6'>"
-            f"<span style='color:{MUTED}'>ELECTRICAL ENGINEERING STEP</span><br>"
+            f"<span style='color:{MUTED}'>THIS PHASE</span><br>"
             f"<b style='color:{EE}'>{step['ee']}</b><br>"
-            f"<span style='color:{MUTED}'>IS THE AI CONCEPT</span><br>"
+            f"<span style='color:{MUTED}'>IN MACHINE LEARNING</span><br>"
             f"<b style='color:{AISIDE}'>{step['ai']}</b></div>", unsafe_allow_html=True)
     st.divider()
     if st.button("🗺️  The whole project map", width="stretch"):

@@ -97,6 +97,33 @@ hr { border-color:#2b3440 !important; }
 .sub { font-family:__MONO__; color:#8b949e; font-size:13px; }
 .limit { font-family:__MONO__; font-size:12px; padding:3px 9px; border-radius:2px;
   border:1px solid; display:inline-block; margin-right:6px; }
+
+/* ---- the question chain ---- */
+.answering { border-left:3px solid #ba68c8; background:#141019; padding:9px 14px; margin:14px 0 4px 0;
+  font-size:14.5px; color:#cbb6d6; }
+.answering-tag { font-family:__MONO__; font-size:10.5px; letter-spacing:.16em; color:#ba68c8;
+  display:block; margin-bottom:3px; }
+.qcard { position:relative; border:1px solid #2b3440; border-left:3px solid #4fc3f7; background:#0b1116;
+  padding:14px 18px; margin-bottom:10px; }
+.qcard-tag { font-family:__MONO__; font-size:10.5px; letter-spacing:.16em; color:#4fc3f7;
+  display:block; margin-bottom:5px; }
+.qcard-q { font-size:19px; font-weight:600; color:#e6edf3; line-height:1.45; }
+
+/* ---- beginner glossary ---- */
+.term { border:1px solid #2b3440; background:#0b0e13; padding:10px 14px; margin-bottom:8px; }
+.term-w { color:#4fc3f7; font-weight:700; font-size:14.5px; }
+.term-p { color:#c9d1d9; font-size:14px; line-height:1.5; }
+.term-e { color:#8b949e; font-size:13px; font-style:italic; }
+
+/* ---- figure labels ---- */
+.figlab { font-family:__MONO__; font-size:11.5px; letter-spacing:.10em; color:#8b949e;
+  border-top:1px solid #2b3440; padding-top:5px; margin-top:2px; }
+.figlab b { color:#ba68c8; letter-spacing:.14em; }
+
+/* ---- what is wrong on a chart ---- */
+.wrongkey { font-size:13px; color:#c9d1d9; border-left:3px solid #ff5252; background:#160f10;
+  padding:8px 13px; margin-top:6px; }
+.wrongkey b { color:#ff5252; }
 </style>
 """.replace("__MONO__", MONOF)
 
@@ -115,629 +142,159 @@ def _bus(tag, label, color):
 
 
 # ============================================================================
-# THE ENGINEERING WORKFLOW
-# One substation, one year, in the order a real condition-monitoring project
-# runs it. Every AI concept hangs off one of these.
+# THE TEN PHASES
+# One page each, in the order a real machine-learning project runs.
+# Every page ends with a question. The next page answers it.
 # ============================================================================
 PHASES = [
-    ("The Transformer In Service",   "Why a transformer heats, and why the hot spot decides its life."),
-    ("One Hour Of Operation",        "The thermal model, and the temperature nobody measures."),
-    ("The Monitoring Log",           "The historian export lands and gets checked."),
-    ("Preparing The Data",           "Bad readings out, physics in, the year split honestly."),
-    ("The First Prediction",         "The standard's own model, then a straight line."),
-    ("Models That Bend",             "Three ensembles on the same columns."),
-    ("Reading The Model",            "Which sensors earn their place, and how the prediction moves."),
-    ("The Monitoring Dashboard",     "Predicted against measured, where it matters."),
-    ("What The Model Does Not Know", "The limit, measured rather than asserted."),
-    ("Decision Support",             "One temperature, one recommendation, one fleet view."),
+    ("The Problem",        "What is going wrong, in plain English."),
+    ("The Data",           "What the substation actually records."),
+    ("Exploring The Data", "Looking before touching. What is odd, and what is wrong."),
+    ("Preparing The Data", "Cleaning, encoding, scaling - getting it fit to learn from."),
+    ("How Learning Works", "The words, and the honest test."),
+    ("The First Model",    "The simplest thing that could work, and where it breaks."),
+    ("Training A Model",   "Models that bend, and why we picked this one."),
+    ("Scoring It",         "The marks out of ten, and which one matters here."),
+    ("Where It Fails",     "The errors that count, found on purpose."),
+    ("Using It",           "One temperature, one decision."),
 ]
 
 
 # ============================================================================
-# THE STEPS  (one per page; len(STEPS) is the count - never hardcode it)
+# THE STEPS  (one per phase; len(STEPS) is the count - never hardcode it)
 #   ee / ai      - the two names of the same idea (amber name, cyan name)
 #   tech         - what is actually computed (violet)
-#   site         - Electrical Engineering. NO AI in this text.
-#   challenge    - The Challenge. Why the manual way runs out of road.
-#   ai_link      - AI Connection. Why this AI concept is therefore required.
-#   takeaway     - Key Takeaway. ONE sentence.
-#   notebook     - In the Notebook. Which step of the Colab notebook.
-#   contributes  - What this step contributes to the finished system.
+#   intro        - TWO SENTENCES MAX. Plain English. No jargon left unexplained.
+#   question     - the question this page ends on; the next page answers it
+#   takeaway     - ONE sentence
+#   notebook     - which notebook phase implements it
 # ============================================================================
 STEPS = [
 
-# ------------------------------------ PHASE 1 - THE TRANSFORMER IN SERVICE
 dict(
-    id="the-asset", phase=0, ee_icon="⚡", ai_icon="🤖",
-    ee="A Transformer Under Load", ai="Why Thermal Monitoring Needs AI",
-    tech="Four units, 35,040 hourly readings, one year",
-    ee_bullets=["40 MVA, 132/33 kV", "No installed spare", "Runs continuously"],
-    ai_bullets=["35,040 examples", "Sensors already fitted", "One unmeasured target"],
-    site="""Ashgrove substation: four 40 MVA 132/33 kV transformers aged 3, 9, 16 and 22 years. Each carries
-between 240 A and 980 A on the 33 kV side. None has an installed spare. Replacement lead time runs to
-months and replacement cost to millions.""",
-    challenge="""A transformer is not damaged by heat. It is damaged by time spent hot. Insulation degrades
-chemically, cumulatively, and invisibly until the unit fails. The engineer needs the internal temperature
-now, on every unit, every hour. Four units over a year is 35,040 assessments.""",
-    ai_link="""Not judgement, and not autonomy. Something duller: a way to turn measurements the substation
-already produces into the one temperature it does not measure, continuously, without anybody watching. The
-engineer still decides what to do about it.""",
-    notebook="""Step 1. The fleet, and the nameplate constants everything else runs on.""",
-    contributes="""The requirement the system is measured against: a temperature for every unit, every hour.""",
-    takeaway="""A transformer's life is set by the temperature inside it, and nobody tracks that by hand across four units for 8,760 hours.""",
+    id="problem", phase=0, ee_icon="\u26a1", ai_icon="\U0001f916",
+    ee="The Problem", ai="Why This Needs Machine Learning",
+    tech="One temperature, needed 35,040 times",
+    ee_bullets=["Paper insulation cooks", "Damage adds up", "Nothing looks wrong"],
+    ai_bullets=["Predict the unseen", "From sensors already fitted", "Every hour"],
+    intro="""A transformer is a large electrical device that sits in a substation and quietly runs hot. Its
+hottest point is buried deep inside, wrapped in paper that slowly cooks - and almost nobody can measure
+that point, because the sensor has to be built in at the factory.""",
+    question="If we cannot measure the hot spot, what <i>can</i> we measure?",
+    takeaway="""The temperature that decides how long a transformer lives is the one nobody measures.""",
+    notebook="""Phase 1 - the asset, the physics, and the target.""",
 ),
 dict(
-    id="why-heat", phase=0, ee_icon="🔥", ai_icon="📈",
-    ee="Where The Heat Comes From", ai="A Non-Linear Relationship",
-    tech="Load loss ∝ K², no-load loss ∝ V²",
-    ee_bullets=["Copper loss, I²R", "Core loss, near constant", "6:1 at rated"],
-    ai_bullets=["A power law", "Steps at each fan stage", "No straight line fits"],
-    site="""A transformer converts voltage, not power. What it fails to pass on becomes heat. Load loss is
-current through winding resistance and rises with the square of load. No-load loss is core hysteresis and
-eddy currents, set by voltage rather than load.""",
-    challenge="""The square is the problem. Take a unit from 50 % to 100 % load and load loss rises four times,
-not two. Total heat rises 2.8 times. Every intuition built on straight lines is wrong here, and the error is
-largest exactly where it matters — at high load.""",
-    ai_link="""This is the first reason a straight-line model will not do. The load-to-heat relationship is a power
-law, cooling stages put steps in it, and ambient shifts the whole curve. The physics is known; the
-combination on a unit that has drifted from its nameplate has no clean closed form.""",
-    notebook="""Step 2. The loss curve in per-unit, and the 2.8× figure.""",
-    contributes="""The reason the project needs a model that can bend rather than a coefficient.""",
-    takeaway="""Heat rises with the square of load, so the last 20 % of loading costs far more than the first 20 %.""",
+    id="data", phase=1, ee_icon="\U0001f4be", ai_icon="\U0001f5c3\ufe0f",
+    ee="The Data", ai="The Dataset",
+    tech="4 transformers x 8,760 hours x 8 sensors",
+    ee_bullets=["Four transformers", "One year, hourly", "Ordinary sensors"],
+    ai_bullets=["35,040 rows", "8 input columns", "1 answer column"],
+    intro="""Every substation already logs a few ordinary readings once an hour - how much current is
+flowing, how warm the air is, how warm the oil is. We have a year of that for four transformers.""",
+    question="What does a whole year of these readings actually look like?",
+    takeaway="""The inputs are cheap sensors already fitted; the answer column is the expensive one.""",
+    notebook="""Phase 2 - loading the monitoring log.""",
 ),
 dict(
-    id="hot-spot", phase=0, ee_icon="🌡️", ai_icon="🎯",
-    ee="Why The Hot Spot, Not The Oil", ai="Choosing The Target Variable",
-    tech="F_AA = exp(15000/383 − 15000/(θ_h + 273))",
-    ee_bullets=["25–30 K above the oil", "Doubles every 6 °C", "Rarely measured"],
-    ai_bullets=["This is y", "Oil is a feature", "Why 2 °C matters"],
-    site="""Three temperatures matter and they are not the same number. Ambient, around 30 °C. Top oil, around
-62 °C at full load and measured on every unit. The winding hot spot, around 89 °C — the hottest point of the
-coil, 25 to 30 K above the oil, and measured almost nowhere.""",
-    challenge="""Insulation ageing is governed by the hot spot, exponentially. IEEE C57.91 puts the ageing rate at
-1.0 at 110 °C, 0.28 at 98 °C and 17 at 140 °C. One hour at 140 °C costs the same insulation life as
-seventeen hours at 110 °C. Watching the oil and assuming the winding follows is how transformers get
-quietly destroyed.""",
-    ai_link="""Choosing what to predict is an engineering decision. Predicting top oil would be easy and useless —
-it is already measured. Predicting the hot spot is useful precisely because it is not. So the hot spot is
-the target; everything else in the log is an input.""",
-    notebook="""Step 3. The ageing curve, and what a 2 °C error costs.""",
-    contributes="""The target variable, and the reason accuracy is worth paying for.""",
-    takeaway="""The hot spot decides transformer life, and it is the one temperature most transformers never measure.""",
+    id="explore", phase=2, ee_icon="\U0001f50d", ai_icon="\U0001f4ca",
+    ee="Exploring The Data", ai="Exploratory Data Analysis (EDA)",
+    tech="Distributions, relationships, and things that cannot be true",
+    ee_bullets=["Look before you touch", "Find the broken sensors", "Learn the daily rhythm"],
+    ai_bullets=["EDA", "Outliers", "Correlation"],
+    intro="""Before building anything, look at the data. That is <b>EDA</b> - exploratory data analysis -
+which means plotting it and asking what is strange. Some of what you find is real, and some of it is a
+broken sensor.""",
+    question="Some of these readings are impossible. How do we get the data fit to learn from?",
+    takeaway="""Every dataset arrives with faults in it, and plotting is how you find them.""",
+    notebook="""Phase 3 - inspecting and exploring the export.""",
 ),
 dict(
-    id="enter-ai", phase=0, ee_icon="🧠", ai_icon="🤝",
-    ee="Why This Needs Machine Learning", ai="Supervised Regression",
-    tech="Learn f(sensors) → θ_h from recorded examples",
-    ee_bullets=["The standard assumes nameplate", "Radiators foul", "Every unit drifts"],
-    ai_bullets=["Cheap inputs", "Expensive label", "Learn this fleet"],
-    site="""There is already a standard way to estimate the hot spot. IEEE C57.91 gives it in closed form, from
-load and the measured oil temperature. It is a good model, and it is what the industry uses. It is also a
-nameplate model.""",
-    challenge="""Every unit drifts away from its nameplate, and drifts differently. Radiators foul, oil degrades,
-cooling capacity falls a few percent per decade. Winding design differs, so the real hot-spot factor differs
-unit to unit. Nobody re-derives a thermal model per unit per year, so the error is simply accepted.""",
-    ai_link="""This is what supervised regression is for. Inputs: the readings the substation already logs. Output:
-the hot-spot temperature. Training data: a year of both. The model learns this fleet's actual behaviour, and
-the standard's model becomes the baseline to beat rather than the answer.""",
-    notebook="""Step 4. The claim, stated before anything is fitted.""",
-    contributes="""Fixes the role of AI: it extends the thermal standard, it does not replace the engineer.""",
-    takeaway="""Machine learning is not replacing the thermal standard — it learns the part of each transformer the standard was never given.""",
-),
-
-# ---------------------------------------- PHASE 2 - ONE HOUR OF OPERATION
-dict(
-    id="thermal-model", phase=1, ee_icon="📐", ai_icon="⚙️",
-    ee="The Thermal Model", ai="Domain Knowledge As Code",
-    tech="θ_h = θ_oil + Δθ_h,r · K^1.6",
-    ee_bullets=["Top-oil rise", "Winding gradient", "Three-hour time constant"],
-    ai_bullets=["The baseline", "The features", "The sanity check"],
-    site="""IEEE C57.91 builds the hot spot in two steps. Top-oil rise over ambient follows the total loss
-term ((K²R + 1)/(R + 1))^n. Hot-spot rise over top oil follows K^(2m), which with m = 0.8 is K^1.6. Add
-them to ambient and you have the winding temperature.""",
-    challenge="""The equations are simple; the conditions are not. The oil has a three-hour time constant, so it
-never reaches the steady state the formula describes. Cooling fans switch in stages and change the exponents
-mid-operation. Cold oil is more viscous, so the gradient is larger on a cold day at the same load.""",
-    ai_link="""Write the physics down anyway. It becomes the baseline the model must beat, the source of the
-engineered features, and the sanity check for the model's response. Domain knowledge does not compete with
-machine learning here — it feeds it.""",
-    notebook="""Step 5. The two functions, and one worked hour on T3.""",
-    contributes="""The equations used to generate the log, build the features, and check the result.""",
-    takeaway="""Write the physics down even when you plan to use machine learning — it becomes both the baseline and the features.""",
+    id="prepare", phase=3, ee_icon="\U0001f9f9", ai_icon="\u2705",
+    ee="Preparing The Data", ai="Cleaning, Encoding and Scaling",
+    tech="Drop the impossible, number the categories, level the ranges",
+    ee_bullets=["Bad readings out", "Categories to numbers", "Physics in"],
+    ai_bullets=["Data cleaning", "Encoding", "Standardisation"],
+    intro="""Raw data is never ready to use. Three jobs: throw out readings that cannot be true, turn
+word-columns into numbers, and put every column on a comparable scale so none of them dominates just
+because its numbers happen to be bigger.""",
+    question="How do we know a model has actually learned, rather than memorised?",
+    takeaway="""Preparation is most of the work, and skipping any of the three quietly ruins the result.""",
+    notebook="""Phase 4 - cleaning, feature engineering, encoding and scaling.""",
 ),
 dict(
-    id="the-target", phase=1, ee_icon="🔎", ai_icon="📋",
-    ee="The Temperature Nobody Measures", ai="Labels, And Where They Come From",
-    tech="Fibre-optic probe on the reference units",
-    ee_bullets=["Fitted at manufacture", "Cannot be retrofitted", "Most units lack one"],
-    ai_bullets=["Seven cheap inputs", "One expensive label", "That gap is the case"],
-    site="""Direct hot-spot measurement needs a fibre-optic probe installed between the winding discs at
-manufacture. It cannot be retrofitted without untanking the transformer. Most units in service do not have
-one. Ashgrove's four do — they were specified as a condition-monitoring pilot.""",
-    challenge="""So this fleet has a year of true hot-spot readings and the rest of the network has none. That is
-both the opportunity and the limit: four instrumented units can teach a model that then runs on units
-without probes, but only if those units behave like the four it learned from.""",
-    ai_link="""In supervised learning the probe readings are the labels. Labels are almost always the expensive part
-of a dataset. The inputs here are cheap — current, voltage, ambient, humidity, oil temperature, fan status.
-A model is worth building exactly when the inputs are cheap and the answer is expensive.""",
-    notebook="""Step 6. The column catalogue, with the cost of each.""",
-    contributes="""The economic argument for the whole scheme, in one table.""",
-    takeaway="""Build a model when the inputs are cheap and the answer is expensive — which is exactly the case here.""",
-),
-
-# ------------------------------------------ PHASE 3 - THE MONITORING LOG
-dict(
-    id="log", phase=2, ee_icon="💾", ai_icon="🗃️",
-    ee="The Historian Export", ai="The Raw Dataset",
-    tech="35,040 rows × 11 columns, hourly, one year",
-    ee_bullets=["SCADA historian", "One row per unit-hour", "Nothing corrected"],
-    ai_bullets=["The raw dataset", "One training example", "Faults included"],
-    site="""The substation SCADA historian holds every reading it has taken. The condition-monitoring request
-produces one CSV: four units, hourly, calendar year 2025. Exactly what the field instruments reported.""",
-    challenge="""A historian export is a record of the instrumentation, not of the transformer. Communications drop
-and values go missing. A sensor freezes and repeats yesterday's number. A unit is switched out and reads
-near-zero current while the winding cools to ambient. A humidity transmitter fails and reports a raw byte.""",
-    ai_link="""The dataset is the input to everything downstream, so the discipline goes here. Load it, then look at
-it. Establish what should be there before deciding what is wrong. Do not clean anything yet.""",
-    notebook="""Step 7. The simulator writes the CSV; the notebook then reads it back.""",
-    contributes="""The evidence every later step works from.""",
-    takeaway="""The raw export is evidence — look at it before you clean it, or you clean away what you needed to see.""",
+    id="learning", phase=4, ee_icon="\U0001f4d0", ai_icon="\U0001f9ea",
+    ee="How Learning Works", ai="Features, Labels and the Train / Test Split",
+    tech="Learn on most of the year, mark on weeks it never saw",
+    ee_bullets=["Study, then sit the exam", "Never mark your own paper", "Hold weeks back"],
+    ai_bullets=["Feature and label", "Training", "Overfitting"],
+    intro="""A model learns by being shown examples: these readings went with that temperature. To find out
+whether it really learned, you hide some weeks from it and test on those - the same reason you do not
+revise from the exam paper.""",
+    question="What is the simplest model that could possibly work?",
+    takeaway="""A score on data the model has already seen is not a score, it is a memory test.""",
+    notebook="""Phase 5 - the honest train / test split.""",
 ),
 dict(
-    id="inspect", phase=2, ee_icon="🔍", ai_icon="🧪",
-    ee="Checking The Export", ai="Data Inspection",
-    tech="dtypes, ranges, missing counts, duplicates",
-    ee_bullets=["Are the units right?", "Are the ranges possible?", "What is repeated?"],
-    ai_bullets=["describe()", "isna().sum()", "A check written on purpose"],
-    site="""Before any engineering conclusion, an engineer checks the instrument. The same questions apply to an
-export. Are the units what they claim to be? Are the ranges physically possible for this plant? How much is
-missing, and is anything repeated?""",
-    challenge="""Impossible values do not announce themselves. A humidity of 255 % is obvious in a summary. A load
-current of 3 A on a 700 A transformer looks like rounding until you realise the unit was de-energised. A
-frozen ambient sensor produces plausible numbers in an implausible sequence — and no summary shows that.""",
-    ai_link="""Every fault left in the file becomes a training example. A model trained on de-energised hours learns
-that low current means winding-at-ambient, then under-predicts every genuinely light-load hour. Inspection
-is the difference between a model that works and one that does not.""",
-    notebook="""Step 8. Four faults found before a model is fitted.""",
-    contributes="""The fault list the cleaning step works from.""",
-    takeaway="""Some faults show up in a summary and some only in a sequence — write the check for both.""",
+    id="baseline", phase=5, ee_icon="\U0001f4dc", ai_icon="\U0001f4c9",
+    ee="The First Model", ai="Baseline and Linear Regression",
+    tech="The industry standard, then a straight line",
+    ee_bullets=["The standard's own sum", "A straight-line fit", "Where it bends wrong"],
+    ai_bullets=["Baseline", "Linear regression", "Residuals"],
+    intro="""Always start with the simplest thing that works, so you know what "good" means. Here that is the
+industry standard's own hand calculation, and then a <b>straight line</b> fitted through the data.""",
+    question="The relationship curves, and a straight line cannot follow it. What can?",
+    takeaway="""Without a baseline, any accuracy number sounds impressive and means nothing.""",
+    notebook="""Phase 6 - the baseline and the linear model.""",
 ),
 dict(
-    id="explore", phase=2, ee_icon="📊", ai_icon="🔗",
-    ee="Reading The Fleet", ai="Exploratory Analysis",
-    tech="Trends, scatter, correlation",
-    ee_bullets=["The daily shape", "Load against temperature", "Unit against unit"],
-    ai_bullets=["Time series", "Scatter", "Correlation matrix"],
-    site="""Three things an engineer wants to see immediately: when the network peaks and when the transformers
-get hot, how steep the load-to-temperature relationship is, and whether one unit runs hotter than the
-others.""",
-    challenge="""The scatter of load against hot spot is not a line and not even a single curve. Hold the load between
-680 and 720 A and the hot spot still spans 36 °C. The spread comes from ambient, cooling stage, and which
-unit it is. No single variable explains it.""",
-    ai_link="""Exploratory analysis decides what the model is allowed to be. If load alone explained the hot spot, a
-lookup table would do. Because the relationship fans out, the model needs several inputs at once — and the
-correlation matrix says which are worth having.""",
-    notebook="""Step 9. A week of trend, the scatter, and the fleet table.""",
-    contributes="""The evidence that this is a multi-input problem, not a lookup.""",
-    takeaway="""At one fixed load the hot spot still spans tens of degrees, which is why one sensor is never enough.""",
-),
-
-# ------------------------------------------ PHASE 4 - PREPARING THE DATA
-dict(
-    id="clean", phase=3, ee_icon="🧹", ai_icon="✅",
-    ee="Removing Invalid Readings", ai="Data Cleaning",
-    tech="Filter, deduplicate, drop unusable rows",
-    ee_bullets=["Interpolate slow signals", "Delete non-measurements", "Log every decision"],
-    ai_bullets=["Imputation", "Row removal", "An audit trail"],
-    site="""Each fault found in the last step gets a decision, and each decision is an engineering one. Duplicates
-go. The constant column goes. Impossible humidity becomes missing, then filled. Missing oil temperature is
-interpolated. Rows with no hot-spot label are dropped.""",
-    challenge="""Two decisions matter and both are counter-intuitive. Interpolating oil temperature is safe, because
-it has a three-hour time constant — interpolating load current would not be, since it can double in an
-hour. And de-energised hours must be deleted, not repaired: a cooling transformer obeys different physics
-from a loaded one.""",
-    ai_link="""Every row left in the file is a statement to the model that this is what normal looks like. A hundred
-de-energised hours is a hundred wrong statements, and the model has no way to know. It will fit them.""",
-    notebook="""Step 10. The cleaning log, with a count against every action.""",
-    contributes="""A dataset in which every remaining row is a measurement of the thing being modelled.""",
-    takeaway="""Interpolate what moves slowly, delete what is not a measurement of the thing you are modelling.""",
+    id="training", phase=6, ee_icon="\U0001f333", ai_icon="\U0001f680",
+    ee="Training A Model", ai="Ensembles, and Choosing One",
+    tech="Many small rules, each fixing the last",
+    ee_bullets=["Rules, not equations", "Each corrects the last", "Pick one for service"],
+    ai_bullets=["Random Forest", "Gradient Boosting", "Model selection"],
+    intro="""Instead of one equation, these models build hundreds of small yes/no rules and combine them.
+That lets them follow a curve no straight line can, without anybody having to write the curve down.""",
+    question="Three models, three sets of predictions. How do we say which one is best?",
+    takeaway="""Tree models bend to the shape of the data, which is why they beat the straight line here.""",
+    notebook="""Phase 7 - training the ensembles and comparing them.""",
 ),
 dict(
-    id="features", phase=3, ee_icon="🔧", ai_icon="💡",
-    ee="Turning Readings Into Engineering Quantities", ai="Feature Engineering",
-    tech="load_pu, K^1.6, oil rise, ramps, 3 h rolling load",
-    ee_bullets=["Per-unit, not amps", "Rise, not temperature", "Recent history"],
-    ai_bullets=["The physics as a column", "Undo the sensor lag", "Worth more than the algorithm"],
-    site="""A raw reading is rarely the quantity an engineer reasons with. Nobody thinks in amps; they think in
-per-unit load. Nobody compares oil temperatures across seasons; they compare oil rise over ambient. Nobody
-looks at one instant; they look at the last few hours.""",
-    challenge="""Two new columns exist because of physics the raw sensors cannot express. K^1.6 is the winding law
-from IEEE C57.91 — give it to the model and it need not discover the exponent. The 3-hour mean load fills
-the gap left by the oil thermometer, which lags the actual top oil by an hour or more.""",
-    ai_link="""Feature engineering is where domain knowledge enters a model. The algorithm can only combine the
-columns it is given. Give it K^1.6 and a straight line can represent a power law. This is usually worth more
-than changing the algorithm — and here it is worth almost as much.""",
-    notebook="""Step 11. Five raw columns become thirteen.""",
-    contributes="""0.41 °C of the total improvement, from domain knowledge alone.""",
-    takeaway="""Feature engineering is where the thermal standard enters the model, and it is usually worth more than a fancier algorithm.""",
+    id="scoring", phase=7, ee_icon="\U0001f9ee", ai_icon="\U0001f4cf",
+    ee="Scoring It", ai="MAE, RMSE and R\u00b2",
+    tech="Three ways to be wrong, one that matters here",
+    ee_bullets=["Average miss, in °C", "Punishes big misses", "Fraction explained"],
+    ai_bullets=["MAE", "RMSE", "R\u00b2"],
+    intro="""There is more than one way to measure "wrong", and each answers a different question. Pick the
+wrong one and a bad model looks fine. For this job the one that matters is <b>MAE</b> - the average miss,
+in degrees.""",
+    question="The average is good. But is it good <i>where it matters</i>?",
+    takeaway="""A single accuracy number hides where the model fails, and it always fails somewhere.""",
+    notebook="""Phase 8 - the evaluation metrics and what each one hides.""",
 ),
 dict(
-    id="scale", phase=3, ee_icon="📏", ai_icon="🎚️",
-    ee="Putting Quantities On A Common Scale", ai="Normalisation",
-    tech="StandardScaler: z = (x − μ) / σ",
-    ee_bullets=["Amps in hundreds", "Per-unit in fractions", "Same physics"],
-    ai_bullets=["Linear models care", "Trees do not", "Fit on train only"],
-    site="""The columns are in wildly different units. Current runs to 980, voltage to 140, per-unit load to 1.4.
-Nothing in the physics says current is four hundred times more important than per-unit load — but to an
-algorithm that measures distance, it is.""",
-    challenge="""Only some algorithms care, and knowing which is the point. Linear and distance-based models are
-affected by scale. Decision trees are not: a split at 640 A is the same split whether the column is in amps
-or per unit. Applying scaling everywhere is harmless; not knowing why is not.""",
-    ai_link="""Fit the scaler on the training set only, then apply it to the test set. Fitting it on everything leaks
-the test set's mean and standard deviation into training. That is the rule people break.""",
-    notebook="""Step 12. Four columns, before and after standardisation.""",
-    contributes="""Comparable inputs, so the linear model's coefficients mean something.""",
-    takeaway="""Scale what needs scaling, fit the scaler on training data only, and know that trees do not care either way.""",
+    id="limits", phase=8, ee_icon="\u26a0\ufe0f", ai_icon="\U0001f4c9",
+    ee="Where It Fails", ai="Segmented Evaluation and Generalisation",
+    tech="The hot hours, and a transformer it has never seen",
+    ee_bullets=["Hot hours do the damage", "Weakest exactly there", "A new unit is worse"],
+    ai_bullets=["Segmented evaluation", "Bias", "Generalisation"],
+    intro="""An average hides its worst days. The hottest 5 % of hours cause most of the damage here, so
+that is exactly where the model has to be checked - not where it is easiest.""",
+    question="Knowing all that, how should an engineer actually use it?",
+    takeaway="""Find the model's weak spot yourself, before it finds you.""",
+    notebook="""Phase 9 - segmented evaluation and the unseen-unit test.""",
 ),
 dict(
-    id="split", phase=3, ee_icon="✂️", ai_icon="📐",
-    ee="Holding Back A Fair Test", ai="Train / Test Split",
-    tech="Whole weeks held out, and why R² moves",
-    ee_bullets=["A commissioning test", "On a case never tuned on", "Chosen deliberately"],
-    ai_bullets=["Blocked, not random", "Both seasons in both sets", "R² depends on the set"],
-    site="""The model has to be scored on readings it has never seen, and how you choose those readings is an
-engineering decision. Random rows are simple. Whole weeks keep the seasons in both sets. The last three
-months is the strictest test of all.""",
-    challenge="""The third option exposes something that looks like a failure and is not. Hold out October to December
-and R² drops sharply while the mean absolute error barely moves. The model did not get worse — the test set
-got narrower, and R² is measured against the test set's own variation.""",
-    ai_link="""The choice here is whole weeks, every fourth one. It stops adjacent hours sitting on both sides of the
-split, keeps summer and winter in both sets so the hot band is testable, and gives a 75/25 split without
-cherry-picking.""",
-    notebook="""Step 13. 26,164 training rows, 8,708 test rows.""",
-    contributes="""The held-out quarter every score in this course is measured on.""",
-    takeaway="""Split by whole weeks so adjacent hours cannot leak, and remember R² depends on how wide the test set is.""",
-),
-
-# ---------------------------------------- PHASE 5 - THE FIRST PREDICTION
-dict(
-    id="baseline", phase=4, ee_icon="📜", ai_icon="📏",
-    ee="The Standard's Own Model", ai="The Baseline",
-    tech="θ_h = θ_oil + 24 · K^1.6 · stage factor",
-    ee_bullets=["IEEE C57.91", "Nameplate values", "Nothing fitted"],
-    ai_bullets=["The number to beat", "A per-unit bias", "Not a straw man"],
-    site="""Before fitting anything, run the model the industry already uses. IEEE C57.91 with nameplate values
-and the measured oil temperature: hot spot equals oil plus 24 K times K^1.6 times a cooling-stage factor. No
-training data required.""",
-    challenge="""It is genuinely good, and it has no way to know that one unit's real hot-spot factor is 21 % above
-nameplate and another's is 7 % below, that twenty-two years of fouling has cost some cooling, or that the
-oil thermometer reads an hour behind. Those are not errors in the standard — they are things it was never
-given.""",
-    ai_link="""This is the number every later model must beat. An R² of 0.99 means nothing alone. An R² of 0.99
-against a baseline that already achieves 0.95 is an engineering result. A model that cannot beat the
-closed-form standard is not worth deploying.""",
-    notebook="""Step 14. MAE 3.18 °C, R² 0.946, and the per-unit bias.""",
-    contributes="""The baseline. Every later claim is measured against this, not against zero.""",
-    takeaway="""Beat the standard, not zero — a model that cannot outperform the closed-form thermal model is not worth deploying.""",
-),
-dict(
-    id="linear", phase=4, ee_icon="📉", ai_icon="📐",
-    ee="A Straight Line Through The Data", ai="Linear Regression",
-    tech="One weight per sensor, added up",
-    ee_bullets=["A sensitivity per sensor", "Every coefficient arguable", "Fitted to this fleet"],
-    ai_bullets=["The right first model", "Cannot overfit here", "Sets the bar"],
-    site="""The simplest fitted model: give each sensor a weight and add them up. The engineering reading is a
-sensitivity coefficient per sensor — how many degrees the hot spot moves per amp of load, per degree of
-ambient, per degree of oil. Every coefficient can be argued with.""",
-    challenge="""It inherits every limitation of a straight line. Heat rises with K² and the gradient with K^1.6, and
-a line cannot bend. Cooling stages put steps in the curve, and a line cannot step. Cold oil is more viscous,
-so ambient and load interact, and a line cannot multiply two inputs together.""",
-    ai_link="""Linear regression is the right first model, always. It is fast, it cannot overfit thirteen columns of
-thirty-five thousand rows, and its coefficients are readable. Anything more complicated now has to justify
-itself against it.""",
-    notebook="""Step 15. 2.41 °C on raw sensors, 2.01 °C with the engineered columns.""",
-    contributes="""Proof that fitting to this fleet at all is worth 0.77 °C.""",
-    takeaway="""A straight line already beats the nameplate model, because it has at least seen this fleet run.""",
-),
-dict(
-    id="residuals", phase=4, ee_icon="🔎", ai_icon="📉",
-    ee="Where The Line Fails", ai="Residual Analysis",
-    tech="error = predicted − measured, against the inputs",
-    ee_bullets=["A systematic error", "Not scatter", "Physics it cannot express"],
-    ai_bullets=["Curvature → bend", "Steps → split", "Which model comes next"],
-    site="""A residual is a prediction error. Plotting residuals against each input is the standard way to find
-what a model has missed. The rule is simple: residuals should look like noise. If they show a pattern, the
-pattern is signal the model failed to use.""",
-    challenge="""These residuals are not noise. Plotted against load they swing from −1.3 °C at light load to +0.4 °C
-in the middle and −2.2 °C at overload — the K^1.6 curve the line could not follow. Grouped by cooling stage
-they sit at different levels, which is an interaction.""",
-    ai_link="""Residual analysis tells you which kind of model you need next. Curvature means the relationship bends,
-so use a model that can bend. Level shifts by category mean interactions, so use a model that can split.
-Tree ensembles do both natively — which is why the next phase uses them.""",
-    notebook="""Step 16. Two diagnostic plots, both showing structure.""",
-    contributes="""The reason for choosing ensembles, measured rather than assumed.""",
-    takeaway="""Structure in the residuals tells you what model to reach for next — curvature means bend, steps mean split.""",
-),
-
-# -------------------------------------------- PHASE 6 - MODELS THAT BEND
-dict(
-    id="forest", phase=5, ee_icon="🌳", ai_icon="🌳",
-    ee="Many Small Rules Instead Of One Equation", ai="Random Forest Regressor",
-    tech="200 trees, each on a different sample and subset",
-    ee_bullets=["Rules, not equations", "Ask several engineers", "Average the answers"],
-    ai_bullets=["A split is a threshold", "Bagging", "No scaling needed"],
-    site="""An experienced engineer does not carry one equation, they carry rules. Above 0.9 per unit with fans at
-stage 1, add about ten degrees. On a cold morning the gradient runs higher than the tables say. T4 always
-sits a couple of degrees above its sisters. A decision tree is exactly that, written down.""",
-    challenge="""One tree memorises. Ask it about an hour it has seen and it is perfect; ask about a new one and it is
-brittle. A random forest fixes that by disagreement: many trees, each on a different random sample of rows
-and a random subset of columns, and the answers averaged.""",
-    ai_link="""Trees solve both problems the residuals exposed. A tree approximates a curve with steps, so K^1.6 stops
-being a problem. A tree splits on cooling stage and then splits differently on load underneath it — that is
-an interaction, for free.""",
-    notebook="""Step 17. MAE 1.53 °C, a 24 % improvement on the best linear model.""",
-    contributes="""The first model that handles curvature and interaction without being told they exist.""",
-    takeaway="""A forest of disagreeing trees handles curvature and interactions natively — exactly what the residuals asked for.""",
-),
-dict(
-    id="boosting", phase=5, ee_icon="📈", ai_icon="🔁",
-    ee="Correcting The Previous Attempt", ai="Gradient Boosting Regressor",
-    tech="300 shallow trees, each fitted to what is left over",
-    ee_bullets=["Take the last result", "Measure what is left", "Correct it"],
-    ai_bullets=["Fit the residual", "Small learning rate", "Sequential, not parallel"],
-    site="""A commissioning engineer does not start from scratch after each test — they take the previous result and
-correct it. Boosting is that loop: make a rough prediction, measure the residual, fit a small tree to it,
-add a fraction of that tree, and repeat.""",
-    challenge="""The direction of the work is what differs from a forest. A forest builds independent trees and
-averages them, so errors cancel. Boosting builds dependent trees, each aimed at the last mistake, so errors
-are attacked. It reaches a lower error on tabular data and takes far longer, because the trees cannot be
-built in parallel.""",
-    ai_link="""Two settings control it and both are trade-offs. The learning rate is how much of each correction to
-accept — small means slow and stable. The number of trees is how long to keep correcting. Halve the learning
-rate and you need roughly twice the trees.""",
-    notebook="""Step 18. MAE 1.35 °C, and the error curve against tree count.""",
-    contributes="""The best accuracy in the course, and the slowest cell in the notebook.""",
-    takeaway="""Boosting attacks its own errors one tree at a time and beats the forest on tabular data, at the cost of a fit that cannot be parallelised.""",
-),
-dict(
-    id="xgboost", phase=5, ee_icon="⚡", ai_icon="🚀",
-    ee="The Same Answer, Fast Enough To Retrain", ai="XGBoost Regressor",
-    tech="600 trees, histogram splits, parallel and regularised",
-    ee_bullets=["New units arrive", "Probes get fitted", "Refit when data changes"],
-    ai_bullets=["Binned splits", "Uses every core", "Built-in regularisation"],
-    site="""A condition-monitoring model is not fitted once. It is refitted as the fleet changes — new units, new
-probes, a year of fresh readings. If refitting takes an hour it happens annually. If it takes a second it
-happens whenever the data changes.""",
-    challenge="""XGBoost is gradient boosting with the implementation problems solved. Continuous columns are bucketed
-once, so each split is a lookup instead of a sort. It uses every core. It penalises tree complexity
-explicitly, so more trees is safer.""",
-    ai_link="""The comparison is not about accuracy. The two land within 0.01 °C of each other and differ by an order
-of magnitude in fit time. When two models are equally accurate, choose on the properties that are not
-accuracy: fit time, memory, deployability, and whether anyone can retrain it without booking an afternoon.""",
-    notebook="""Step 19. Same MAE, a fraction of the time.""",
-    contributes="""The model carried into the dashboard.""",
-    takeaway="""When two models are equally accurate, pick on fit time and deployability — those are engineering criteria too.""",
-),
-dict(
-    id="leaderboard", phase=5, ee_icon="🏁", ai_icon="📊",
-    ee="Which Model Goes Into Service", ai="Model Comparison",
-    tech="Six models, one held-out quarter of the year",
-    ee_bullets=["The same test for each", "Against the standard", "Not against zero"],
-    ai_bullets=["Three separate levers", "None dominates", "R² does not discriminate"],
-    site="""Every model so far, on the same held-out weeks, scored the same way. The table answers two separate
-questions that should not be confused: does machine learning beat the standard's thermal model, and does the
-algorithm matter as much as the features?""",
-    challenge="""The second answer is the surprising one. Nameplate to fitted straight line is 0.77 °C. Raw sensors to
-engineered columns, same algorithm, is 0.41 °C. Linear to gradient boosting, same columns, is 0.66 °C. All
-three levers are real and comparable in size — and a great deal more published effort goes into the third
-than the second.""",
-    ai_link="""Read it as an engineer, not a scoreboard. The total improvement is 3.18 °C to 1.35 °C, a 58 % cut
-against the model the industry currently uses. At 110 °C that is the difference between understating the
-ageing rate by 27 % and by 13 %. Every R² in the table is above 0.94, which is why R² cannot choose for you.""",
-    notebook="""Step 20. The leaderboard, and the three levers measured separately.""",
-    contributes="""The headline result of the whole project.""",
-    takeaway="""Machine learning cut the hot-spot error by 58 % against the industry-standard thermal model, and feature engineering delivered nearly as much of that as the algorithm.""",
-),
-
-# ------------------------------------------ PHASE 7 - READING THE MODEL
-dict(
-    id="importance", phase=6, ee_icon="📋", ai_icon="🔎",
-    ee="Which Sensors Are Earning Their Place", ai="Feature Importance",
-    tech="Rankings, then drop the instrument and refit",
-    ee_bullets=["Every sensor costs", "Cable, telemetry, calibration", "For the whole life"],
-    ai_bullets=["Rankings disagree", "Columns are redundant", "Refitting decides"],
-    site="""A monitoring scheme costs money per sensor: the instrument, the cabling, the telemetry channel and the
-calibration for the rest of the transformer's life. So the question is not academic. Which of these
-measurements is actually contributing?""",
-    challenge="""Two of the five specified sensors contribute almost nothing. Humidity has a negligible effect on
-oil-to-air heat transfer. Voltage moves only core loss, which is one seventh of total loss, and it varies by
-±5 %. That is not a failure of the model — it is the model reporting a real result about the plant.""",
-    ai_link="""There are two traps. Two models rank the same columns differently, so a ranking describes the model and
-not the transformer. And removing one column proves nothing, because the columns are redundant by
-construction. Remove everything derived from an instrument, refit, and measure — that has an answer in
-degrees.""",
-    notebook="""Step 21. Two rankings side by side, then the instrument-level test.""",
-    contributes="""The sensor justification, in degrees, for whoever pays for the instrumentation.""",
-    takeaway="""Importance rankings disagree between models and hide redundancy — to test an instrument, remove everything derived from it and refit.""",
-),
-dict(
-    id="sensitivity", phase=6, ee_icon="🎛️", ai_icon="📈",
-    ee="How The Prediction Responds", ai="Sensitivity Analysis",
-    tech="Vary one input, hold the rest, plot the response",
-    ee_bullets=["Push it, do not read it", "Check against the physics", "A loading chart"],
-    ai_bullets=["One-at-a-time", "The response surface", "Sanity-check the model"],
-    site="""An engineer trusts a model by pushing it, not by reading its score. Take a realistic operating point,
-move one input at a time, and check the response is the shape the physics requires. More load must mean a
-hotter winding, and the curve must steepen.""",
-    challenge="""A model can score well on average and still be wrong where it matters. If it flattens above 1.2 per
-unit it under-predicts every overload — the only hours anybody cares about. If it responds to ambient with a
-slope of 0.3 instead of about 1.0 it fails in a heatwave. Average error reveals neither.""",
-    ai_link="""This is also how the model gets explained to somebody who will not read a metric. A curve of predicted
-hot spot against load, at three ambient temperatures, is a loading chart — and engineers have used loading
-charts for a century. The model produced a familiar artefact.""",
-    notebook="""Step 22. The loading chart, produced from data.""",
-    contributes="""The evidence that the model agrees with the standard across the whole range.""",
-    takeaway="""Push the model one input at a time and check it against the physics — a good score is not the same as a correct response.""",
-),
-
-# ------------------------------------ PHASE 8 - THE MONITORING DASHBOARD
-dict(
-    id="metrics", phase=7, ee_icon="📐", ai_icon="🧮",
-    ee="Stating The Accuracy", ai="MAE, RMSE and R²",
-    tech="Three numbers, and what each one hides",
-    ee_bullets=["Survives a design review", "Quoted in degrees", "Matched to the decision"],
-    ai_bullets=["MAE: typical error", "RMSE: worst errors", "R²: test-set dependent"],
-    site="""An accuracy claim has to survive a design review. Three numbers are normally quoted and they answer
-different questions. MAE is how wrong a typical prediction is, in degrees. RMSE is how wrong the worst ones
-are. R² is what fraction of the variation is explained.""",
-    challenge="""R² is the one that gets misread. Score on every fourth week and it is 0.991; score on October to
-December and it is 0.978 — with the same 1.35 °C mean error both times. The test set's standard deviation
-fell from 17.4 °C to 11.5 °C, and that is the entire explanation.""",
-    ai_link="""Choose the metric that matches the decision. The decision here is how close the winding is to 110 °C,
-which is a question in degrees — so MAE and RMSE are the operative metrics and R² is context. The metric is
-part of the specification, not an afterthought.""",
-    notebook="""Step 23. Both splits fitted and scored, side by side.""",
-    contributes="""The accuracy figure that goes into the scheme specification.""",
-    takeaway="""Quote the error in degrees; R² changes when the test set changes even though the model has not.""",
-),
-dict(
-    id="errors", phase=7, ee_icon="📈", ai_icon="📊",
-    ee="The Shape Of The Error", ai="Error Distribution",
-    tech="Predicted against measured, and the residual histogram",
-    ee_bullets=["A calibration check", "Evidence, not a claim", "Readable by anyone"],
-    ai_bullets=["The 45° line", "Centred on zero", "Symmetric or not"],
-    site="""A single accuracy figure hides the shape. Two plots are standard on any commissioning report. Predicted
-against measured — points should sit on the 45° line. And the error histogram — it should be centred on zero
-and symmetric.""",
-    challenge="""For a thermal model the direction of the error is not symmetric in consequence. Predicting too high
-costs money, because loading is restricted that need not have been. Predicting too low costs insulation
-life, silently, and nobody finds out for years.""",
-    ai_link="""These two plots are how a model gets accepted or rejected in a review. A score is a claim; a
-predicted-against-measured plot is evidence. Anyone can read it, including people who will never read the
-code. Plot it before quoting the metric.""",
-    notebook="""Step 24. The scatter, the histogram, and the error percentiles.""",
-    contributes="""The evidence behind the accuracy claim.""",
-    takeaway="""A predicted-against-measured plot is evidence; a metric is only a claim about it.""",
-),
-dict(
-    id="trend", phase=7, ee_icon="📉", ai_icon="⏱️",
-    ee="Following A Real Week", ai="Time-Series Comparison",
-    tech="Predicted and measured, hour by hour",
-    ee_bullets=["Does it track the peak?", "Does it lag?", "The contingency hours"],
-    ai_bullets=["No metrics needed", "Two lines", "The plot that earns trust"],
-    site="""The scatter plot treats every hour as independent; operations does not. An engineer wants to see the
-model follow the plant. Does it track the daily peak or lag it? When the load steps, does the prediction
-step with it?""",
-    challenge="""A real week contains the events that matter — a contingency transfer, the hottest afternoon of the
-summer, the overnight recovery when the oil cools slowly and the winding cools fast. Any of these could be
-where the model breaks, and none of them show up in an average.""",
-    ai_link="""This is the plot shown to an operations manager. No metrics, no axes anybody has to be taught to read,
-two lines that should sit on top of each other. If the model is going to be trusted, this is what does it.""",
-    notebook="""Step 25. Six days across the hottest hours of the test set.""",
-    contributes="""The trust argument — and the first sight of the peak being under-read.""",
-    takeaway="""The model tracks the plant closely all week and then under-reads the annual peak by nearly 4 °C — the one hour you cannot afford to under-read.""",
-),
-dict(
-    id="hot-tail", phase=7, ee_icon="🌡️", ai_icon="⚠️",
-    ee="The Errors That Actually Matter", ai="Segmented Evaluation",
-    tech="Error by temperature band, converted to ageing",
-    ee_bullets=["95 % of hours are free", "482 hours above 110 °C", "That is where life goes"],
-    ai_bullets=["Segment the error", "Weight by consequence", "Report the limitation"],
-    site="""For 95 % of the year these transformers run between 40 °C and 90 °C hot spot, and nothing is at stake.
-The hours that matter are the other 5 %: 1,753 hours above 98 °C, 482 above 110 °C, and 113 above 120 °C
-across the fleet's year.""",
-    challenge="""Segment the error by temperature and the model looks different. It rises from 1.3 °C in the normal
-band to 2.1 °C above 110 °C, and the bias turns negative — the model under-predicts the hottest hours. There
-are fewer training examples up there, so it regresses towards the middle. The 1.35 °C average hides this
-completely.""",
-    ai_link="""State the consequence in engineering units. The hottest 1 % of hours carry 38 % of the insulation
-ageing and the hottest 5 % carry 71 %. So a model that is worse in the top 5 % is worse where nearly all the
-damage happens. That is the honest way to report it, and it points at the fix.""",
-    notebook="""Step 26. Error by band, and the ageing concentration curve.""",
-    contributes="""The limitation that has to be declared with the accuracy figure.""",
-    takeaway="""Report the error where the consequence is — 71 % of the ageing happens in 5 % of the hours, and that is where the model is weakest.""",
-),
-
-# --------------------------- PHASE 9 - WHAT THE MODEL DOES NOT KNOW
-dict(
-    id="unseen-unit", phase=8, ee_icon="🚫", ai_icon="📉",
-    ee="A Transformer It Has Never Seen", ai="Generalisation, Measured",
-    tech="Train on three units, test on the fourth",
-    ee_bullets=["The scheme targets un-probed units", "Different winding designs", "Testable right now"],
-    ai_bullets=["Out-of-distribution", "Bias, not variance", "A fixable offset"],
-    site="""The whole point of the scheme is to run this model on transformers without a probe. So the real question
-is not how well it predicts these four units. It is how well it predicts a fifth — a unit it has never seen,
-of a different vintage and winding design.""",
-    challenge="""It fails, and it fails in a diagnosable way. Held-out MAE rises from 1.35 °C to between 2.4 and
-5.6 °C, and almost all of it is bias. Trained without one unit the model over-predicts it by 5.6 °C all
-year; without another it under-predicts by 4.8 °C. Those units genuinely have different hot-spot factors.""",
-    ai_link="""This is the most important limitation in the project and it must be measured, not assumed. The model
-interpolates within the fleet it learned; it does not extrapolate to new designs. The deployable version is
-therefore: fit probes to a representative sample of designs, and accept a calibration period on any type not
-represented.""",
-    notebook="""Step 27. Four hold-out runs, with bias and scatter separated.""",
-    contributes="""The honest boundary of the scheme, in the same units as the accuracy claim.""",
-    takeaway="""This model knows these four transformers, not transformers in general — and the failure is a fixable offset, not a broken model.""",
-),
-
-# --------------------------------------------- PHASE 10 - DECISION SUPPORT
-dict(
-    id="predict", phase=9, ee_icon="🎚️", ai_icon="🔮",
-    ee="Asking The Model A Question", ai="Interactive Prediction",
-    tech="Five readings in, one temperature out",
-    ee_bullets=["What the control room sees", "Five gauges", "One answer"],
-    ai_bullets=["Model inference", "With an interpretation", "Not just a number"],
-    site="""This is the scheme from the control room. Five readings the substation already has — load current,
-ambient temperature, top-oil temperature, voltage and humidity — and one answer: the hot-spot temperature,
-and what it means.""",
-    challenge="""The answer alone is not useful. 97 °C tells an operator nothing they can act on. They need how far
-it is from 110 °C, what is driving it, how fast insulation is being consumed, and whether anything needs
-doing. A number without an interpretation is not decision support.""",
-    ai_link="""Two different questions get asked and they are not interchangeable. In sensor mode all five readings
-come from the plant now, and this is what the scheme does continuously. In what-if mode the engineer sets a
-load and the oil temperature is estimated — that is a forecast, and it inherits the thermal model's
-assumptions.""",
-    notebook="""Step 28. The `assess()` function and the slider demonstration.""",
-    contributes="""The interactive core of the whole system.""",
-    takeaway="""A predicted temperature is not decision support until it arrives with the headroom, the ageing rate, and the reason.""",
-),
-dict(
-    id="recommend", phase=9, ee_icon="🚦", ai_icon="🧭",
-    ee="Turning A Temperature Into An Action", ai="Decision Rules On Top Of A Model",
-    tech="IEEE C57.91 table 8 limits, as thresholds",
-    ee_bullets=["110 / 120 / 140 °C", "Published, not invented", "Name the cause"],
-    ai_bullets=["Model gives the number", "Standard gives the limit", "Rules give the reason"],
-    site="""The limits are not invented. IEEE C57.91 sets them: below 98 °C continue normal operation, 98 to 110 °C
-monitor closely, 110 to 120 °C increase cooling and prepare to reduce load, above 120 °C reduce loading now.
-The model supplies the temperature; the standard supplies the thresholds.""",
-    challenge="""The recommendation has to name the cause or it will be ignored. Telling an operator to reduce load on
-a transformer whose fans have failed is the wrong instruction — the cooling should be fixed. So the rules
-check whether the oil rise is larger than the load justifies, and whether there is any cooling left to add.""",
-    ai_link="""Note where the machine learning stops. The model predicts a temperature and nothing else. The
-thresholds come from a published standard. The cause diagnosis is engineering logic, written by hand and
-readable by anyone. Keeping the three separate is what makes the system auditable.""",
-    notebook="""Step 29. The rule engine, in about forty lines.""",
-    contributes="""The output an operator actually acts on.""",
-    takeaway="""The model gives a temperature, the standard gives the threshold, and hand-written logic gives the reason — keeping them separate is what makes the system auditable.""",
-),
-dict(
-    id="dashboard", phase=9, ee_icon="📺", ai_icon="🎯",
-    ee="The Substation Monitoring Dashboard", ai="The Deployed System",
-    tech="Four units, live prediction, ranked by risk",
-    ee_bullets=["Which unit first?", "Headroom, not temperature", "Reason beside the action"],
-    ai_bullets=["Ranked by risk", "Cumulative ageing", "One line to act on"],
-    site="""Everything from the previous twenty-nine steps on one screen. For each transformer: the current
-readings, the predicted hot spot against the 110 °C limit, the insulation life consumed this year, and the
-recommended action with its reason.""",
-    challenge="""The dashboard has to answer the operator's real question, which is not what the temperature is. It is
-which transformer to look at first and what to do about it. That means ranking by risk rather than by name,
-and showing headroom rather than raw temperature.""",
-    ai_link="""Cheap sensors that were already fitted feed a model trained on four instrumented units, which feeds
-thresholds from a published standard, which feeds one line of text an operator can act on. The machine
-learning is one component of four — the one that supplies the number nobody can measure.""",
-    notebook="""Step 30. The fleet panel, the gauges, and the ageing chart.""",
-    contributes="""The finished system, and the end of the course.""",
-    takeaway="""The output of the whole project is one ranked screen telling an operator which transformer to look at first, and why.""",
+    id="use", phase=9, ee_icon="\U0001f6a6", ai_icon="\U0001f3af",
+    ee="Using It", ai="Prediction and Decision Support",
+    tech="A temperature, a limit, and a recommended action",
+    ee_bullets=["Predict now", "Compare to the limit", "Recommend, not act"],
+    ai_bullets=["Live prediction", "Decision rules", "Human in charge"],
+    intro="""A temperature on its own is not useful. It becomes useful when it is compared against a limit
+and turned into a recommendation - which a person then accepts or overrules.""",
+    question="",
+    takeaway="""The model estimates; the engineer decides. That boundary is the whole design.""",
+    notebook="""Phase 10 - live prediction and the decision rules.""",
 ),
 ]
 
@@ -835,7 +392,7 @@ def _nav(step, key):
         elif st.button("◀  The project overview", key=f"prev_{key}", width="stretch"):
             goto("start")
     with c2:
-        st.markdown(f"<div class='pos'>▐ STEP {i+1:02d} / {len(ORDER):02d} ▌"
+        st.markdown(f"<div class='pos'>▐ PHASE {i+1:02d} / {len(ORDER):02d} ▌"
                     f"<br><b>{step['ee']}</b></div>", unsafe_allow_html=True)
     with c3:
         if next_s:
@@ -848,6 +405,12 @@ def _nav(step, key):
 # ============================================================================
 # open_page  -  Parts 1, 2 and 3, rendered ABOVE the stage renderer
 # ============================================================================
+def prev_question(stage):
+    """The question the previous page ended on, which this page answers."""
+    i = ORDER.index(stage)
+    return STEPS[i - 1]["question"] if i > 0 else ""
+
+
 def open_page(stage, style, animate):
     step = BY_ID.get(stage)
     if step is None:
@@ -857,62 +420,62 @@ def open_page(stage, style, animate):
 
     _nav(step, "top")
     st.markdown(
-        f"<div class='tele' style='margin-top:14px'>⟨ASHGROVE 132/33kV⟩ &nbsp; "
-        f"STEP {i+1:02d}/{len(ORDER)} &nbsp;·&nbsp; PHASE {step['phase']+1:02d}/{len(PHASES)} "
-        f"&nbsp;·&nbsp; <span style='color:{EE}'>{pname.upper()}</span> "
+        f"<div class='tele' style='margin-top:14px'>\u27e8ASHGROVE 132/33kV\u27e9 &nbsp; "
+        f"PHASE {step['phase']+1:02d}/{len(PHASES)} "
+        f"&nbsp;\u00b7&nbsp; <span style='color:{EE}'>{pname.upper()}</span> "
         f"&nbsp;—&nbsp; {pdesc}</div>", unsafe_allow_html=True)
     st.markdown(f"# {step['ee_icon']}  {step['ee']}")
-    st.markdown(f"<span class='sub'>▸ this electrical engineering step is the AI concept </span>"
+    st.markdown(f"<span class='sub'>\u25b8 in machine learning this is called </span>"
                 f"<b style='color:{AISIDE}'>{step['ai']}</b>", unsafe_allow_html=True)
+
+    # ---- the answer half of the question chain ----------------------------
+    q = prev_question(stage)
+    if q:
+        st.markdown(f"<div class='answering'><span class='answering-tag'>ANSWERING</span>"
+                    f"{q}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='relay'>{step['intro']}</div>", unsafe_allow_html=True)
     st.divider()
-
-    _bus("01", "Electrical Engineering", EE)
-    st.markdown(f"<div class='relay'>{step['site']}</div>", unsafe_allow_html=True)
-    st.write("")
-
-    _bus("02", "The Challenge", RED)
-    st.markdown(f"<div class='relay warn'>{step['challenge']}</div>", unsafe_allow_html=True)
-    st.write("")
-
-    _bus("03", "AI Connection", AISIDE)
-    st.markdown(f"<div class='relay ai'>{step['ai_link']}</div>", unsafe_allow_html=True)
-    st.plotly_chart(bridge_figure(step, style, animate), width="stretch",
-                    key=f"bridge_{stage}")
-    st.caption("▶ Press Play — the reading travels the busbar from the substation into the AI.")
-    st.divider()
-
-    _bus("04", "Technical Idea", TECH)
-    st.caption(f"{step['tech']} — interactive. Change things and watch what happens.")
 
 
 # ============================================================================
-# close_page  -  Part 5, rendered BELOW the stage renderer
+# close_page  -  the takeaway and the question that opens the next page
 # ============================================================================
 def close_page(stage):
     step = BY_ID.get(stage)
     if step is None:
         return
+    i = ORDER.index(stage)
     st.divider()
 
-    _bus("05", "Key Takeaway", GREEN)
-    st.markdown(f"<div class='relay ok' style='font-size:19px;font-weight:600;line-height:1.5'>"
+    _bus("KEY TAKEAWAY", "", GREEN)
+    st.markdown(f"<div class='relay ok' style='font-size:18px;font-weight:600;line-height:1.5'>"
                 f"{step['takeaway']}</div>", unsafe_allow_html=True)
     st.write("")
 
-    _bus("06", "In the Notebook", "#8bc34a")
-    c1, c2 = st.columns(2)
-    c1.markdown(f"**Where you implement it**\n\n{step['notebook']}")
-    c2.markdown(f"**What it contributes**\n\n{step['contributes']}")
+    # ---- the question half of the question chain --------------------------
+    if step["question"]:
+        nxt = STEPS[i + 1]
+        st.markdown(f"<div class='qcard'><span class='qcard-tag'>THE QUESTION THIS LEAVES</span>"
+                    f"<div class='qcard-q'>{step['question']}</div></div>",
+                    unsafe_allow_html=True)
+        if st.button(f"Answer it  \u2192  {nxt['ee_icon']}  {nxt['ee']}",
+                     key=f"chain_{stage}", width="stretch", type="primary"):
+            goto(nxt["id"])
+    else:
+        st.markdown("<div class='qcard'><span class='qcard-tag'>THAT IS THE COURSE</span>"
+                    "<div class='qcard-q'>Ten questions, ten answers, one working "
+                    "system.</div></div>", unsafe_allow_html=True)
 
     st.write("")
+    st.caption(f"In the notebook: {step['notebook']}")
     segs = []
-    for i, (pname, _) in enumerate(PHASES):
-        cls = "cur" if i == step["phase"] else ("done" if i < step["phase"] else "")
-        segs.append(f"<span class='seg {cls}' title='{pname}'>{i+1:02d}</span>")
+    for j, (pn, _) in enumerate(PHASES):
+        cls = "cur" if j == step["phase"] else ("done" if j < step["phase"] else "")
+        segs.append(f"<span class='seg {cls}' title='{pn}'>{j+1:02d}</span>")
     st.markdown(f"<div class='rail'><span class='rail-lab'>PHASE</span>" + "".join(segs)
                 + f"<span class='rail-lab' style='margin-left:auto'>"
-                f"{step['phase']+1:02d}/{len(PHASES)} · {PHASES[step['phase']][0].upper()}"
-                f"</span></div>", unsafe_allow_html=True)
+                f"{step['phase']+1:02d}/{len(PHASES)} \u00b7 {PHASES[step['phase']][0].upper()}"
+                + "</span></div>", unsafe_allow_html=True)
     st.write("")
     _nav(step, "bottom")
 
@@ -921,16 +484,16 @@ def close_page(stage):
 # THE MIND MAP  -  clickable workflow, one node per phase
 # ============================================================================
 MAP_NODES = [
-    ("Power Transformer", "the-asset", 0),
-    ("Sensors", "the-target", 1),
-    ("Operating Data", "log", 2),
-    ("Data Preparation", "clean", 3),
-    ("Feature Engineering", "features", 3),
-    ("Machine Learning", "leaderboard", 5),
-    ("Temperature Prediction", "predict", 9),
-    ("Condition Monitoring", "metrics", 7),
-    ("Maintenance Planning", "recommend", 9),
-    ("Reliable Power Supply", "dashboard", 9),
+    ("The Problem", "problem", 0),
+    ("The Data", "data", 1),
+    ("Exploring It", "explore", 2),
+    ("Preparing It", "prepare", 3),
+    ("How Learning Works", "learning", 4),
+    ("The First Model", "baseline", 5),
+    ("Training A Model", "training", 6),
+    ("Scoring It", "scoring", 7),
+    ("Where It Fails", "limits", 8),
+    ("Using It", "use", 9),
 ]
 
 
