@@ -1,8 +1,8 @@
 # The Sentinels of Nova City
 
 **An AI input-and-output assessment for Class 6.** A three-minute narrated comic,
-then twelve questions. Roughly 15-20 minutes per student. No internet, no server,
-no login, nothing leaves the child's browser.
+then three rounds of questions. Roughly 20 minutes per student. No internet, no
+server, no login, nothing leaves the child's browser.
 
 ---
 
@@ -10,7 +10,7 @@ no login, nothing leaves the child's browser.
 
 **One file (easiest).** Give the student `AI-Sentinels-Assessment.html`. Email it,
 put it on a USB stick, drop it on the desktop. Double-click and it runs — the
-narration audio and all the artwork are inside that single file (3.7 MB).
+narration audio and all the artwork are inside that single file (~4 MB).
 
 **The folder version.** `index.html` next to `scenes.js`, `app.js` and
 `narration.mp3`. Double-click `index.html`. Keep the four files together.
@@ -22,82 +22,93 @@ or a speaker are needed — the story is narrated.
 
 ---
 
-## What the student does
+## The story tells a story. It does not teach.
 
-1. **Types their name**, class and roll number.
-2. **Watches the story.** Three minutes. The questions stay locked until it
-   finishes once. After that they can replay it any time, including from inside
-   the questions — this is a comprehension test, not a memory test.
-3. **Answers twelve questions.** They can move around freely and change answers.
-   There is no timer.
-4. **Sees their score** with every answer explained, and saves an answer file for
-   the teacher.
+This is the central design decision, and it is worth not undoing.
 
----
+The narration is pure drama: eleven minutes to midnight, nine days of rain, a dam
+above the town, and four heroes who all give the wrong answer on the same night.
+It never says the words *input*, *output* or *machine*. It never explains
+anything. It just shows what happened.
 
-## The story
+The villain, **the Static**, never throws a punch. It spends nine days painting
+stripes on the dam wall, recording the mayor's voice, and swapping one page of
+numbers for another. So Iris looks at the wall and says "zebra". Echo listens and
+writes that there is nothing to worry about. Nova reads her page and says "safe".
+Rex says there is no danger.
 
-Four heroes protect Nova City, and each one is plainly an AI: **Captain Echo**
-turns sound into words, **Iris** turns a picture into a name, **Nova** turns
-numbers into a warning, and **Rex** the robot dog turns a typed question into a
-spoken answer. Different powers, same three steps: something goes in, they work
-on it, something comes out.
+Meera, who is eleven and has no cape, is the one who sees the wet paint. At the
+end the reporters ask her how four superheroes could all be wrong at once, and
+she says: *"They weren't wrong. They were told wrong."*
 
-The villain, **the Static**, never fights anybody. He corrupts what the heroes
-are *given* — he paints stripes on the dam so Iris reports "zebra", plays a
-recording so Echo hears the wrong voice, feeds Nova last summer's numbers. Three
-heroes, three wrong answers, and not one of them broken.
-
-A girl called **Meera** works out why: *bad input, bad output*. So the Sentinels
-clean their inputs instead of fighting, and the right answers come out.
-
-That last part is the point of the whole assessment. Children meet AI as
-something that is either magic or broken; the story gives them a third and truer
-idea — that it is a machine whose answer depends on what you hand it.
+That line is the whole idea, and it arrives as a story beat rather than a lesson.
+**The teaching happens in the questions**, where the pattern is named and
+practised. A child who watches the story has seen the concept four times without
+being told it once — which is exactly what makes the questions land.
 
 ---
 
-## The twelve questions
+## The three rounds
 
-| # | Type | What it tests |
-|---|------|---------------|
-| 1-4 | Sort three cards into **INPUT / OUTPUT / THE MACHINE** | Can they separate the three, hero by hero |
-| 5-8 | Multiple choice on the story | Did they follow why the wrong answers happened |
-| 9-10 | A school gate camera, **not in the story** | Can they transfer the idea to something new |
-| 11 | Odd one out | Can they spot a thing that is *not* an input |
-| 12 | Written, two lines | Can they say it in their own words |
+### Part 1 — Drag & Drop (8 marks)
 
-**Marks: 19 automatic + 2 from the teacher = 21.** Each sorting card is worth one
-mark, so questions 1-4 carry three marks each.
+The same pattern every single time:
+
+```
+   WHAT GOES IN    →    THE MACHINE    →    WHAT COMES OUT
+```
+
+A worked example is shown first, filled in, on the round's intro screen. Then four
+patterns arrive with two boxes empty and four cards to choose from. The student
+drags a card into a box — or, on a tablet, taps the card and then taps the box.
+Both work everywhere. Tapping a filled box takes the card back out.
+
+Repeating one unchanging pattern is what does the teaching. By the fourth one the
+child is completing it from the shape alone.
+
+### Part 2 — Multiple Choice (6 marks)
+
+Four answers, one best. Three questions are about the story, and three are about
+machines that never appeared in it — a school gate camera, a chatbot, a smart
+speaker — so it is transfer, not recall.
+
+### Part 3 — Guessing Game (4 marks)
+
+A row of empty letter boxes and one clue. The student types a guess. Wrong guesses
+cost nothing and can be repeated. "Another clue" reveals a second and then a third,
+each more generous than the last, ending with the letter count and first letter.
+
+The four words are **INPUT**, **OUTPUT**, **MACHINE** and **STATIC**. The first
+three are the vocabulary; the fourth is there because it is fun, and because the
+clue for it ("I spent nine days painting a wall") is really a comprehension
+question wearing a disguise.
+
+**Total: 18 marks**, all automatically marked.
 
 ### The misconception this is built to catch
 
 The commonest Class 6 error is answering *"the input is the camera"* — confusing
-the machine with the thing you give it. That is why every sorting question has a
-third bin, **THE MACHINE**, holding a card that is neither input nor output
-(her helmet, Iris's camera eye, Nova herself, the robot dog's body). Question 9
-sets the same trap in multiple-choice form, with "The camera" sitting right next
-to the correct answer.
+the machine with the thing you hand it. Every drag round puts a machine-part card
+in the tray as a decoy (Iris's camera eye, Echo's helmet, Rex's antenna tail), and
+MCQ question 4 sets the same trap with "The camera" sitting right beside the
+correct answer. Part 3's clue for MACHINE names it outright.
 
-A student who scores well on 5-8 but badly on the third card of 1-4 has followed
-the story without getting the concept. That is the pattern worth looking for.
+A student who does well on the story questions but drops the decoy cards into
+INPUT has followed the plot without getting the idea. That is the pattern to look
+for.
 
 ### Answer key
 
-| Q | Answer |
-|---|--------|
-| 1 | shout = INPUT, words on visor = OUTPUT, helmet = THE MACHINE |
-| 2 | photo = INPUT, the word CRACK = OUTPUT, camera eye = THE MACHINE |
-| 3 | rainfall/river numbers = INPUT, the flood warning = OUTPUT, Nova herself = THE MACHINE |
-| 4 | typed question = INPUT, spoken answer = OUTPUT, the dog's body = THE MACHINE |
-| 5 | The Static had painted stripes on the wall |
-| 6 | The inputs the heroes were given |
-| 7 | They gave their machines fresh, correct inputs |
-| 8 | An AI's answer can only be as good as what it is given |
-| 9 | The picture of the person standing at the gate |
-| 10 | The decision to open the gate |
-| 11 | The answer that appears on your screen |
-| 12 | input = the photo of the medicine strip; output = the spoken name of the medicine |
+**Part 1** — in every pattern: the thing handed over goes in WHAT GOES IN, the
+hero or device is THE MACHINE, the word or decision they produce is WHAT COMES
+OUT. The leftover cards are always either a part of the machine or scenery.
+
+**Part 2** — 1: the wall had stripes painted on it. 2: the things the heroes were
+given to work from. 3: they were given the wrong things to work from. 4: the
+picture of the person at the gate. 5: the decision to open the gate. 6: the answer
+that appears on your screen.
+
+**Part 3** — INPUT, OUTPUT, MACHINE, STATIC.
 
 ---
 
@@ -106,18 +117,16 @@ the story without getting the concept. That is the pattern worth looking for.
 On the result screen the student can:
 
 - **Save my answer file** — writes `sentinels-<name>.json` to their Downloads
-  folder: name, class, roll, both timestamps, the automatic score, and every
-  answer with the correct one beside it. Have them hand these in.
+  folder: name, class, roll, both timestamps, the score broken down by round, and
+  every answer with the correct one beside it. For the guessing game it also
+  records how many clues were used and what wrong words were tried, which is often
+  more interesting than the mark.
 - **Print / Save as PDF** — a clean printable sheet, buttons removed.
 
-Question 12 is printed on both, with the expected answer underneath, ready to
-mark. There are two marks in it.
-
 Answers are also kept in the browser's own storage, so a closed tab or a flat
-battery does not lose the work — reopening the page brings it back. **The same
-browser profile therefore resumes the same student.** Before the next child
-starts, press **New student** on the result screen, or use a fresh browser
-profile or a private window per student.
+battery does not lose the work. **The same browser profile therefore resumes the
+same student.** Before the next child starts, press **New student** on the result
+screen, or use a fresh browser profile or a private window per student.
 
 ---
 
@@ -125,12 +134,15 @@ profile or a private window per student.
 
 Everything lives in three plain files. No build step, no framework, no npm.
 
-- **`app.js`** — the questions are the `QUESTIONS` array at the very top. Add a
-  sorting question by copying one of the first four and changing `cards`; add a
-  multiple-choice by copying one of the middle ones and setting `ans` to the
-  index of the right option (0-3). The score totals recalculate themselves.
-- **`scenes.js`** — the artwork (drawn as SVG, no image files) and `LINES`, the
-  caption track: `[scene, caption, seconds]`.
+- **`app.js`** — the `QUESTIONS` array at the top holds all three rounds, each
+  entry tagged `part: 'drag' | 'mcq' | 'guess'`. Copy an existing entry to add
+  one; the totals recalculate themselves.
+  - a **drag** entry needs `slots` (three, each either `fixed` text or an
+    `answer` id) and a `tray` of cards, at least one of which should be a decoy.
+  - a **guess** entry needs `answer`, an `accept` list of spellings to allow, and
+    three clues that get progressively kinder.
+- **`scenes.js`** — the artwork (SVG drawn in code, no image files) and `LINES`,
+  the caption track: `[scene, caption, seconds]`.
 - **`index.html`** — the styling.
 
 After any edit, rebuild the single-file copy:
@@ -139,19 +151,22 @@ After any edit, rebuild the single-file copy:
 python -X utf8 bundle.py
 ```
 
-### Two traps, if you touch the artwork
+### Three traps, if you touch the artwork
 
 - **Never put an animation class on an SVG group that also has a `transform`
-  attribute.** A CSS transform replaces the attribute, and the art snaps to the
+  attribute.** A CSS transform replaces the attribute and the art snaps to the
   top-left corner. Position on an outer `<g>`, animate on an inner one.
 - **Nothing readable goes below about `y=560`** in the 1280x720 scene. The
   caption band covers the bottom of the stage.
+- **Keep teaching words out of the scenes.** The pictures say "SHE HEARS" and
+  "SHE WRITES", never "INPUT" and "OUTPUT". If those words appear before Part 1,
+  the assessment stops measuring anything.
 
 ### Re-recording the narration
 
-The voice is ElevenLabs "George", generated through vidIQ, at 178 seconds.
-If you replace `narration.mp3`, the caption times in `scenes.js` scale to the new
-length automatically, but they were hand-aligned to the pauses in *this*
-recording (mean error 0.3 s) and a different reading will drift. For a fresh
-recording, re-measure: find the silent gaps in the new file and re-anchor each
-line to the pause in front of it.
+The voice is ElevenLabs "George", generated through vidIQ, at 190 seconds. If you
+replace `narration.mp3`, the caption times in `scenes.js` scale to the new length
+automatically, but they were aligned against the pauses in *this* recording (mean
+error 0.24 s) and a different reading will drift. For a fresh recording, re-measure:
+decode the mp3 in a browser, find the silent gaps, and re-fit the caption
+boundaries to them.

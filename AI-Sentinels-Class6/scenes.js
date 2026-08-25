@@ -244,16 +244,16 @@
       '<path d="M' + (x2 - 30) + ',' + (y - 20) + ' L' + x2 + ',' + y + ' L' + (x2 - 30) + ',' + (y + 20) + ' Z" fill="' + color + '"/></g>';
   }
 
-  /* the core teaching diagram: INPUT -> AI -> OUTPUT */
+  /* the middle-of-the-story diagram: what they were handed, what they said */
   function pipeline(opts) {
     var y = opts.y || 400, tone = opts.tone || '', good = tone !== 'bad';
     var arrowC = tone === 'bad' ? '#ff8787' : '#ffd43b';
     return '<g>' +
-      chip(210, y, 300, 180, 'INPUT', opts.inp, '#1c7ed6', 'pop') +
+      chip(210, y, 300, 180, opts.inTitle || 'WAS HANDED', opts.inp, '#1c7ed6', 'pop') +
       arrow(370, 540, y, arrowC, true) +
       '<g class="pop d1">' + aiBox(640, y, opts.brain, tone) + '</g>' +
       arrow(742, 912, y, arrowC, true) +
-      chip(1070, y, 300, 180, 'OUTPUT', opts.outp, good ? '#2f9e44' : '#e03131', 'pop d2') +
+      chip(1070, y, 300, 180, opts.outTitle || 'SAID', opts.outp, good ? '#2f9e44' : '#e03131', 'pop d2') +
       (tone === 'bad'
         ? '<g class="pop d3"><circle cx="1070" cy="' + (y - 128) + '" r="42" fill="#e03131" stroke="' + INK + '" stroke-width="7"/>' +
           Tplain(1070, y - 114, 'X', 46, '#fff') + '</g>'
@@ -273,11 +273,19 @@
   /* --------------------------------------------------------- the scenes */
   var S = {};
 
-  S.city = function (u) {
-    return sky(u, 'night') + stars(40, 3) +
-      '<circle cx="1080" cy="130" r="62" fill="#ffd43b" stroke="' + INK + '" stroke-width="6"/>' +
+  S.clock = function (u) {
+    return sky(u, 'storm') + rain(46, 3, .5) +
       skyline(600, '#2b2f57', 5, true) + skyline(680, '#181c3d', 9, false) +
-      '<g class="pop">' + T(640, 300, 'NOVA CITY', 92, '#ffd43b') + '</g>';
+      '<g class="pop">' +
+      '<circle cx="640" cy="240" r="134" fill="#12142a" stroke="#ffd43b" stroke-width="10"/>' +
+      '<circle cx="640" cy="240" r="112" fill="none" stroke="#3a3f66" stroke-width="4"/>' +
+      /* 23:49 - both hands drawn pointing at twelve, then rotated into place */
+      '<line x1="640" y1="240" x2="640" y2="166" stroke="#fdf7ea" stroke-width="12" ' +
+      'stroke-linecap="round" transform="rotate(-4,640,240)"/>' +
+      '<line x1="640" y1="240" x2="640" y2="132" stroke="#ffd43b" stroke-width="9" ' +
+      'stroke-linecap="round" transform="rotate(-66,640,240)"/>' +
+      '<circle cx="640" cy="240" r="12" fill="#e03131"/>' +
+      T(640, 452, 'ELEVEN MINUTES TO MIDNIGHT', 46, '#ffd43b') + '</g>';
   };
 
   S.team = function (u) {
@@ -297,8 +305,8 @@
       '<path d="M470,270 q56,90 0,180" fill="none" stroke="#ffd43b" stroke-width="10" stroke-linecap="round"/>' +
       '<path d="M520,240 q72,120 0,240" fill="none" stroke="#ffd43b" stroke-width="10" stroke-linecap="round"/>' +
       '</g>' +
-      chip(880, 300, 460, 150, 'SOUND GOES IN', '"HELP!"', '#1c7ed6', 'pop d2') +
-      chip(880, 540, 460, 150, 'WORDS COME OUT', 'A boy shouted|from Baker Street', '#2f9e44', 'pop d3');
+      chip(880, 300, 460, 150, 'SHE HEARS', '"HELP!"', '#1c7ed6', 'pop d2') +
+      chip(880, 540, 460, 150, 'SHE WRITES', 'A boy shouted|from Baker Street', '#2f9e44', 'pop d3');
   };
 
   S.iris = function (u) {
@@ -306,55 +314,29 @@
       '<g class="bob">' + heroAt('iris', 260, 330, 1.05) + '</g>' +
       '<g class="pop d1"><line x1="330" y1="380" x2="560" y2="470" stroke="#69db7c" stroke-width="8" class="flow"/>' +
       '<line x1="330" y1="420" x2="560" y2="560" stroke="#69db7c" stroke-width="8" class="flow"/></g>' +
-      chip(830, 330, 400, 150, 'PICTURE IN', '[ photo of a wall ]', '#1c7ed6', 'pop d2') +
-      chip(830, 560, 400, 150, 'NAME OUT', 'CRACK', '#2f9e44', 'pop d3');
+      chip(830, 330, 400, 150, 'SHE LOOKS AT', '[ a cracked wall ]', '#1c7ed6', 'pop d2') +
+      chip(830, 560, 400, 150, 'SHE NAMES IT', 'CRACK', '#2f9e44', 'pop d3');
   };
 
   S.nova = function (u) {
     return sky(u, 'storm') + rain(30, 5, .35) + skyline(700, '#20244a', 12, true) +
       heroAt('nova', 240, 440, 1.1, 'bob') +
-      chip(760, 300, 520, 160, 'NUMBERS IN', 'Rain 92 mm   River 7.4 m', '#1c7ed6', 'pop d1') +
-      chip(760, 540, 520, 160, 'ONE SENTENCE OUT', 'NOT SAFE', '#2f9e44', 'pop d2');
+      chip(760, 300, 520, 160, 'SHE READS', 'Rain 92 mm   River 7.4 m', '#1c7ed6', 'pop d1') +
+      chip(760, 540, 520, 160, 'SHE SAYS', 'NOT SAFE', '#2f9e44', 'pop d2');
   };
 
   S.rex = function (u) {
     return sky(u, 'night') + stars(18, 17) + skyline(700, '#20244a', 14, true) +
       heroAt('rex', 300, 400, 1.05, 'bob2') +
-      chip(880, 300, 470, 150, 'YOU TYPE', 'Where is the dam?', '#1c7ed6', 'pop d1') +
-      chip(880, 540, 470, 150, 'REX SPEAKS', 'Two miles north.', '#2f9e44', 'pop d2');
-  };
-
-  S.machine = function (u) {
-    return sky(u, 'night') + stars(16, 19) +
-      banner('THE SAME THREE THINGS', 'every single one of them', '#7048e8') +
-      pipeline({ y: 430, inp: 'something|goes in', outp: 'something|comes out', brain: 'IT WORKS ON IT' });
-  };
-
-  S.define = function (u) {
-    return sky(u, 'night') + stars(16, 23) +
-      '<g class="pop">' +
-      '<rect x="80" y="120" width="500" height="480" rx="26" fill="#1c7ed6" stroke="' + INK + '" stroke-width="9"/>' +
-      T(330, 250, 'INPUT', 74, '#fff') +
-      Tplain(330, 330, 'what goes IN', 34, '#e7f5ff') +
-      Tplain(330, 390, 'to the machine', 34, '#e7f5ff') +
-      Tplain(330, 500, 'a sound, a photo,', 28, '#c5f6fa') +
-      Tplain(330, 545, 'numbers, your question', 28, '#c5f6fa') +
-      '</g>' +
-      '<g class="pop d2">' +
-      '<rect x="700" y="120" width="500" height="480" rx="26" fill="#2f9e44" stroke="' + INK + '" stroke-width="9"/>' +
-      T(950, 250, 'OUTPUT', 74, '#fff') +
-      Tplain(950, 330, 'what comes OUT', 34, '#ebfbee') +
-      Tplain(950, 390, 'of the machine', 34, '#ebfbee') +
-      Tplain(950, 500, 'a word, an answer,', 28, '#d3f9d8') +
-      Tplain(950, 545, 'a warning, a decision', 28, '#d3f9d8') +
-      '</g>';
+      chip(880, 300, 470, 150, 'YOU ASK', 'Where is the dam?', '#1c7ed6', 'pop d1') +
+      chip(880, 540, 470, 150, 'HE ANSWERS', 'Two miles north.', '#2f9e44', 'pop d2');
   };
 
   S.storm = function (u) {
     return sky(u, 'storm') + rain(70, 3, .75) + skyline(620, '#232750', 5, true) + skyline(690, '#161a3a', 9, false) +
       '<path d="M300,60 L250,220 L330,220 L270,380" fill="none" stroke="#ffd43b" stroke-width="14" ' +
       'stroke-linecap="round" class="flick"/>' +
-      '<g class="pop">' + T(640, 170, 'THE RAIN WOULD NOT STOP', 52, '#fff') + '</g>';
+      '<g class="pop">' + T(640, 170, 'NINE DAYS OF RAIN', 58, '#fff') + '</g>';
   };
 
   function damWall(striped) {
@@ -386,9 +368,9 @@
 
   S.attack = function (u) {
     return sky(u, 'storm') + '<rect width="' + W + '" height="' + H + '" fill="#12142a" opacity=".3"/>' +
-      banner('HE DID NOT ATTACK THE HEROES', 'he attacked what they were GIVEN', '#7048e8') +
+      banner('IT NEVER TOUCHED A HERO', 'nine days of paint, a recording, a swapped page', '#7048e8') +
       heroAt('statik', 250, 470, .95) +
-      chip(760, 430, 340, 190, 'INPUT', 'the picture|the voice|the numbers', '#1c7ed6', 'pop d1') +
+      chip(760, 430, 340, 190, 'IT CHANGED', 'the picture|the voice|the numbers', '#1c7ed6', 'pop d1') +
       '<g class="pop d2"><path d="M470,430 q120,-70 220,-10" fill="none" stroke="#cc5de8" stroke-width="12" ' +
       'stroke-linecap="round" class="flow"/>' +
       '<path d="M960,340 l90,-60 M960,430 l110,0 M960,520 l90,60" stroke="#cc5de8" stroke-width="10" stroke-linecap="round"/>' +
@@ -410,31 +392,43 @@
       banner('A RECORDING, NOT THE REAL MAYOR', null, '#7048e8') +
       pipeline({
         y: 440, tone: 'bad', brain: 'ECHO LISTENS',
-        inp: 'a FAKE|voice', outp: '"all is well"'
+        inTitle: 'ECHO WAS HANDED', outTitle: 'SO ECHO WROTE',
+        inp: 'a RECORDING|of the mayor', outp: 'nothing to|worry about'
       });
   };
 
   S.oldnum = function (u) {
     return sky(u, 'storm') + '<rect width="' + W + '" height="' + H + '" fill="#12142a" opacity=".2"/>' +
-      banner('LAST SUMMER’S NUMBERS', 'not tonight’s', '#7048e8') +
+      banner('THE SWAPPED PAGE', 'old numbers, not tonight’s', '#7048e8') +
       pipeline({
         y: 450, tone: 'bad', brain: 'NOVA COUNTS',
-        inp: 'OLD numbers|Rain 4 mm', outp: 'SAFE'
+        inTitle: 'NOVA WAS HANDED', outTitle: 'SO NOVA SAID',
+        inp: 'the OLD page|Rain 4 mm', outp: 'SAFE'
       });
   };
 
-  S.wrong3 = function (u) {
-    var y = 300, s = sky(u, 'storm') + banner('THREE WRONG ANSWERS', 'and not one of them was broken', '#e03131');
-    var rows = [['Iris', 'ZEBRA'], ['Echo', 'ALL IS WELL'], ['Nova', 'SAFE']];
+  S.allwrong = function (u) {
+    var s = sky(u, 'storm') + banner('ALL FOUR OF THEM WERE WRONG', 'on the same night', '#e03131');
+    var rows = [['IRIS', 'ZEBRA'], ['ECHO', 'NOTHING TO WORRY ABOUT'], ['NOVA', 'SAFE'], ['REX', 'THERE IS NO DANGER']];
     rows.forEach(function (r, i) {
-      var yy = y + i * 140;
-      s += chip(280, yy, 300, 110, r[0] + ' WAS GIVEN', 'a BAD input', '#7048e8', 'pop d' + (i + 1));
-      s += arrow(440, 640, yy, '#ff8787', true);
-      s += chip(840, yy, 320, 110, r[0] + ' SAID', r[1], '#e03131', 'pop d' + (i + 1));
-      s += '<g class="pop d' + (i + 1) + '"><circle cx="1090" cy="' + yy + '" r="34" fill="#e03131" stroke="' + INK +
-        '" stroke-width="6"/>' + Tplain(1090, yy + 12, 'X', 36, '#fff') + '</g>';
+      var yy = 275 + i * 98;
+      s += '<g class="pop d' + (i + 1) + '">' +
+        Tplain(340, yy + 12, r[0], 40, '#ffd43b', 'end') +
+        arrow(380, 560, yy, '#ff8787', true) +
+        chip(830, yy, 520, 76, '', r[1], '#e03131') +
+        '<circle cx="1140" cy="' + yy + '" r="30" fill="#e03131" stroke="' + INK + '" stroke-width="6"/>' +
+        Tplain(1140, yy + 11, 'X', 32, '#fff') + '</g>';
     });
     return s;
+  };
+
+  S.rexwrong = function (u) {
+    return sky(u, 'storm') + rain(30, 21, .35) + skyline(700, '#20244a', 14, true) +
+      heroAt('rex', 300, 420, 1.05, 'bob2') +
+      chip(880, 300, 470, 140, 'ASKED', 'Where is the danger?', '#7048e8', 'pop d1') +
+      '<g class="pop d2">' + chip(880, 500, 470, 140, 'REX SAID', 'There is no danger.', '#e03131') +
+      '<circle cx="1130" cy="418" r="40" fill="#e03131" stroke="' + INK + '" stroke-width="7"/>' +
+      Tplain(1130, 432, 'X', 44, '#fff') + '</g>';
   };
 
   S.meera = function (u) {
@@ -451,41 +445,39 @@
   /* NOTE: the caption band covers roughly y > 580 of the 720-high viewBox.
      Nothing readable goes below that line, and no scene repeats its own
      caption word for word - the art shows, the caption tells. */
-  S.rule = function (u) {
-    return '<rect width="' + W + '" height="' + H + '" fill="#12142a"/>' +
-      '<g class="shine" opacity=".14"><rect x="-300" width="200" height="' + H + '" fill="#fff" transform="skewX(-18)"/></g>' +
-      '<g class="pop">' + T(640, 230, 'BAD INPUT', 118, '#e03131') + '</g>' +
-      '<g class="pop d2">' + T(640, 400, 'BAD OUTPUT', 118, '#e03131') + '</g>' +
-      '<g class="pop d3">' + Tplain(640, 500, 'The machine is not lying.', 36, '#fdf7ea') +
-      Tplain(640, 552, 'It is only as good as what we give it.', 36, '#ffd43b') + '</g>';
+  /* Iris dives past the paint and finally sees the wall itself */
+  S.dive = function (u) {
+    return sky(u, 'storm') + rain(40, 31, .45) +
+      '<path d="M180,700 L260,200 L1020,200 L1100,700 Z" fill="#adb5bd" stroke="' + INK + '" stroke-width="9"/>' +
+      '<rect x="240" y="160" width="800" height="52" rx="10" fill="#868e96" stroke="' + INK + '" stroke-width="8"/>' +
+      '<path d="M660,215 q26,110 -18,205 q30,85 8,180 q-14,55 6,100" fill="none" stroke="#12142a" ' +
+      'stroke-width="16" stroke-linecap="round" class="pulse"/>' +
+      '<path d="M660,215 q26,110 -18,205 q30,85 8,180 q-14,55 6,100" fill="none" stroke="#e03131" ' +
+      'stroke-width="7" stroke-linecap="round"/>' +
+      '<g transform="translate(300,330) rotate(28)"><g class="bob">' + HERO.iris() + '</g></g>' +
+      '<g class="pop d1">' + T(950, 300, 'PAST THE PAINT', 52, '#ffd43b') + '</g>';
   };
 
   S.clean = function (u) {
     return sky(u, 'dawn') +
-      banner('THEY CLEANED THEIR INPUTS', 'a fresh photo, the real voice, tonight’s numbers', '#2f9e44') +
+      banner('THEY WENT AND GOT THE REAL THING', 'a fresh look, the real voice, tonight’s gauges', '#2f9e44') +
       /* the old card stays readable under its strike - a full X hid the words */
-      '<g opacity=".62">' + chip(230, 400, 330, 150, 'OLD INPUT', 'painted|stripes', '#868e96', 'pop') + '</g>' +
+      '<g opacity=".62">' + chip(230, 400, 330, 150, 'THE FAKE', 'paint, a tape,|an old page', '#868e96', 'pop') + '</g>' +
       '<g class="pop d1"><line x1="80" y1="330" x2="380" y2="470" stroke="#e03131" stroke-width="13" stroke-linecap="round"/>' +
       '<circle cx="392" cy="330" r="36" fill="#e03131" stroke="' + INK + '" stroke-width="6"/>' +
       Tplain(392, 344, 'X', 40, '#fff') + '</g>' +
       arrow(450, 620, 400, '#ffd43b', true) +
-      chip(880, 400, 420, 190, 'NEW INPUT', 'a fresh photo|the real voice|tonight’s rain', '#1c7ed6', 'pop d2');
-  };
-
-  S.newio = function (u) {
-    return '<rect width="' + W + '" height="' + H + '" fill="#0b3d2e"/>' +
-      '<g class="shine" opacity=".16"><rect x="-300" width="240" height="' + H + '" fill="#fff" transform="skewX(-18)"/></g>' +
-      '<g class="pop">' + T(640, 300, 'NEW INPUT', 104, '#8ce99a') + '</g>' +
-      '<g class="pop d2">' + T(640, 470, 'NEW OUTPUT', 104, '#ffd43b') + '</g>';
+      chip(880, 400, 420, 190, 'THE REAL THING', 'the wall itself|the real mayor|tonight’s gauges', '#1c7ed6', 'pop d2');
   };
 
   S.fixed = function (u) {
-    var s = sky(u, 'storm') + banner('THE RIGHT ANSWERS, AT LAST', null, '#2f9e44');
-    [['IRIS', 'CRACK'], ['ECHO', 'EVACUATE'], ['NOVA', 'FLOOD IN 2 HOURS']].forEach(function (r, i) {
-      var yy = 300 + i * 140;
-      s += chip(300, yy, 340, 110, r[0] + ' WAS GIVEN', 'a GOOD input', '#1c7ed6', 'pop d' + (i + 1));
-      s += arrow(480, 680, yy, '#ffd43b', true);
-      s += chip(900, yy, 400, 110, r[0] + ' SAID', r[1], '#2f9e44', 'pop d' + (i + 1));
+    var s = sky(u, 'storm') + banner('THIS TIME THEY WERE RIGHT', null, '#2f9e44');
+    [['IRIS', 'CRACK. IT’S OPENING.'], ['ECHO', 'EVACUATE. NOW.'], ['NOVA', 'FLOOD. TWO HOURS.']].forEach(function (r, i) {
+      var yy = 300 + i * 110;
+      s += '<g class="pop d' + (i + 1) + '">' +
+        Tplain(330, yy + 12, r[0], 40, '#ffd43b', 'end') +
+        arrow(370, 560, yy, '#ffd43b', true) +
+        chip(850, yy, 520, 84, '', r[1], '#2f9e44') + '</g>';
     });
     return s;
   };
@@ -517,13 +509,28 @@
       '<g class="pop d1">' + T(700, 180, 'BUT MEERA KNEW THE RULE', 50, '#ffd43b') + '</g>';
   };
 
+  /* morning after: the reporters, and Meera's last line */
+  S.morning = function (u) {
+    return sky(u, 'dawn') + skyline(620, '#2b2f57', 4, true) +
+      '<circle cx="1050" cy="200" r="70" fill="#ffd43b" opacity=".85"/>' +
+      heroAt('meera', 420, 470, 1.15, 'bob') +
+      '<g class="pop d1">' +
+      '<rect x="700" y="330" width="120" height="80" rx="12" fill="#12142a" stroke="#fdf7ea" stroke-width="6"/>' +
+      '<circle cx="760" cy="370" r="24" fill="#495057" stroke="#fdf7ea" stroke-width="5"/>' +
+      '<rect x="880" y="350" width="90" height="60" rx="10" fill="#12142a" stroke="#fdf7ea" stroke-width="6"/>' +
+      '<circle cx="925" cy="380" r="18" fill="#495057" stroke="#fdf7ea" stroke-width="4"/>' +
+      '<rect x="1020" y="336" width="110" height="72" rx="12" fill="#12142a" stroke="#fdf7ea" stroke-width="6"/>' +
+      '<circle cx="1075" cy="372" r="21" fill="#495057" stroke="#fdf7ea" stroke-width="5"/>' +
+      '</g>' +
+      '<g class="pop d2">' + T(640, 150, 'THE NEXT MORNING', 54, '#ffd43b') + '</g>';
+  };
+
   S.finale = function (u) {
     return '<rect width="' + W + '" height="' + H + '" fill="#12142a"/>' +
-      '<g class="pop">' + T(640, 110, 'THE RULE', 62, '#ffd43b') + '</g>' +
-      pipeline({ y: 320, inp: 'INPUT|what goes in', outp: 'OUTPUT|what comes out', brain: 'THE AI WORKS' }) +
-      '<g class="pop d3">' +
-      '<rect x="130" y="482" width="1020" height="92" rx="20" fill="#e03131" stroke="#fdf7ea" stroke-width="6"/>' +
-      T(640, 543, 'WHAT YOU PUT IN DECIDES WHAT COMES OUT', 38, '#fff') + '</g>';
+      '<g class="shine" opacity=".12"><rect x="-300" width="220" height="' + H + '" fill="#fff" transform="skewX(-18)"/></g>' +
+      '<g class="pop">' + T(640, 250, '“THEY WEREN’T WRONG.', 74, '#fdf7ea') + '</g>' +
+      '<g class="pop d2">' + T(640, 370, 'THEY WERE TOLD WRONG.”', 74, '#ffd43b') + '</g>' +
+      '<g class="pop d3">' + Tplain(640, 480, '— Meera, aged eleven', 34, '#adb5bd') + '</g>';
   };
 
   /* ------------------------------------------------------- caption track
@@ -532,76 +539,88 @@
      app.js turns the weights into real times using the audio's own duration,
      so the sync holds even if the mp3 is ever re-recorded slightly longer. */
   var LINES = [
-    ['city', 'Nova City had four protectors.', 0.00],
-    ['team', 'People called them the Sentinels.', 2.68],
+    ['clock', 'Eleven minutes to midnight,', 0.00],
+    ['storm', 'and the rain over Nova City had not stopped for nine days.', 1.83],
 
-    ['echo', 'Captain Echo could hear anything.', 5.25],
-    ['echo', 'Sounds went into her helmet, and words came out on her visor.', 7.58],
-    ['echo', 'Give her a shout, and she showed you who shouted.', 12.13],
+    ['dam', 'High on the ridge above the houses stood the old dam,', 6.14],
+    ['dam', 'holding back a lake that had grown far too big for it.', 9.50],
 
-    ['iris', 'Iris flew above the rooftops with a camera for an eye.', 15.74],
-    ['iris', 'Pictures went in. Names came out.', 19.56],
-    ['iris', 'Show her a cracked wall, and Iris said: CRACK.', 22.77],
+    ['team', 'Four Sentinels guarded the city.', 13.47],
 
-    ['nova', 'Nova worked with numbers.', 27.16],
-    ['nova', 'Rainfall, river level, hour by hour.', 29.09],
-    ['nova', 'Numbers went in, and out came one short sentence. Safe, or not safe.', 32.78],
+    ['echo', 'Captain Echo, who could hear a whisper across nine streets,', 16.26],
+    ['echo', 'and write down every word of it.', 19.87],
 
-    ['rex', 'And Rex, the robot dog, took questions.', 37.70],
-    ['rex', 'You typed a question, and Rex spoke the answer out loud.', 41.46],
+    ['iris', 'Iris, who flew, and named whatever her camera eye landed on.', 22.59],
 
-    ['team', 'Four heroes. Four different powers.', 44.53],
-    ['machine', 'But look closely. Every one of them did the same three things.', 49.00],
-    ['machine', 'Something went IN. They worked on it. Something came OUT.', 55.65],
+    ['nova', 'Nova, who read the rain gauges and the river marks,', 27.67],
+    ['nova', 'and said one word. Safe. Or not safe.', 30.69],
 
-    ['define', 'The thing that goes in is called the INPUT.', 58.67],
-    ['define', 'The thing that comes out is called the OUTPUT.', 63.56],
+    ['rex', 'And Rex, the robot dog, who answered any question out loud,', 35.56],
+    ['rex', 'in a voice like a kettle.', 39.37],
 
-    ['storm', 'One grey evening, the rain would not stop.', 66.92],
-    ['dam', 'High above the city stood the old dam.', 70.20],
-    ['statik', 'And in the shadows behind it stood the Static.', 73.02],
+    ['allwrong', 'That night, all four of them were wrong.', 41.74],
 
-    ['statik', 'The Static could not fight.', 76.45],
-    ['statik', 'The Static was clever in a nastier way.', 78.51],
-    ['attack', 'He did not attack the heroes. He attacked what they were GIVEN.', 81.64],
+    ['zebra', 'At six minutes to midnight, Iris circled the dam wall,', 44.83],
+    ['zebra', 'looked straight at it, and said: “Zebra.”', 48.62],
 
-    ['zebra', 'He painted false stripes across the dam wall.', 85.90],
-    ['zebra', 'Iris took her picture, and said, calmly: ZEBRA.', 89.30],
+    ['fakevoice', 'Echo tilted her head towards the town hall, listened,', 52.80],
+    ['fakevoice', 'and wrote: “The mayor says there is nothing to worry about.”', 55.65],
 
-    ['fakevoice', 'He played a recording of the mayor’s voice.', 92.60],
-    ['fakevoice', 'Captain Echo listened, and wrote: the mayor says all is well.', 96.91],
+    ['oldnum', 'Nova checked her numbers twice, and said: “Safe.”', 60.95],
 
-    ['oldnum', 'He fed Nova last summer’s numbers.', 101.81],
-    ['oldnum', 'Nova read them, and said: SAFE.', 104.65],
+    ['rexwrong', 'And Rex, asked where the danger was,', 65.26],
+    ['rexwrong', 'wagged his antenna and said: “There is no danger.”', 67.74],
 
-    ['wrong3', 'Three heroes. Three wrong answers.', 108.04],
-    ['wrong3', 'And not one of them was broken.', 111.07],
+    ['meera', 'On the bridge, a girl named Meera stopped walking.', 72.29],
 
-    ['meera', 'A girl named Meera was watching from the bridge.', 113.66],
-    ['meera', 'She understood before anyone else.', 117.01],
+    ['meera', 'Meera was eleven. No cape. No camera. No antenna.', 76.13],
+    ['meera', 'What she had was a clear view of the dam wall.', 81.50],
+    ['zebra', 'And the dam wall had black stripes painted across it,', 84.74],
+    ['zebra', 'still wet, shining in the rain.', 87.87],
 
-    ['meera', '"They are not lying," she said.', 119.62],
-    ['meera', '"They are only as good as what we give them."', 121.87],
-    ['rule', '"BAD INPUT, BAD OUTPUT."', 125.44],
+    ['meera', 'She turned round.', 90.85],
+    ['statik', 'Behind the heroes, in the dark between two lamps, something flickered.', 92.50],
+    ['statik', 'Not a person, exactly. A shape made of broken signal.', 97.51],
+    ['statik', 'Bars, and crackle, and two red eyes.', 101.99],
 
-    ['clean', 'So the Sentinels did not fight the Static. They cleaned their inputs.', 127.48],
-    ['clean', 'Iris flew close and took a fresh picture, with no paint on it.', 132.52],
-    ['clean', 'Echo turned to the real mayor, and listened to the real voice.', 136.95],
-    ['clean', 'Nova threw away the old numbers, and took tonight’s rainfall.', 141.43],
+    ['attack', 'It had not touched a single hero.', 105.69],
 
-    ['newio', 'New input. New output.', 146.85],
+    ['attack', 'It had spent all nine days of that rain painting a wall,', 108.10],
+    ['attack', 'recording a voice, and swapping one page of numbers for another.', 111.73],
 
-    ['fixed', 'Iris said: CRACK. Echo said: EVACUATE.', 148.58],
-    ['fixed', 'Nova said: FLOOD IN TWO HOURS.', 153.66],
+    ['meera', '“Iris! Fly closer! Get past the paint!”', 117.40],
 
-    ['rescue', 'The city moved. The bridge cleared.', 157.39],
-    ['dambreak', 'And when the dam gave way, not one person stood below it.', 158.70],
+    ['dive', 'Iris dropped through the rain, so close her cape brushed the concrete,', 121.56],
+    ['dive', 'and looked again. At the wall itself.', 125.81],
+    ['dive', 'At the crack running down it like a black river.', 129.31],
 
-    ['staticgone', 'The Static slipped away.', 164.27],
-    ['staticgone', 'But Meera had learned the rule that beats him every time.', 166.34],
+    ['fixed', '“Crack,” said Iris. “It’s opening.”', 132.74],
 
-    ['finale', 'Every AI takes an input, works on it, and gives an output.', 169.87],
-    ['finale', 'And the answer that comes out can never be better than what you put in.', 172.77]
+    ['clean', 'Echo turned away from the recording, and found the real mayor,', 136.47],
+    ['clean', 'soaked, shouting on the town hall steps.', 140.73],
+
+    ['fixed', '“Evacuate,” wrote Echo. “Now.”', 143.54],
+
+    ['clean', 'Nova threw the old page into the water, and read tonight’s gauges.', 147.23],
+
+    ['fixed', '“Flood,” she said. “Two hours. Maybe less.”', 152.01],
+
+    ['rescue', 'It took forty minutes to clear the low streets.', 156.32],
+    ['staticgone', 'The Static was gone by then.', 159.31],
+    ['staticgone', 'It never stays where people are looking.', 161.54],
+
+    ['dambreak', 'At sixteen minutes past two, the dam broke.', 164.44],
+
+    ['dambreak', 'The water came down the valley, through the empty market,', 168.21],
+    ['dambreak', 'under the empty bridge, and out to the sea.', 171.64],
+
+    ['dambreak', 'Not one person was standing below it.', 175.03],
+
+    ['morning', 'And in the morning, when the reporters asked Meera', 179.03],
+    ['morning', 'how four superheroes had all been wrong on the same night,', 182.32],
+    ['morning', 'she thought about it for a moment, and said:', 184.77],
+
+    ['finale', '“They weren’t wrong. They were told wrong.”', 187.70]
   ];
 
   /* build the stage markup once; scene svgs are reused across repeated lines */
@@ -625,7 +644,7 @@
      it (mean error 0.3 s). They scale if the audio is ever re-recorded at a
      different length, so a fresh voiceover still lines up roughly. */
   function track(duration) {
-    var k = (duration && duration > 1) ? duration / 178.0 : 1;
+    var k = (duration && duration > 1) ? duration / 190.35 : 1;
     return LINES.map(function (l) {
       return { at: l[2] * k, scene: l[0], text: l[1] };
     });
