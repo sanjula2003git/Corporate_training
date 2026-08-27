@@ -1,0 +1,38 @@
+"""Four beginner-friendly phases for the interactive project."""
+PHASES=["Data Collection","Data Cleaning","Model Training","Model Evaluation"]
+STEPS=[
+dict(id="collection",phase=0,title="Collect The Site Data",ai="Bring the evidence together",step="1 · Data Collection",doing="",
+ site=("Engineers drill boreholes to see the soil below the ground.","They use CPT and SPT tests to check how strong or soft the soil is.","Sensors measure how much different parts of the building move."),
+ challenge=("Each test shows only one small part of the site.","A soft area can hide between the tested spots.","More tests take time and cost money."),
+ ai_link=("Put every test location on one map.","Compare the soil and movement at the same location.","Show where another soil test may be needed."),
+ tech="Boreholes, ground tests and movement readings",plain="We know the soil at a few tested spots. We do not directly know what lies between them.",
+ figure="The left picture shows soft soil. The right picture shows downward movement. Blue stars are soil test locations.",
+ watch="Follow the red arrows. The soft area sits between test locations. The same area also moves downward more.",
+ takeaway="Good predictions begin with clear and correctly located measurements."),
+dict(id="cleaning",phase=1,title="Check And Clean The Data",ai="Make the measurements usable",step="2 · Data Cleaning",doing="",
+ site=("First, look at the beginning, end and summary of the dataset.","Next, remove repeated rows before filling missing values.","Finally, find unusual values and check whether they are errors or real warnings."),
+ challenge=("Missing and repeated records can confuse the model.","A wrong unit can create an extremely large value.","A real warning must not be deleted just because it looks unusual."),
+ ai_link=("Summarize every column and draw its distribution.","Find duplicates and missing values in the correct order.","Flag outliers for checking before changing them."),
+ tech="Missing values, duplicates, units and sensor checks",plain="Data cleaning means finding measurements that are missing, repeated or recorded incorrectly, then fixing or clearly marking them.",
+ figure="The overview below follows the complete order: inspect, remove duplicates, handle missing values, then review outliers.",
+ watch="Cleaning reduces data errors. It does not remove genuine high-settlement readings simply because they are unusual.",
+ takeaway="A model trained on incorrect measurements will learn incorrect patterns."),
+dict(id="training",phase=2,title="Train The Settlement Model",ai="Learn from earlier examples",step="3 · Model Training",doing="",
+ site=("Each cleaned row describes one foundation location.","Soil, water and building load are the inputs.","Measured settlement is the answer used for learning."),
+ challenge=("Several conditions affect settlement together.","The relationship is not a simple straight line.","The model must not memorize individual locations."),
+ ai_link=("Learn patterns from the cleaned examples.","Connect soil, water and load with measured movement.","Keep some locations hidden for the final test."),
+ tech="Random Forest regression",plain="Training means showing the model examples where both the site conditions and the measured movement are known.",
+ figure="Longer bars show which inputs the trained model used more when making predictions.",
+ watch="Importance shows what the model relied on. It does not prove the physical cause of settlement.",
+ takeaway="Training teaches the pattern; it does not prove the model works on new locations."),
+dict(id="evaluation",phase=3,title="Test The Model And Review The Result",ai="Check accuracy and uncertainty",step="4 · Model Evaluation",doing="",
+ site=("Engineers need predictions for locations the model has not seen.","They also need to know where the prediction may be unreliable.","The final decision still needs engineering review."),
+ challenge=("A prediction can be wrong even when a map looks convincing.","Some locations are far from any soil test.","One accuracy score cannot explain every mistake."),
+ ai_link=("Compare predictions with hidden test measurements.","Measure the size of prediction errors.","Show predicted movement and missing evidence on separate maps."),
+ tech="Test error, risk map and uncertainty map",plain="Evaluation means checking the finished model with examples that were not used during training.",
+ figure="Dots near the dashed line are better predictions. The maps below show expected movement and where more evidence is needed.",
+ watch="Read the prediction map together with the uncertainty map. A strong colour does not guarantee a correct answer.",
+ takeaway="Use the model to guide the next inspection—not to declare a structure safe."),
+]
+ORDER=[s["id"] for s in STEPS]
+BY_ID={s["id"]:s for s in STEPS}
