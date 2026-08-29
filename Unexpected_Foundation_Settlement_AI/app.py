@@ -1,4 +1,6 @@
 """Interactive illustrations for the Unexpected Foundation Settlement notebook."""
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -15,6 +17,8 @@ from sklearn.metrics import mean_absolute_error, r2_score
 
 import bridge
 import story
+
+ASSET_DIR=Path(__file__).parent/"assets"
 
 st.set_page_config(page_title="Foundation Settlement AI",page_icon="🏗️",layout="wide")
 st.markdown("""<style>
@@ -172,7 +176,7 @@ def limits_figure():
 def collection_tables():
     st.markdown("#### Watch how the site data is collected")
     st.write("This short animation follows each measurement from the site into one dataset row.")
-    st.video("assets/site-data-collection-explainer.webm",autoplay=False,muted=False)
+    st.video(str(ASSET_DIR/"site-data-collection-explainer.webm"),autoplay=False,muted=False)
     st.caption("🔊 Press play and check that the speaker icon in the video controls is not muted.")
 
     st.markdown("#### What data do engineers collect?")
@@ -374,7 +378,7 @@ def model_choice_content():
     st.markdown("#### Random Forest flowchart")
     st.plotly_chart(random_forest_flow_figure(),use_container_width=True,config={"displayModeBar":False})
     st.markdown("#### Watch the same process")
-    st.video("assets/random-forest-internal.mp4",autoplay=False,muted=False)
+    st.video(str(ASSET_DIR/"random-forest-internal.mp4"),autoplay=False,muted=False)
     st.caption("The animation follows one cleaned row through several decision trees and then averages their predictions.")
 
     st.markdown("### Why was Random Forest chosen?")
