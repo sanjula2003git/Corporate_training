@@ -35,7 +35,7 @@ jobs:
 
       - name: Assemble site (HTML + CSS + built React + landing page)
         run: |
-          mkdir -p _site/01-HTML-Version _site/02-CSS-Styled-Version _site/03-React-Version _site/qp-spin-3parts _site/AI-Sentinels-Class6
+          mkdir -p _site/01-HTML-Version _site/02-CSS-Styled-Version _site/03-React-Version _site/qp-spin-3parts _site/AI-Sentinels-Class6 _site/Thursday-Thief-Class6
           cp index.html _site/index.html
           cp -r 01-HTML-Version/. _site/01-HTML-Version/
           cp -r 02-CSS-Styled-Version/. _site/02-CSS-Styled-Version/
@@ -45,6 +45,8 @@ jobs:
           # bundler is a dev tool, so neither is published beside the quiz.
           cp -r AI-Sentinels-Class6/. _site/AI-Sentinels-Class6/
           rm -f _site/AI-Sentinels-Class6/README.md _site/AI-Sentinels-Class6/bundle.py
+          cp -r Thursday-Thief-Class6/. _site/Thursday-Thief-Class6/
+          rm -f _site/Thursday-Thief-Class6/README.md _site/Thursday-Thief-Class6/bundle.py
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
