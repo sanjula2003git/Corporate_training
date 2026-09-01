@@ -13,11 +13,15 @@
   --shadow-sm:4px 4px 0 var(--line);
 }
 *{box-sizing:border-box}
-html,body{margin:0;padding:0}
+html,body{margin:0;padding:0;height:100%}
 body{
   font-family:"Trebuchet MS","Segoe UI",Verdana,sans-serif;
   color:var(--ink);
-  min-height:100vh;
+  height:100%;
+  /* the page itself never scrolls. Everything is sized to the viewport, and
+     the one region that genuinely cannot fit - the answer review on the
+     results screen - scrolls inside .body instead. */
+  overflow:hidden;
   -webkit-font-smoothing:antialiased;
   /* comic backdrop: a sunburst behind the panel, halftone dots over it */
   background-color:#0e1030;
@@ -31,29 +35,45 @@ body{
   background-size:auto,auto,auto,auto,20px 20px;
   background-attachment:fixed;
 }
-.wrap{max-width:1280px;margin:0 auto;padding:26px 20px 70px}
+.wrap{
+  max-width:1280px;margin:0 auto;padding:14px 16px;
+  height:100vh;height:100dvh;      /* dvh so mobile browser bars do not clip it */
+  display:flex;flex-direction:column;
+}
 
 .panel{
   background:var(--paper);
   border:5px solid var(--line);
   border-radius:18px;
   box-shadow:var(--shadow);
-  padding:30px 32px;
-  min-height:78vh;
+  padding:18px 24px;
+  flex:1 1 auto;min-height:0;      /* fills the viewport, never exceeds it */
   display:flex;
   flex-direction:column;
+  overflow:hidden;
 }
-h1,h2,h3{margin:0 0 10px;line-height:1.1;letter-spacing:.5px}
-h1{font-size:clamp(28px,4.4vw,46px);text-transform:uppercase}
-h2{font-size:clamp(20px,3vw,30px);text-transform:uppercase}
-p{line-height:1.55;font-size:17px}
-.big{font-size:20px}
+/* everything above the buttons. The nav row lives outside it, so Next and
+   Back are on screen at all times without scrolling for them. */
+.body{
+  flex:1 1 auto;min-height:0;
+  display:flex;flex-direction:column;
+  overflow-y:auto;overflow-x:hidden;
+  scrollbar-gutter:stable;
+}
+.body::-webkit-scrollbar{width:12px}
+.body::-webkit-scrollbar-thumb{background:var(--ink2);border-radius:8px;border:3px solid var(--paper)}
+
+h1,h2,h3{margin:0 0 8px;line-height:1.1;letter-spacing:.5px}
+h1{font-size:clamp(24px,3.4vw,38px);text-transform:uppercase}
+h2{font-size:clamp(19px,2.4vw,26px);text-transform:uppercase}
+p{line-height:1.5;font-size:16px}
+.big{font-size:18px}
 .muted{color:var(--ink2)}
-.warn{color:var(--red);font-weight:bold;min-height:22px;margin:10px 0 0}
+.warn{color:var(--red);font-weight:bold;min-height:20px;margin:8px 0 0}
 
 .btn{
-  font:inherit;font-weight:bold;font-size:18px;
-  padding:13px 24px;border:4px solid var(--line);border-radius:12px;
+  font:inherit;font-weight:bold;font-size:17px;
+  padding:11px 20px;border:4px solid var(--line);border-radius:12px;
   background:var(--yellow);color:var(--ink);cursor:pointer;
   box-shadow:var(--shadow-sm);
   transition:transform .06s ease, box-shadow .06s ease;
@@ -66,9 +86,9 @@ p{line-height:1.55;font-size:17px}
 .btn.plain{background:var(--paper2)}
 .btn.sm{font-size:15px;padding:9px 15px;border-width:3px}
 
-label{display:block;font-weight:bold;margin:14px 0 6px;font-size:16px}
+label{display:block;font-weight:bold;margin:10px 0 5px;font-size:15px}
 input[type=text],textarea{
-  width:100%;font:inherit;font-size:17px;padding:12px 14px;
+  width:100%;font:inherit;font-size:17px;padding:10px 13px;
   border:3px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);
 }
 input:focus,textarea:focus{outline:4px solid var(--yellow);outline-offset:1px}
@@ -76,37 +96,54 @@ input:focus,textarea:focus{outline:4px solid var(--yellow);outline-offset:1px}
 .row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
 .spread{justify-content:space-between}
 .grow{flex:1 1 220px}
-.navrow{display:flex;gap:12px;justify-content:space-between;margin-top:auto;padding-top:26px;flex-wrap:wrap}
+/* outside .body, so the buttons are always visible without scrolling */
+.navrow{
+  display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;
+  flex:0 0 auto;margin-top:0;padding-top:14px;
+  border-top:3px solid rgba(18,20,42,.12);margin-top:12px;
+}
 
 /* ---------- welcome ---------- */
-.hero-title{text-align:center;padding:10px 0 16px}
+.hero-title{text-align:center;padding:4px 0 10px}
 .kicker{
   display:inline-block;background:var(--red);color:#fff;font-weight:bold;
   padding:7px 16px;border:3px solid var(--line);border-radius:8px;
   transform:rotate(-2deg);text-transform:uppercase;letter-spacing:1px;font-size:14px;
 }
 .title-main{
-  font-size:clamp(34px,7vw,72px);font-weight:bold;text-transform:uppercase;
-  letter-spacing:1px;line-height:.98;margin:16px 0 8px;
+  /* vmin, not vw: on a short wide screen the title has to shrink with the
+     height as well, or it eats the space the form needs */
+  font-size:clamp(30px,7vmin,58px);font-weight:bold;text-transform:uppercase;
+  letter-spacing:1px;line-height:.98;margin:10px 0 6px;
   color:var(--yellow);
   -webkit-text-stroke:3px var(--line);
   paint-order:stroke fill;
   text-shadow:6px 6px 0 var(--blue);
 }
-.subtitle{font-size:clamp(16px,2.4vw,23px);font-weight:bold;color:var(--ink2);text-transform:uppercase}
-.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin:22px 0}
-.step{background:var(--paper2);border:3px solid var(--line);border-radius:12px;padding:16px}
-.step p{margin:6px 0 0;font-size:15px}
+.subtitle{font-size:clamp(15px,2.2vmin,20px);font-weight:bold;color:var(--ink2);text-transform:uppercase}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin:14px 0}
+.step{background:var(--paper2);border:3px solid var(--line);border-radius:12px;padding:12px 14px}
+.step p{margin:4px 0 0;font-size:14px;line-height:1.4}
 .step .n{
   /* flex, not inline-flex: the heading must drop onto its own line below */
-  display:flex;width:36px;height:36px;align-items:center;justify-content:center;
+  display:flex;width:30px;height:30px;align-items:center;justify-content:center;
   background:var(--blue);color:#fff;border:3px solid var(--line);border-radius:50%;
-  font-weight:bold;margin-bottom:10px;
+  font-weight:bold;margin-bottom:7px;font-size:15px;
 }
 
-/* ---------- story stage ---------- */
+/* ---------- story stage ----------
+   The picture has to fit the screen height, not just its width, or the play
+   controls end up below the fold. Height is what is scarce, so the width is
+   derived from the height that is left over after the chrome around it, and
+   only then capped at 100%. --stage-chrome is everything else on this screen:
+   wrap padding, panel border and padding, the heading, the control bar and
+   the nav row. Measured, not guessed - tests/fit.mjs checks it. */
 .stage{
-  position:relative;width:100%;aspect-ratio:16/9;
+  --stage-chrome:290px;
+  position:relative;
+  width:min(100%, calc((100dvh - var(--stage-chrome)) * 16 / 9));
+  aspect-ratio:16/9;
+  flex:0 0 auto;margin:0 auto;
   background:#0b0d1c;border:5px solid var(--line);border-radius:14px;overflow:hidden;
   box-shadow:var(--shadow-sm);
 }
@@ -116,14 +153,16 @@ input:focus,textarea:focus{outline:4px solid var(--yellow);outline-offset:1px}
 .caption{
   position:absolute;left:0;right:0;bottom:0;
   background:linear-gradient(to top,rgba(8,10,22,.94),rgba(8,10,22,.7) 72%,transparent);
-  color:#fff;padding:30px 20px 16px;font-size:clamp(15px,2.25vw,23px);
-  font-weight:bold;text-align:center;line-height:1.35;min-height:64px;
+  color:#fff;padding:28px 20px 14px;font-size:clamp(15px,2.1vmin,22px);
+  font-weight:bold;text-align:center;line-height:1.35;min-height:58px;
   text-shadow:0 2px 6px #000;
 }
 .controls{
   display:flex;gap:12px;align-items:center;flex-wrap:wrap;
-  margin-top:14px;background:var(--paper2);border:4px solid var(--line);
-  border-radius:12px;padding:12px 14px;
+  margin-top:12px;background:var(--paper2);border:4px solid var(--line);
+  border-radius:12px;padding:10px 12px;
+  width:min(100%, calc((100dvh - 290px) * 16 / 9));margin-inline:auto;
+  flex:0 0 auto;
 }
 .bar{
   flex:1 1 200px;height:16px;background:#fff;
@@ -138,12 +177,12 @@ input:focus,textarea:focus{outline:4px solid var(--yellow);outline-offset:1px}
   padding:7px 16px;border:3px solid var(--line);border-radius:9px;
   text-transform:uppercase;letter-spacing:1px;font-size:14px;margin-bottom:12px;
 }
-.parttitle{font-size:clamp(32px,6vw,60px);color:var(--red);-webkit-text-stroke:2px var(--line);paint-order:stroke fill}
-.demo{margin:20px 0;padding:18px;background:var(--paper2);border:3px dashed var(--line);border-radius:14px}
-.democap{margin:0 0 14px;font-weight:bold;font-size:16px;color:var(--ink2)}
+.parttitle{font-size:clamp(28px,6vmin,50px);color:var(--red);-webkit-text-stroke:2px var(--line);paint-order:stroke fill}
+.demo{margin:14px 0;padding:14px;background:var(--paper2);border:3px dashed var(--line);border-radius:14px}
+.democap{margin:0 0 10px;font-weight:bold;font-size:15px;color:var(--ink2)}
 
 /* ---------- quiz chrome ---------- */
-.qhead{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.qhead{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;flex:0 0 auto}
 .partchip{
   background:var(--purple);color:#fff;font-weight:bold;font-size:13px;
   padding:6px 13px;border:3px solid var(--line);border-radius:8px;
@@ -163,12 +202,12 @@ input:focus,textarea:focus{outline:4px solid var(--yellow);outline-offset:1px}
   background:var(--yellow);font-weight:bold;font-size:14px;
   padding:5px 13px;border:3px solid var(--line);border-radius:8px;letter-spacing:.6px;
 }
-.qtext{font-size:clamp(20px,2.6vw,28px);font-weight:bold;margin:12px 0 18px;line-height:1.3}
+.qtext{font-size:clamp(18px,2.5vmin,25px);font-weight:bold;margin:9px 0 13px;line-height:1.3}
 
 /* ---------- part 1: the pattern ---------- */
 .pattern{
   display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:10px;align-items:end;
-  margin-bottom:22px;
+  margin-bottom:16px;
 }
 @media(max-width:820px){
   .pattern{grid-template-columns:1fr}
@@ -180,8 +219,8 @@ input:focus,textarea:focus{outline:4px solid var(--yellow);outline-offset:1px}
 }
 .slotlab.sit{color:var(--blue)} .slotlab.skill{color:var(--red)} .slotlab.act{color:var(--green)}
 .slot{
-  min-height:100px;display:flex;align-items:center;justify-content:center;
-  text-align:center;padding:12px;border-radius:14px;font-weight:bold;font-size:17px;
+  min-height:clamp(70px,11vmin,100px);display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:10px;border-radius:14px;font-weight:bold;font-size:clamp(15px,1.8vmin,17px);
   border:4px solid var(--line);background:#fff;
 }
 .slot.think{background:var(--ink);color:var(--yellow);letter-spacing:.5px}
@@ -189,7 +228,7 @@ input:focus,textarea:focus{outline:4px solid var(--yellow);outline-offset:1px}
 .slot.drop.full{border-style:solid;background:#fff3bf}
 .slot.hot{background:#d3f9d8;border-style:solid;transform:scale(1.03)}
 .ghosttext{color:var(--ink2);font-weight:normal;font-size:15px}
-.arrowcell{display:flex;align-items:center;justify-content:center;height:100px}
+.arrowcell{display:flex;align-items:center;justify-content:center;height:clamp(70px,11vmin,100px)}
 .arrowmark{
   width:44px;height:14px;background:var(--ink);position:relative;border-radius:2px;
 }
@@ -197,11 +236,11 @@ input:focus,textarea:focus{outline:4px solid var(--yellow);outline-offset:1px}
   content:"";position:absolute;right:-16px;top:-9px;
   border-left:20px solid var(--ink);border-top:16px solid transparent;border-bottom:16px solid transparent;
 }
-.traylab{font-size:15px;color:var(--ink2);margin:0 0 10px;font-weight:bold}
-.cards{display:flex;gap:12px;flex-wrap:wrap;min-height:60px;align-items:flex-start}
+.traylab{font-size:14px;color:var(--ink2);margin:0 0 8px;font-weight:bold}
+.cards{display:flex;gap:10px;flex-wrap:wrap;min-height:52px;align-items:flex-start}
 .card{
   background:#fff;border:4px solid var(--line);border-radius:12px;
-  padding:13px 16px;font-size:17px;font-weight:bold;cursor:grab;
+  padding:10px 14px;font-size:clamp(15px,1.8vmin,17px);font-weight:bold;cursor:grab;
   box-shadow:var(--shadow-sm);max-width:330px;text-align:left;font-family:inherit;color:var(--ink);
   touch-action:none;user-select:none;
 }
@@ -215,10 +254,10 @@ input:focus,textarea:focus{outline:4px solid var(--yellow);outline-offset:1px}
 }
 
 /* ---------- part 2: mcq ---------- */
-.opts{display:flex;flex-direction:column;gap:12px}
+.opts{display:flex;flex-direction:column;gap:10px}
 .opt{
-  text-align:left;font:inherit;font-size:18px;font-weight:bold;color:var(--ink);
-  background:#fff;border:4px solid var(--line);border-radius:12px;padding:15px 17px;
+  text-align:left;font:inherit;font-size:clamp(15px,1.9vmin,18px);font-weight:bold;color:var(--ink);
+  background:#fff;border:4px solid var(--line);border-radius:12px;padding:11px 15px;
   cursor:pointer;box-shadow:var(--shadow-sm);display:flex;gap:13px;align-items:flex-start;
 }
 .opt:hover{transform:translate(-2px,-2px)}
@@ -230,17 +269,17 @@ input:focus,textarea:focus{outline:4px solid var(--yellow);outline-offset:1px}
 .opt.chosen .k{background:var(--red);color:#fff}
 
 /* ---------- part 3: guessing game ---------- */
-.blanks{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 22px}
+.blanks{display:flex;gap:9px;flex-wrap:wrap;margin:4px 0 16px}
 .blank{
-  width:52px;height:64px;border:4px solid var(--line);border-bottom-width:9px;
-  border-radius:9px;background:#fff;display:flex;align-items:center;justify-content:center;
-  font-size:32px;font-weight:bold;
+  width:clamp(38px,5.5vmin,52px);height:clamp(46px,7vmin,64px);border:4px solid var(--line);
+  border-bottom-width:9px;border-radius:9px;background:#fff;display:flex;
+  align-items:center;justify-content:center;font-size:clamp(23px,4vmin,32px);font-weight:bold;
 }
 .blank.got{background:var(--green);color:#fff}
-.clues{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.clues{display:flex;flex-direction:column;gap:9px;margin-bottom:14px}
 .clue{
   background:var(--paper2);border:3px solid var(--line);border-radius:12px;
-  padding:13px 16px;font-size:18px;font-weight:bold;
+  padding:10px 14px;font-size:clamp(15px,1.9vmin,18px);font-weight:bold;
 }
 .cluen{
   display:inline-block;background:var(--blue);color:#fff;font-size:12px;
@@ -254,23 +293,31 @@ input:focus,textarea:focus{outline:4px solid var(--yellow);outline-offset:1px}
 /* ---------- result ---------- */
 .scorebox{
   text-align:center;background:var(--yellow);border:5px solid var(--line);
-  border-radius:16px;padding:22px;box-shadow:var(--shadow-sm);margin-bottom:16px;
+  border-radius:16px;padding:12px 18px;box-shadow:var(--shadow-sm);margin-bottom:10px;
 }
-.scorebox .num{font-size:clamp(42px,9vw,76px);font-weight:bold;line-height:1}
-.partscores{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:22px}
+.scorebox .num{font-size:clamp(32px,7vmin,58px);font-weight:bold;line-height:1}
+.partscores{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-bottom:12px}
 .ps{
   background:var(--paper2);border:3px solid var(--line);border-radius:12px;
-  padding:13px 16px;display:flex;justify-content:space-between;align-items:center;font-size:17px;
+  padding:9px 14px;display:flex;justify-content:space-between;align-items:center;font-size:16px;
 }
 .ps span{font-weight:bold;font-size:21px}
 .revhead{
-  margin:18px 0 8px;font-size:19px;text-transform:uppercase;color:var(--purple);
-  border-bottom:3px solid var(--line);padding-bottom:5px;
+  margin:12px 0 7px;font-size:17px;text-transform:uppercase;color:var(--purple);
+  border-bottom:3px solid var(--line);padding-bottom:4px;
 }
-.review{display:flex;flex-direction:column;gap:10px}
+/* the one list that cannot fit a screen: 18 marks of answers. It scrolls
+   inside the panel, so the score above it and the buttons below it stay put.
+   The hint is there because a Class 6 student will not go looking. */
+.revtop{
+  display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
+  justify-content:space-between;flex:0 0 auto;margin-bottom:2px;
+}
+.scrollhint{font-weight:bold;font-size:14px}
+.review{display:flex;flex-direction:column;gap:8px}
 .rev{
-  border:3px solid var(--line);border-radius:10px;padding:12px 14px;background:#fff;
-  display:flex;gap:12px;align-items:flex-start;font-size:16px;
+  border:3px solid var(--line);border-radius:10px;padding:9px 12px;background:#fff;
+  display:flex;gap:11px;align-items:flex-start;font-size:15px;
 }
 .rev.ok{background:#ebfbee} .rev.no{background:#fff0f0}
 .rev .mark{font-weight:bold;font-size:20px;flex:0 0 auto;width:28px;text-align:center}
@@ -278,9 +325,16 @@ input:focus,textarea:focus{outline:4px solid var(--yellow);outline-offset:1px}
 .rev .said{color:var(--ink2);font-size:15px;display:block}
 
 @media print{
-  body{background:#fff}
+  body{background:#fff;height:auto;overflow:visible}
+  html,body{height:auto}
   .noprint{display:none !important}
-  .panel{box-shadow:none;min-height:0;break-inside:avoid}
+  /* on paper there is no viewport to fit, so undo the whole screen-height
+     layout - otherwise the answer review prints as one clipped page */
+  .wrap{height:auto;display:block;padding:0}
+  .panel{box-shadow:none;min-height:0;height:auto;overflow:visible;break-inside:avoid}
+  .body{overflow:visible;display:block;min-height:0}
+  .review{display:block}
+  .rev{break-inside:avoid;margin-bottom:8px}
 }
 </style>
 </head>
@@ -1419,6 +1473,7 @@ input:focus,textarea:focus{outline:4px solid var(--yellow);outline-offset:1px}
   /* -------------------------------------------------------------- welcome */
   function welcomeHTML() {
     return '<div class="panel">' +
+      '<div class="body">' +
       '<div class="hero-title">' +
       '<span class="kicker">Class 6 &middot; Unit 1 &middot; What is Intelligence?</span>' +
       '<div class="title-main">The Thursday<br>Thief</div>' +
@@ -1441,6 +1496,7 @@ input:focus,textarea:focus{outline:4px solid var(--yellow);outline-offset:1px}
       '<input id="f-roll" type="text" value="' + esc(S.roll) + '" placeholder="17" autocomplete="off"></div>' +
       '</div>' +
       '<p id="f-warn" class="warn"></p>' +
+      '</div>' +
       '<div class="navrow"><span></span>' +
       '<button class="btn go" id="b-start">Start the story</button></div>' +
       '</div>';
@@ -1466,7 +1522,8 @@ input:focus,textarea:focus{outline:4px solid var(--yellow);outline-offset:1px}
 
   function storyHTML() {
     return '<div class="panel">' +
-      '<div class="row spread" style="margin-bottom:12px">' +
+      '<div class="body">' +
+      '<div class="row spread" style="margin-bottom:10px;flex:0 0 auto">' +
       '<h2 style="margin:0">The Thursday Thief</h2>' +
       '<span class="muted" style="font-weight:bold" id="mode">Watch it right through. You can replay it later.</span>' +
       '</div>' +
@@ -1477,6 +1534,7 @@ input:focus,textarea:focus{outline:4px solid var(--yellow);outline-offset:1px}
       '<button class="btn plain sm" id="b-restart">Start again</button>' +
       '<div class="bar" id="bar" title="Jump to a moment"><i id="barfill"></i></div>' +
       '<span class="time" id="clock">0:00</span>' +
+      '</div>' +
       '</div>' +
       '<div class="navrow">' +
       '<button class="btn plain" id="b-back">Back</button>' +
@@ -1590,12 +1648,14 @@ input:focus,textarea:focus{outline:4px solid var(--yellow);outline-offset:1px}
         ], {}, -1) + '</div>';
     }
     return '<div class="panel">' +
+      '<div class="body">' +
       '<div class="partbadge">' + p.n + ' of 3</div>' +
       '<h1 class="parttitle">' + p.title + '</h1>' +
       '<p class="big" style="max-width:760px">' + p.blurb + '</p>' +
       demo +
       '<p class="muted big"><b>' + qs.length + ' question' + (qs.length > 1 ? 's' : '') +
       '</b> &middot; ' + marks + ' mark' + (marks > 1 ? 's' : '') + '</p>' +
+      '</div>' +
       '<div class="navrow">' +
       '<button class="btn plain" id="b-story">Watch the story again</button>' +
       '<button class="btn go" id="b-begin">Start ' + p.title + '</button>' +
@@ -1811,6 +1871,7 @@ input:focus,textarea:focus{outline:4px solid var(--yellow);outline-offset:1px}
 
     var last = local === qs.length - 1, lastPart = S.part === PARTS.length - 1;
     return '<div class="panel">' +
+      '<div class="body">' +
       '<div class="qhead">' +
       '<span class="partchip">' + p.n + ' &middot; ' + p.title + '</span>' + dots +
       '<span style="flex:1"></span>' +
@@ -1820,6 +1881,7 @@ input:focus,textarea:focus{outline:4px solid var(--yellow);outline-offset:1px}
       (q.hero ? '<span class="qtag">' + q.hero + '</span>' : '') +
       '<p class="qtext">' + esc(q.q || 'What is the word?') + '</p>' +
       body +
+      '</div>' +
       '<div class="navrow">' +
       '<button class="btn plain" id="b-prev"' + (local === 0 ? ' disabled' : '') + '>Previous</button>' +
       (last
@@ -1927,7 +1989,11 @@ input:focus,textarea:focus{outline:4px solid var(--yellow);outline-offset:1px}
       var b = g.byPart[p.key];
       s += '<div class="ps"><b>' + p.title + '</b><span>' + b.got + ' / ' + b.total + '</span></div>';
     });
-    s += '</div><h2>Every answer</h2><div class="review">';
+    s += '</div><div class="body">' +
+      '<div class="revtop"><h2 style="margin:0">Every answer</h2>' +
+      '<span class="muted scrollhint">' + g.rows.length +
+      ' answers &middot; scroll this list</span></div>' +
+      '<div class="review">';
     PARTS.forEach(function (p) {
       s += '<h3 class="revhead">' + p.title + '</h3>';
       g.rows.filter(function (r) { return r.part === p.key; }).forEach(function (r) {
@@ -1937,7 +2003,7 @@ input:focus,textarea:focus{outline:4px solid var(--yellow);outline-offset:1px}
           '</span></div>';
       });
     });
-    s += '</div><div class="navrow noprint">' +
+    s += '</div></div><div class="navrow noprint">' +
       '<button class="btn plain" id="b-again">Back to the questions</button>' +
       '<span><button class="btn" id="b-print">Print / Save as PDF</button> ' +
       '<button class="btn go" id="b-save">Save my answer file</button> ' +

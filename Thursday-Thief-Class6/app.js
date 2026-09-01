@@ -325,6 +325,7 @@
   /* -------------------------------------------------------------- welcome */
   function welcomeHTML() {
     return '<div class="panel">' +
+      '<div class="body">' +
       '<div class="hero-title">' +
       '<span class="kicker">Class 6 &middot; Unit 1 &middot; What is Intelligence?</span>' +
       '<div class="title-main">The Thursday<br>Thief</div>' +
@@ -347,6 +348,7 @@
       '<input id="f-roll" type="text" value="' + esc(S.roll) + '" placeholder="17" autocomplete="off"></div>' +
       '</div>' +
       '<p id="f-warn" class="warn"></p>' +
+      '</div>' +
       '<div class="navrow"><span></span>' +
       '<button class="btn go" id="b-start">Start the story</button></div>' +
       '</div>';
@@ -372,7 +374,8 @@
 
   function storyHTML() {
     return '<div class="panel">' +
-      '<div class="row spread" style="margin-bottom:12px">' +
+      '<div class="body">' +
+      '<div class="row spread" style="margin-bottom:10px;flex:0 0 auto">' +
       '<h2 style="margin:0">The Thursday Thief</h2>' +
       '<span class="muted" style="font-weight:bold" id="mode">Watch it right through. You can replay it later.</span>' +
       '</div>' +
@@ -383,6 +386,7 @@
       '<button class="btn plain sm" id="b-restart">Start again</button>' +
       '<div class="bar" id="bar" title="Jump to a moment"><i id="barfill"></i></div>' +
       '<span class="time" id="clock">0:00</span>' +
+      '</div>' +
       '</div>' +
       '<div class="navrow">' +
       '<button class="btn plain" id="b-back">Back</button>' +
@@ -496,12 +500,14 @@
         ], {}, -1) + '</div>';
     }
     return '<div class="panel">' +
+      '<div class="body">' +
       '<div class="partbadge">' + p.n + ' of 3</div>' +
       '<h1 class="parttitle">' + p.title + '</h1>' +
       '<p class="big" style="max-width:760px">' + p.blurb + '</p>' +
       demo +
       '<p class="muted big"><b>' + qs.length + ' question' + (qs.length > 1 ? 's' : '') +
       '</b> &middot; ' + marks + ' mark' + (marks > 1 ? 's' : '') + '</p>' +
+      '</div>' +
       '<div class="navrow">' +
       '<button class="btn plain" id="b-story">Watch the story again</button>' +
       '<button class="btn go" id="b-begin">Start ' + p.title + '</button>' +
@@ -717,6 +723,7 @@
 
     var last = local === qs.length - 1, lastPart = S.part === PARTS.length - 1;
     return '<div class="panel">' +
+      '<div class="body">' +
       '<div class="qhead">' +
       '<span class="partchip">' + p.n + ' &middot; ' + p.title + '</span>' + dots +
       '<span style="flex:1"></span>' +
@@ -726,6 +733,7 @@
       (q.hero ? '<span class="qtag">' + q.hero + '</span>' : '') +
       '<p class="qtext">' + esc(q.q || 'What is the word?') + '</p>' +
       body +
+      '</div>' +
       '<div class="navrow">' +
       '<button class="btn plain" id="b-prev"' + (local === 0 ? ' disabled' : '') + '>Previous</button>' +
       (last
@@ -833,7 +841,11 @@
       var b = g.byPart[p.key];
       s += '<div class="ps"><b>' + p.title + '</b><span>' + b.got + ' / ' + b.total + '</span></div>';
     });
-    s += '</div><h2>Every answer</h2><div class="review">';
+    s += '</div><div class="body">' +
+      '<div class="revtop"><h2 style="margin:0">Every answer</h2>' +
+      '<span class="muted scrollhint">' + g.rows.length +
+      ' answers &middot; scroll this list</span></div>' +
+      '<div class="review">';
     PARTS.forEach(function (p) {
       s += '<h3 class="revhead">' + p.title + '</h3>';
       g.rows.filter(function (r) { return r.part === p.key; }).forEach(function (r) {
@@ -843,7 +855,7 @@
           '</span></div>';
       });
     });
-    s += '</div><div class="navrow noprint">' +
+    s += '</div></div><div class="navrow noprint">' +
       '<button class="btn plain" id="b-again">Back to the questions</button>' +
       '<span><button class="btn" id="b-print">Print / Save as PDF</button> ' +
       '<button class="btn go" id="b-save">Save my answer file</button> ' +

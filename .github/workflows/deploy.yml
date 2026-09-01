@@ -47,6 +47,8 @@ jobs:
           rm -f _site/AI-Sentinels-Class6/README.md _site/AI-Sentinels-Class6/bundle.py
           cp -r Thursday-Thief-Class6/. _site/Thursday-Thief-Class6/
           rm -f _site/Thursday-Thief-Class6/README.md _site/Thursday-Thief-Class6/bundle.py
+          rm -f _site/Thursday-Thief-Class6/VIDEO-SCRIPT.md
+          rm -rf _site/Thursday-Thief-Class6/tests
           cp -r Leaf-Machine-Class6/. _site/Leaf-Machine-Class6/
           rm -f _site/Leaf-Machine-Class6/README.md _site/Leaf-Machine-Class6/bundle.py
           rm -rf _site/Leaf-Machine-Class6/tests
