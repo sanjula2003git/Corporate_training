@@ -197,14 +197,53 @@ After any edit, rebuild the single-file copy:
 python -X utf8 bundle.py
 ```
 
-### Three traps, if you touch the artwork
+### How the picture stays alive
+
+The story is nineteen still drawings, and three things stop it looking like
+nineteen still drawings.
+
+**The camera moves.** Each scene runs one slow move for exactly as long as it
+is on screen — in on a discovery, out on a memory, across the room on an
+accusation, up the wall on a climb. The move is named per scene in `CAM` in
+`scenes.js` and runs on the `<svg>` element itself, never on a group inside the
+art, so it can never collide with a `transform` attribute. `--hold` is the
+length of the move and `--tin` is how far into the scene the story already is,
+both written by `app.js`; `--tin` is what makes dragging the bar land in the
+middle of a move instead of restarting it.
+
+**Reveals are hung on sentences, not on a stopwatch.** A `.pop` element carries
+a beat class: `b0` is the second the scene opens, `b1` the next caption line of
+that scene, `b2` the one after, and `b1x1`–`b1x4` are four steps in between, for
+staggering a group of things across one long line. The real delays are
+generated from `LINES` by `beatCSS()`, so retiming the story retimes the artwork
+with it. This is why the five stolen things arrive one at a time as she names
+them, and why the crow does not appear until the sentence that lets it in.
+`d1`–`d5` still exist for quick decorative staggers that belong to no line.
+
+**Everything holds still when the story is paused.** Idle loops are gated on
+`.scene.live`, so eighteen off-screen scenes animate nothing, and the stage
+loses its `playing` class on pause, which freezes the camera and everything
+drawn inside it. Art that keeps drifting under a frozen caption looks broken.
+
+Captions arrive a word at a time (`setCaption` in `app.js`), which is the
+difference between a line being spoken and a line being pasted up. The DOM
+still reads back as one plain sentence, which is what the tests check.
+`prefers-reduced-motion` turns all of it off.
+
+### Traps, if you touch the artwork
 
 - **Never put an animation class on an SVG group that also has a `transform`
   attribute.** A CSS transform replaces the attribute and the art snaps to the
   top-left corner. Position on an outer `<g>`, animate on an inner one. Every
-  speech bubble in this file was invisible until that was fixed.
+  speech bubble in this file was invisible until that was fixed — and the
+  screenshot test walked into the same trap from the other side, by putting
+  `transform:none` on `.scene *` to freeze a frame.
 - **Nothing readable goes below about `y=560`** in the 1280x720 scene. The
   caption band covers the bottom of the stage.
+- **The camera crops the frame.** At the end of a push-in only about
+  `x=93..1187, y=52..668` of the scene is still visible, so a label that looks
+  comfortably inside on the first frame can be cut in half on the last one.
+  `tests/story.mjs` measures every piece of text at both ends of every move.
 - **Keep teaching words out of the scenes.** The pictures say "MISSING" and
   "ALL FOUR. SAME DAY.", never "observation" or "pattern". If the vocabulary
   appears before Part 1, the assessment stops measuring anything.

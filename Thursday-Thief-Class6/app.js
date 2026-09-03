@@ -370,7 +370,7 @@
   }
 
   /* ---------------------------------------------------------------- story */
-  var cues = null, rafId = 0, liveScene = null, liveCue = -1;
+  var cues = null, tim = null, startOf = null, rafId = 0, liveScene = null, liveCue = -1;
 
   function storyHTML() {
     return '<div class="panel">' +
@@ -400,27 +400,70 @@
     return Math.floor(t / 60) + ':' + ('0' + (t % 60)).slice(-2);
   }
 
-  function showScene(name) {
+  /* The caption track, the scene timing, and the stylesheet of beat delays
+     all come from the same LINES, and all three are rebuilt here whenever the
+     story screen is opened - because a narration.mp3 dropped in beside this
+     file changes the length of everything at once. */
+  function buildTiming() {
+    var d = media.usingAudio() ? audio.duration : 0;
+    cues = window.STORY.track(d);
+    tim = window.STORY.timing(d);
+    startOf = {};
+    var st = document.getElementById('beats'), i, el;
+    if (st) st.textContent = window.STORY.beatCSS(d);
+    for (i = 0; i < tim.length; i++) {
+      startOf[tim[i].scene] = tim[i].at;
+      el = document.querySelector('#stage .scene[data-scene="' + tim[i].scene + '"]');
+      if (el) el.style.setProperty('--hold', tim[i].hold.toFixed(2) + 's');
+    }
+  }
+
+  /* tin is how far into this scene the story already is. It is zero when the
+     scene arrives in its own time, and some way in when a child has dragged
+     the bar - and passing it down as a negative delay is what makes a dragged
+     scene look like it was always running instead of starting over. */
+  function showScene(name, tin) {
     if (name === liveScene) return;
     liveScene = name;
-    var all = document.querySelectorAll('#stage .scene'), i;
+    var all = document.querySelectorAll('#stage .scene'), i, el, on;
     for (i = 0; i < all.length; i++) {
-      all[i].classList.toggle('live', all[i].getAttribute('data-scene') === name);
+      el = all[i];
+      on = el.getAttribute('data-scene') === name;
+      el.classList.remove('live');
+      if (on) {
+        el.style.setProperty('--tin', '-' + Math.max(0, tin || 0).toFixed(2) + 's');
+        void el.getBoundingClientRect();   /* forces the camera move to restart */
+        el.classList.add('live');
+      }
     }
+  }
+
+  /* A caption arrives a word at a time, fast, the way a line is spoken. A
+     whole sentence appearing at once is the single most mechanical thing a
+     read-along does. textContent still reads back as the plain sentence. */
+  function setCaption(text) {
+    var cap = document.getElementById('cap');
+    if (!cap) return;
+    var words = String(text).split(' '), out = '', i;
+    var step = Math.min(0.05, 0.5 / Math.max(1, words.length));
+    for (i = 0; i < words.length; i++) {
+      out += '<span class="w" style="animation-delay:' + (i * step).toFixed(3) + 's">' +
+        esc(words[i]) + '</span>' + (i < words.length - 1 ? ' ' : '');
+    }
+    cap.innerHTML = out;
   }
 
   /* paint() does the work; loop() keeps it smooth while playing. timeupdate is
      wired to paint() too, so captions keep moving if frames are throttled. */
   function paint() {
     var t = media.time(), d = media.duration();
-    if (!cues) cues = window.STORY.track(media.usingAudio() ? audio.duration : 0);
+    if (!cues) buildTiming();
     var i, k = 0;
     for (i = 0; i < cues.length; i++) if (cues[i].at <= t + 0.02) k = i;
     if (k !== liveCue) {
       liveCue = k;
-      showScene(cues[k].scene);
-      var cap = document.getElementById('cap');
-      if (cap) cap.textContent = cues[k].text;
+      showScene(cues[k].scene, t - (startOf[cues[k].scene] || 0));
+      setCaption(cues[k].text);
     }
     var fill = document.getElementById('barfill');
     if (fill) fill.style.width = (t / d * 100).toFixed(2) + '%';
@@ -435,9 +478,15 @@
   }
 
   function wireStory() {
-    cues = null; liveScene = null; liveCue = -1;
+    cues = null; tim = null; liveScene = null; liveCue = -1;
     var play = document.getElementById('b-play');
-    function sync() { play.textContent = media.paused() ? 'Play' : 'Pause'; }
+    /* Pausing has to stop the pictures too. A paused story whose art keeps
+       drifting under a frozen caption looks broken, not alive. */
+    function sync() {
+      play.textContent = media.paused() ? 'Play' : 'Pause';
+      var stage = document.getElementById('stage');
+      if (stage) stage.classList.toggle('playing', !media.paused());
+    }
 
     /* tell the child whether to expect a voice or to read along */
     var mode = document.getElementById('mode');
@@ -446,6 +495,8 @@
     }
 
     play.onclick = function () {
+      var st = document.getElementById('stage');
+      if (st) st.classList.add('started');
       if (media.paused()) {
         media.play().then(sync).catch(function () {
           document.getElementById('cap').textContent =
@@ -456,14 +507,14 @@
       sync();
     };
     document.getElementById('b-restart').onclick = function () {
-      media.seek(0); liveCue = -1; media.play();
+      media.seek(0); liveCue = -1; liveScene = null; media.play();
       cancelAnimationFrame(rafId); rafId = requestAnimationFrame(loop);
       sync();
     };
     document.getElementById('bar').onclick = function (e) {
       var r = this.getBoundingClientRect();
       media.seek(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * media.duration());
-      liveCue = -1; paint();
+      liveCue = -1; liveScene = null; paint();
     };
     document.getElementById('b-back').onclick = function () { media.pause(); go('welcome'); };
     document.getElementById('b-quiz').onclick = function () {
@@ -475,8 +526,9 @@
       play.textContent = 'Play';
       var b = document.getElementById('b-quiz');
       if (b) { b.disabled = false; b.textContent = 'Go to the questions'; }
-      var cap = document.getElementById('cap');
-      if (cap) cap.textContent = 'The end. Now the questions.';
+      setCaption('The end. Now the questions.');
+      var stage = document.getElementById('stage');
+      if (stage) stage.classList.remove('playing');
     });
     audio.onpause = sync;
     audio.onplay = sync;
