@@ -176,51 +176,132 @@ ok(paused.animated > 0 && paused.running === 0,
 await click(c, '#b-play');    /* leave it running for the shots below */
 await sleep(300);
 
-/* --------------------------------------------------- 3. nothing gets cropped
-   A camera that pushes in crops the frame, so a label that was comfortably
-   inside the picture at the start of a scene can be outside it by the end.
-   This walks every scene to both ends of its own move and measures every
-   piece of text against the edge of the stage - which is the only way to
-   find it, because a still of the first frame always looks fine. */
-console.log('\n  the camera never cuts a word in half');
+/* The children have to be doing something other than bobbing. Checking the
+   markup would only prove the classes are spelled right; the computed
+   animation name proves a rule actually reached the element, which is where
+   an SVG transform-origin or a gating selector usually goes wrong. */
+const acting = await evalIn(c, `return (() => {
+  const sv = document.querySelector('#stage .scene[data-scene="accuse"]');
+  const live = sv.classList.contains('live');
+  sv.classList.add('live');
+  const run = sel => [...sv.querySelectorAll(sel)]
+    .filter(el => getComputedStyle(el).animationName !== 'none').length;
+  const out = {
+    heads: run('.head'), arms: run('.armrd, .armld, .armru'),
+    pointing: run('.jab'), mouths: run('.talk'), eyes: run('.lid'),
+    /* the pivot has to land on the shoulder, not the middle of the arm */
+    armOrigin: (() => {
+      const a = sv.querySelector('.armrd');
+      return a ? getComputedStyle(a).transformOrigin : null;
+    })()
+  };
+  if (!live) sv.classList.remove('live');
+  return out;
+})()`);
 
-const clipped = await evalIn(c, `return (() => {
+ok(acting.heads > 0 && acting.arms > 0,
+  acting.heads + ' heads turn on the neck and ' + acting.arms + ' arms hinge at the shoulder');
+ok(acting.pointing === 1, 'the boy doing the accusing is the one whose arm jabs');
+ok(acting.mouths > 0, acting.mouths + ' mouth is actually saying something');
+ok(acting.eyes > 0, acting.eyes + ' pairs of eyes blink');
+ok(/px 0px$|px 0px /.test(acting.armOrigin) || /0px$/.test(acting.armOrigin),
+  'and an arm swings from its top corner, not its middle (' + acting.armOrigin + ')');
+
+/* ------------------------------------------------ 3. every label is in shot
+   The camera now cuts between framings inside a scene, so a label being out
+   of frame is normal - the wide shot's title has no business being visible
+   during a close-up of a latch. What is NOT allowed is a label being out of
+   frame during the shot it was written for, which is a thing you cannot see
+   in a still and will not notice while watching unless you already know it
+   is missing. So: drive each scene to both ends of each of its shots, and
+   measure the text that belongs to that shot against the stage. */
+console.log('\n  every label is inside the shot it belongs to');
+
+const framing = await evalIn(c, `return (() => {
   const stage = document.getElementById('stage');
   const sb = stage.getBoundingClientRect();
   const bad = [];
-  document.querySelectorAll('#stage .scene').forEach(sv => {
-    const hold = parseFloat(sv.style.getPropertyValue('--hold')) || 10;
+  let checked = 0;
+  window.STORY.timing(0).forEach(sc => {
+    const sv = document.querySelector('#stage .scene[data-scene="' + sc.scene + '"]');
     const live = sv.classList.contains('live');
     sv.classList.add('live');
     sv.style.animationPlayState = 'paused';
-    [['start', 0.001], ['end', hold - 0.001]].forEach(([when, t]) => {
-      sv.style.animationDelay = '-' + t.toFixed(3) + 's';
-      sv.getBoundingClientRect();                       /* settle the transform */
-      sv.querySelectorAll('text').forEach(el => {
-        const r = el.getBoundingClientRect();
-        if (!r.width) return;
-        const out = Math.max(sb.left - r.left, r.right - sb.right,
-                             sb.top - r.top, r.bottom - sb.bottom);
-        if (out > 2) bad.push(sv.getAttribute('data-scene') + ' "' +
-          el.textContent.slice(0, 22) + '" cut at the ' + when + ' by ' +
-          Math.round(out) + 'px');
+
+    const beatOf = el => {
+      for (let n = el; n && n !== sv; n = n.parentElement) {
+        const c = [...(n.classList || [])].find(x => /^b\\d+(x\\d)?$/.test(x));
+        if (c) return parseInt(c.slice(1), 10);
+      }
+      return 0;                       /* no beat class means the opening shot */
+    };
+    const texts = [...sv.querySelectorAll('text')];
+
+    sc.beats.forEach((b, j) => {
+      const till = (j + 1 < sc.beats.length) ? sc.beats[j + 1] : sc.hold;
+      const mine = texts.filter(el => beatOf(el) === j);
+      [['start', b + 0.05], ['end', till - 0.05]].forEach(([when, at]) => {
+        sv.style.animationDelay = '-' + at.toFixed(3) + 's';
+        sv.getBoundingClientRect();
+        mine.forEach(el => {
+          const r = el.getBoundingClientRect();
+          if (!r.width) return;
+          checked++;
+          const out = Math.max(sb.left - r.left, r.right - sb.right,
+                               sb.top - r.top, r.bottom - sb.bottom);
+          if (out > 3) bad.push(sc.scene + ' shot ' + j + ' "' +
+            el.textContent.slice(0, 22) + '" out of frame at the ' + when +
+            ' by ' + Math.round(out) + 'px');
+        });
       });
     });
+
     sv.style.animationDelay = '';
     sv.style.animationPlayState = '';
     if (!live) sv.classList.remove('live');
   });
-  return bad;
+  return { bad, checked };
 })()`);
 
-ok(clipped.length === 0, 'every word stays inside the frame for the whole move' +
-  (clipped.length ? ':\n        ' + clipped.join('\n        ') : ''));
+ok(framing.checked > 60, framing.checked + ' label positions measured across the shot list');
+ok(framing.bad.length === 0, 'every label is in frame for its own shot' +
+  (framing.bad.length ? ':\n        ' + framing.bad.join('\n        ') : ''));
 
-/* ------------------------------------------------- 2. a picture of each scene */
-console.log('\n  rendering every scene');
+/* and the shots must actually be different from one another, or this is all
+   an expensive way of doing nothing */
+const cuts = await evalIn(c, `return (() => {
+  const t = window.STORY.timing(0);
+  let shots = 0, moved = 0;
+  t.forEach(sc => {
+    const list = window.STORY.shots[sc.scene] || [];
+    shots += Math.min(list.length, sc.beats.length);
+    for (let j = 1; j < Math.min(list.length, sc.beats.length); j++) {
+      const a = window.STORY.frame(list[j-1].z, list[j-1].x, list[j-1].y);
+      const b = window.STORY.frame(list[j].z, list[j].x, list[j].y);
+      if (a !== b) moved++;
+    }
+  });
+  return { shots, moved };
+})()`);
+ok(cuts.shots >= 40, 'the nineteen scenes are cut into ' + cuts.shots + ' shots');
+ok(cuts.moved === cuts.shots - 19, 'and every cut lands the camera somewhere new');
 
-/* freeze everything and force every reveal on, so a shot is the finished
-   composition rather than whatever frame the animation happened to be at */
+/* ---------------------------------------------------- 4. a picture of each shot
+   Not each scene - each shot. A wide drawing can be perfectly composed and
+   still fall apart in the close-up the camera actually cuts to, and the
+   close-up is what a child sees. */
+console.log('\n  rendering every shot');
+
+/* Stop the story first. Rendering while it plays leaves the caption band and
+   the progress bar wandering through the shots, so every frame looks like it
+   belongs to a different moment than it does. */
+await evalIn(c, `(() => {
+  const b = document.getElementById('b-play');
+  if (b.textContent === 'Pause') b.click();
+})()`);
+await sleep(300);
+
+/* freeze the animation but keep the camera, which is set per shot below */
 await evalIn(c, `(() => {
   const st = document.createElement('style');
   st.id = 'freeze';
@@ -228,28 +309,75 @@ await evalIn(c, `(() => {
      children overrides their transform ATTRIBUTES and collapses the whole
      drawing into the top-left corner - the trap named at the top of
      scenes.js, which this test walked straight into the first time. */
-  st.textContent = '.scene{animation:none!important;transform:none!important;' +
-    'transition:none!important;display:none}' +
-    '.scene.shot{display:block;opacity:1}' +
+  /* index.html has .stage svg{display:block}, which is MORE specific than a
+     bare .scene - so hiding the other scenes needs !important or the paused
+     live scene simply paints over the shot we asked for */
+  st.textContent = '.scene{animation:none!important;transition:none!important;' +
+    'display:none!important;opacity:0!important}' +
+    '.scene.shot{display:block!important;opacity:1!important}' +
     '.scene *{animation:none!important}' +
     '.mote{opacity:.6!important}';
   document.head.appendChild(st);
 })()`);
 
-const names = cam.map(s => s.scene);
-for (let i = 0; i < names.length; i++) {
-  await evalIn(c, `document.querySelectorAll('#stage .scene').forEach(s =>
-    s.classList.toggle('shot', s.getAttribute('data-scene') === ${JSON.stringify(names[i])}))`);
-  await sleep(120);
-  const res = await Promise.race([
-    c.send('Page.captureScreenshot', { format: 'png' }),
-    sleep(8000).then(() => null)          /* captureScreenshot can hang forever */
-  ]);
-  if (!res) { console.log('   (screenshot timed out) ' + names[i]); continue; }
-  const n = String(i + 1).padStart(2, '0') + '-' + names[i];
-  writeFileSync(join(OUT, n + '.png'), Buffer.from(res.data, 'base64'));
-  console.log('   ' + n);
+const shotList = await evalIn(c, `return window.STORY.timing(0).map(sc => ({
+  scene: sc.scene, lines: sc.beats.length,
+  shots: (window.STORY.shots[sc.scene] || []).length
+}))`);
+
+let n = 0;
+for (const sc of shotList) {
+  for (let j = 0; j < Math.min(sc.lines, sc.shots); j++) {
+    await evalIn(c, `(() => {
+      const want = ${JSON.stringify(sc.scene)};
+      document.querySelectorAll('#stage .scene').forEach(sv => {
+        const on = sv.getAttribute('data-scene') === want;
+        sv.classList.toggle('shot', on);
+        if (!on) return;
+        /* Only what has been revealed by this line. Without this the sheet
+           shows every label at once, including ones that belong to a later
+           shot, and half of them read as bugs when they are simply not on
+           screen yet. */
+        sv.querySelectorAll('*').forEach(el => {
+          /* Double the backslash: this regex is inside a JS template literal,
+             where an unrecognised escape quietly loses it - \d arrives in the
+             browser as plain d, and the pattern stops matching anything at
+             all, with no error. */
+          const cls = [...(el.classList || [])].find(x => /^b\\d+(x\\d)?$/.test(x));
+          if (cls) el.style.visibility = parseInt(cls.slice(1), 10) <= ${j} ? '' : 'hidden';
+        });
+        const sh = window.STORY.shots[want][${j}];
+        const to = sh.to || {};
+        /* the framing halfway through the shot, which is what it mostly looks like */
+        sv.style.transform = window.STORY.frame(
+          (sh.z + (to.z || sh.z * 1.05)) / 2,
+          (sh.x + (to.x || sh.x)) / 2,
+          (sh.y + (to.y || sh.y)) / 2);
+      });
+    })()`);
+    /* put that shot's own caption up, so the frame explains itself */
+    await evalIn(c, `(() => {
+      const t = window.STORY.timing(0).find(x => x.scene === ${JSON.stringify(sc.scene)});
+      const cue = window.STORY.track(0).filter(q => q.scene === ${JSON.stringify(sc.scene)})[${j}];
+      if (cue) document.getElementById('cap').textContent = cue.text;
+    })()`);
+    await sleep(110);
+    const res = await Promise.race([
+      c.send('Page.captureScreenshot', { format: 'png' }),
+      sleep(8000).then(() => null)        /* captureScreenshot can hang forever */
+    ]);
+    n++;
+    if (!res) { console.log('   (screenshot timed out) ' + sc.scene + ' ' + j); continue; }
+    const name = String(n).padStart(2, '0') + '-' + sc.scene + '-shot' + j;
+    writeFileSync(join(OUT, name + '.png'), Buffer.from(res.data, 'base64'));
+  }
 }
+console.log('   ' + n + ' shots written to ' + OUT);
+
+await evalIn(c, `document.querySelectorAll('#stage .scene').forEach(sv => {
+  sv.style.transform = '';
+  sv.querySelectorAll('*').forEach(el => { el.style.visibility = ''; });
+})`);
 
 /* nothing readable may sit under the caption band (rule 2 in scenes.js) */
 const low = await evalIn(c, `return (() => {

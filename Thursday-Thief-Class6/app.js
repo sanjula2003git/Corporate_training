@@ -410,7 +410,7 @@
     tim = window.STORY.timing(d);
     startOf = {};
     var st = document.getElementById('beats'), i, el;
-    if (st) st.textContent = window.STORY.beatCSS(d);
+    if (st) st.textContent = window.STORY.timingCSS(d);
     for (i = 0; i < tim.length; i++) {
       startOf[tim[i].scene] = tim[i].at;
       el = document.querySelector('#stage .scene[data-scene="' + tim[i].scene + '"]');

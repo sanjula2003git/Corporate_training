@@ -20,24 +20,13 @@
     '.scene text{font-family:"Trebuchet MS","Segoe UI",Verdana,sans-serif;font-weight:bold}',
 
     /* -------------------------------------------------------- the camera
-       The move runs on the <svg class="scene"> element itself, never on a
-       group inside the art, so it can never collide with a transform
-       attribute (rule 1 at the top of this file). build() picks --cam per
-       scene; app.js sets --hold to the seconds that scene is really on
-       screen, and --tin to how far into it we already are (a negative
-       number), so dragging the bar lands in the middle of a move instead of
-       starting it again. Scale never drops to 1 and no pan is larger than
-       (scale-1)/2, or the edge of the picture walks into frame. */
-    '@keyframes campush{from{transform:scale(1.03)}to{transform:scale(1.17)}}',
-    '@keyframes campull{from{transform:scale(1.19)}to{transform:scale(1.04)}}',
-    '@keyframes campanr{from{transform:scale(1.13) translateX(2.8%)}',
-    'to{transform:scale(1.13) translateX(-2.8%)}}',
-    '@keyframes campanl{from{transform:scale(1.13) translateX(-2.8%)}',
-    'to{transform:scale(1.13) translateX(2.8%)}}',
-    '@keyframes camtiltup{from{transform:scale(1.15) translateY(-3.2%)}',
-    'to{transform:scale(1.15) translateY(3.2%)}}',
-    '@keyframes camtiltdn{from{transform:scale(1.15) translateY(3.2%)}',
-    'to{transform:scale(1.15) translateY(-3.2%)}}',
+       Each scene has its own generated move - see SHOTS and cameraCSS at the
+       bottom of this file. It runs on the <svg class="scene"> element itself,
+       never on a group inside the art, so it can never collide with a
+       transform attribute (rule 1 at the top of this file). --hold is the
+       seconds that scene is really on screen and --tin is how far into it we
+       already are (a negative number), both written by app.js, so dragging
+       the bar lands in the middle of a move instead of starting it again. */
     '@keyframes camdrift{from{transform:scale(1.05) translate(1.2%,0.7%)}',
     'to{transform:scale(1.15) translate(-1.2%,-0.7%)}}',
     '.scene{transform:scale(1.08)}',
@@ -76,6 +65,17 @@
     '100%{transform:rotate(0deg)}}',
     '@keyframes peck{0%,72%,100%{transform:rotate(0deg)}84%{transform:rotate(22deg)}}',
     '@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.014)}}',
+    /* Arms hinge at the shoulder, heads turn on the neck, and a mouth that is
+       saying something opens and closes. Without these a drawn child is a
+       cut-out with a bobbing head, which is exactly what it looks like. */
+    '@keyframes armswing{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(5deg)}}',
+    '@keyframes armswing2{0%,100%{transform:rotate(3.5deg)}50%{transform:rotate(-4.5deg)}}',
+    '@keyframes jab{0%,58%,100%{transform:rotate(0deg)}72%{transform:rotate(-8deg)}',
+    '86%{transform:rotate(-2deg)}}',
+    '@keyframes headturn{0%,100%{transform:rotate(-2.4deg)}50%{transform:rotate(2.8deg)}}',
+    '@keyframes talk{0%,100%{transform:scaleY(.45)}11%{transform:scaleY(1)}',
+    '24%{transform:scaleY(.5)}37%{transform:scaleY(.95)}',
+    '51%{transform:scaleY(.4)}64%{transform:scaleY(1)}82%{transform:scaleY(.55)}}',
 
     '.scene.live .bob{animation:bob 3.4s ease-in-out infinite}',
     '.scene.live .bob2{animation:bob2 4.1s ease-in-out infinite}',
@@ -107,6 +107,22 @@
     '.peck{transform-box:fill-box;transform-origin:right bottom}',
     '.scene.live .breathe{animation:breathe 5.6s ease-in-out infinite}',
     '.breathe{transform-box:fill-box;transform-origin:center bottom}',
+    /* The pivot is whichever corner of the arm's own bounding box the shoulder
+       sits in: an arm that hangs down has its shoulder at the TOP of its box,
+       one that is raised or pointing has it at the BOTTOM. Get this wrong and
+       the arm swings from the hand. */
+    '.scene.live .armrd{animation:armswing 4.2s ease-in-out infinite}',
+    '.armrd{transform-box:fill-box;transform-origin:left top}',
+    '.scene.live .armld{animation:armswing2 4.6s ease-in-out infinite}',
+    '.armld{transform-box:fill-box;transform-origin:right top}',
+    '.scene.live .armru{animation:armswing 5.2s ease-in-out infinite}',
+    '.armru{transform-box:fill-box;transform-origin:left bottom}',
+    '.scene.live .jab{animation:jab 2.9s ease-in-out infinite}',
+    '.jab{transform-box:fill-box;transform-origin:left bottom}',
+    '.scene.live .head{animation:headturn 6.8s ease-in-out infinite}',
+    '.head{transform-box:fill-box;transform-origin:center bottom}',
+    '.scene.live .talk{animation:talk .9s ease-in-out infinite}',
+    '.talk{transform-box:fill-box;transform-origin:center}',
 
     /* ------------------------------------------------------------- beats
        .pop reveals a thing once. Which second it arrives is set by a beat
@@ -205,66 +221,74 @@
       g += '<path d="M -30 -88 Q 0 -50 30 -88" fill="none" stroke="' + shade(L.top, -14) +
         '" stroke-width="10"/>';
     }
-    /* arms */
+    /* Arms. Each one goes in its own group so it can hinge at the shoulder;
+       the paths carry no transform attribute, so the class is safe on them. */
+    var arm = '" fill="none" stroke="' + L.skin + '" stroke-width="17" stroke-linecap="round"/>';
     if (opts.point) {
-      g += '<path d="M 40 -80 L 118 -104" fill="none" stroke="' + L.skin +
-        '" stroke-width="17" stroke-linecap="round"/>' +
-        '<circle cx="124" cy="-106" r="12" fill="' + L.skin + '" stroke="' + INK + '" stroke-width="5"/>';
-      g += '<path d="M -40 -80 L -56 -18" fill="none" stroke="' + L.skin +
-        '" stroke-width="17" stroke-linecap="round"/>';
+      g += '<g class="jab"><path d="M 40 -80 L 118 -104' + arm +
+        '<circle cx="124" cy="-106" r="12" fill="' + L.skin + '" stroke="' + INK +
+        '" stroke-width="5"/></g>';
+      g += '<g class="armld"><path d="M -40 -80 L -56 -18' + arm + '</g>';
     } else if (opts.up) {
-      g += '<path d="M 40 -80 L 66 -150" fill="none" stroke="' + L.skin +
-        '" stroke-width="17" stroke-linecap="round"/>' +
-        '<path d="M -40 -80 L -58 -20" fill="none" stroke="' + L.skin +
-        '" stroke-width="17" stroke-linecap="round"/>';
+      g += '<g class="armru"><path d="M 40 -80 L 66 -150' + arm + '</g>';
+      g += '<g class="armld"><path d="M -40 -80 L -58 -20' + arm + '</g>';
     } else {
-      g += '<path d="M 40 -80 L 54 -16" fill="none" stroke="' + L.skin +
-        '" stroke-width="17" stroke-linecap="round"/>' +
-        '<path d="M -40 -80 L -54 -16" fill="none" stroke="' + L.skin +
-        '" stroke-width="17" stroke-linecap="round"/>';
+      g += '<g class="armrd"><path d="M 40 -80 L 54 -16' + arm + '</g>';
+      g += '<g class="armld"><path d="M -40 -80 L -54 -16' + arm + '</g>';
     }
-    /* head */
-    g += '<circle cx="0" cy="' + headY + '" r="40" fill="' + L.skin + '" stroke="' + INK +
-      '" stroke-width="7"/>';
-    /* hair */
-    g += '<path d="M -41 ' + (headY - 4) + ' Q -36 ' + (headY - 52) + ' 0 ' + (headY - 46) +
-      ' Q 36 ' + (headY - 52) + ' 41 ' + (headY - 4) + ' Q 22 ' + (headY - 30) + ' 0 ' +
-      (headY - 26) + ' Q -22 ' + (headY - 30) + ' -41 ' + (headY - 4) + ' Z" fill="' + L.hair +
-      '" stroke="' + INK + '" stroke-width="5"/>';
+    /* Plaits hang from the head but stay outside the turning group: they are
+       the one part whose bounding box would drag the pivot down to the hair
+       tips, and a head that turns about its plaits looks like a puppet. */
     if (L.plait) {
       g += '<path d="M -40 ' + (headY - 2) + ' Q -62 ' + (headY + 40) + ' -50 ' + (headY + 74) +
         '" fill="none" stroke="' + L.hair + '" stroke-width="15" stroke-linecap="round"/>' +
         '<path d="M 40 ' + (headY - 2) + ' Q 62 ' + (headY + 40) + ' 50 ' + (headY + 74) +
         '" fill="none" stroke="' + L.hair + '" stroke-width="15" stroke-linecap="round"/>';
     }
+
+    /* everything from here to the mouth turns together, on the neck */
+    var h = '';
+    /* head */
+    h += '<circle cx="0" cy="' + headY + '" r="40" fill="' + L.skin + '" stroke="' + INK +
+      '" stroke-width="7"/>';
+    /* hair */
+    h += '<path d="M -41 ' + (headY - 4) + ' Q -36 ' + (headY - 52) + ' 0 ' + (headY - 46) +
+      ' Q 36 ' + (headY - 52) + ' 41 ' + (headY - 4) + ' Q 22 ' + (headY - 30) + ' 0 ' +
+      (headY - 26) + ' Q -22 ' + (headY - 30) + ' -41 ' + (headY - 4) + ' Z" fill="' + L.hair +
+      '" stroke="' + INK + '" stroke-width="5"/>';
     /* face */
     var ey = headY - 4;
     if (opts.shut) {
-      g += '<path d="M -20 ' + ey + ' q 8 7 16 0" fill="none" stroke="' + INK + '" stroke-width="5"/>' +
+      h += '<path d="M -20 ' + ey + ' q 8 7 16 0" fill="none" stroke="' + INK + '" stroke-width="5"/>' +
         '<path d="M 4 ' + ey + ' q 8 7 16 0" fill="none" stroke="' + INK + '" stroke-width="5"/>';
     } else {
       /* open eyes blink. The lid class scales the pair down for one frame, so
          it goes on a group of its own - never on anything carrying a
          transform attribute. The offset keeps a room full of children from
          blinking in unison, which reads as a machine, not a class. */
-      g += '<g class="lid" style="animation-delay:' + (x % 11 * 0.53).toFixed(2) + 's">' +
+      h += '<g class="lid" style="animation-delay:' + (x % 11 * 0.53).toFixed(2) + 's">' +
         '<circle cx="-13" cy="' + ey + '" r="5.5" fill="' + INK + '"/>' +
         '<circle cx="13" cy="' + ey + '" r="5.5" fill="' + INK + '"/></g>';
     }
     var my = headY + 18;
     if (opts.mouth === 'sad') {
-      g += '<path d="M -13 ' + (my + 5) + ' q 13 -12 26 0" fill="none" stroke="' + INK +
+      h += '<path d="M -13 ' + (my + 5) + ' q 13 -12 26 0" fill="none" stroke="' + INK +
         '" stroke-width="5" stroke-linecap="round" transform="translate(-13,0)"/>';
     } else if (opts.mouth === 'open') {
-      g += '<ellipse cx="0" cy="' + my + '" rx="11" ry="13" fill="#7a2b2b" stroke="' + INK +
-        '" stroke-width="4"/>';
+      /* an open mouth is a mouth in the middle of saying something, so it
+         says something rather than hanging open for nineteen seconds */
+      h += '<g class="talk" style="animation-delay:-' + (x % 9 * 0.31).toFixed(2) + 's">' +
+        '<ellipse cx="0" cy="' + my + '" rx="11" ry="13" fill="#7a2b2b" stroke="' + INK +
+        '" stroke-width="4"/></g>';
     } else if (opts.mouth === 'flat') {
-      g += '<line x1="-12" y1="' + my + '" x2="12" y2="' + my + '" stroke="' + INK +
+      h += '<line x1="-12" y1="' + my + '" x2="12" y2="' + my + '" stroke="' + INK +
         '" stroke-width="5" stroke-linecap="round"/>';
     } else {
-      g += '<path d="M -13 ' + (my - 4) + ' q 13 14 26 0" fill="none" stroke="' + INK +
+      h += '<path d="M -13 ' + (my - 4) + ' q 13 14 26 0" fill="none" stroke="' + INK +
         '" stroke-width="5" stroke-linecap="round"/>';
     }
+    g += '<g class="head" style="animation-delay:-' + (x % 17 * 0.4).toFixed(2) + 's">' +
+      h + '</g>';
 
     /* Everyone breathes, and whoever has an idle loop starts it part-way
        through, at a slightly different speed. Identical loops running in step
@@ -513,9 +537,10 @@
       '<g class="pop b1"><rect x="30" y="4" width="120" height="66" rx="6" fill="none" ' +
       'stroke="#e8eaf0" stroke-width="7" stroke-dasharray="16 12"/></g>' +
       '</g>' +
-      '<g class="pop b0">' + T(940, 250, '?', 150, '#e03131') + '</g>' +
-      '<g class="pop b1">' + T(1090, 360, '?', 96, '#e03131') + '</g>' +
-      '<g class="pop b1x2">' + T(1010, 440, '?', 74, '#e03131') + '</g>' +
+      /* one question mark beside each gap, inside the close-up of that gap */
+      '<g class="pop b0">' + T(800, 200, '?', 110, '#e03131') + '</g>' +
+      '<g class="pop b1">' + T(760, 340, '?', 90, '#e03131') + '</g>' +
+      '<g class="pop b1x2">' + T(830, 436, '?', 70, '#e03131') + '</g>' +
       '<g class="pop b2">' + T(930, 120, 'MISSING. AGAIN.', 52, '#ffd43b') + '</g>';
   };
 
@@ -542,7 +567,7 @@
       kid('yash', 470, 430, 0.5, null, { shut: true, mouth: 'flat' }) +
       desk(900, 500, 1.15) +
       kid('imran', 900, 486, 1.05, 'bob2', { down: true, mouth: 'flat' }) +
-      '<g class="pop b0">' + T(1040, 150, 'SAID NOTHING', 42, '#ffd43b') + '</g>' +
+      '<g class="pop b0">' + T(1050, 265, 'SAID NOTHING', 42, '#ffd43b') + '</g>' +
       /* every face in the room aimed at one desk */
       '<g class="pop b1"><path d="M 560 360 L 800 400" stroke="#e03131" stroke-width="7" ' +
       'class="flow" fill="none"/></g>';
@@ -567,7 +592,7 @@
       /* she is not innocent in this, and the picture says so on the line that
          says so */
       bubble(300, 190, 330, 130, 'left', ['I THOUGHT', 'SO TOO.'], 34, 'b2') +
-      '<g class="pop b0">' + T(640, 120, 'ALL WEEK, BY HIMSELF', 44, '#ffd43b') + '</g>';
+      '<g class="pop b0">' + T(900, 250, 'ALL WEEK, BY HIMSELF', 40, '#ffd43b') + '</g>';
   };
 
   /* 6. the list: five shiny things and nothing else */
@@ -598,9 +623,9 @@
       '<circle cx="380" cy="405" r="76" fill="none" stroke="#e03131" stroke-width="9"/>' +
       '<path d="M 434 459 L 486 511" stroke="#e03131" stroke-width="10" stroke-linecap="round"/>' +
       '</g>' +
-      '<g class="pop b1">' + T(940, 200, 'ONE BENT', 54, '#e03131') + '</g>' +
-      '<g class="pop b1x2">' + T(940, 268, 'LATCH', 54, '#e03131') + '</g>' +
-      '<g class="pop b2x2">' + T(940, 360, 'ONE BLACK FEATHER', 34, '#3a3f66') + '</g>' +
+      '<g class="pop b1">' + T(700, 196, 'ONE BENT', 40, '#e03131') + '</g>' +
+      '<g class="pop b1x2">' + T(700, 250, 'LATCH', 40, '#e03131') + '</g>' +
+      '<g class="pop b2x2">' + T(390, 282, 'ONE BLACK FEATHER', 32, '#3a3f66') + '</g>' +
       kid('tanvi', 1050, 520, 0.78, 'bob2', { mouth: 'flat' });
   };
 
@@ -677,8 +702,8 @@
     g += clock(1050, 190, 1.1, 11, 19);
     /* an empty room is the one place the dust should be visible */
     g += motes(18, 420, 110, 560, 340, '#e9dfc4');
-    g += '<g class="pop b1">' + T(760, 150, 'NINETEEN MINUTES', 46, '#ffd43b') + '</g>';
-    g += '<g class="pop b1x2">' + T(760, 226, 'WITHOUT MOVING', 38, '#a5d8ff') + '</g>';
+    g += '<g class="pop b1">' + T(950, 128, 'NINETEEN MINUTES', 44, '#ffd43b') + '</g>';
+    g += '<g class="pop b1x2">' + T(950, 196, 'WITHOUT MOVING', 36, '#a5d8ff') + '</g>';
     return g;
   };
 
@@ -690,8 +715,9 @@
       windowFrame(690, 250, 1.3, { bent: true, swing: 'b0' }) +
       /* and only then does something come in and hop along the sill */
       '<g class="pop b1">' + crow(600, 378, 0.95, { tilt: true, anim: 'hop', peck: true }) + '</g>' +
-      '<g class="pop b2">' + T(1090, 210, 'ONE BRIGHT', 40, '#ffd43b') + '</g>' +
-      '<g class="pop b2x2">' + T(1090, 272, 'YELLOW EYE', 44, '#ffd43b') + '</g>' +
+      /* small, and up close: by this line the camera is right on the eye */
+      '<g class="pop b2">' + T(672, 266, 'ONE BRIGHT', 28, '#ffd43b') + '</g>' +
+      '<g class="pop b2x2">' + T(672, 304, 'YELLOW EYE', 28, '#ffd43b') + '</g>' +
       kid('tanvi', 170, 470, 0.85, null, { mouth: 'open' });
   };
 
@@ -922,18 +948,154 @@
 
   var RUNTIME = 228;   /* seconds the story lasts when there is no audio file */
 
-  /* -------------------------------------------------------- the camera map
-     Which way the camera moves in each scene. A film where every shot pushes
-     in the same way is as flat as one where nothing moves at all, so each
-     move is picked for what the sentence is doing: in on a discovery, out on
-     a memory, across the room on an accusation, up the wall on a climb. */
-  var CAM = {
-    room: 'campush', cupboard: 'campush', accuse: 'campanr', imran: 'campush',
-    lunch: 'campanl', list: 'campush', window: 'campush', calendar: 'campush',
-    memory: 'campull', ask: 'camdrift', wait: 'campush', crow: 'campush',
-    steal: 'campanr', ledge: 'camtiltup', ladder: 'camtiltup', sorry: 'camdrift',
-    assembly: 'campull', finale: 'campush', crowend: 'camdrift'
+  /* ------------------------------------------------------------ the shots
+     One entry per caption line of each scene: where the camera is standing
+     while that sentence is spoken. z is how far in, (x,y) is what sits in the
+     middle of the frame, and an optional `to` is where it has drifted to by
+     the end of the line. Between one line and the next the camera CUTS.
+
+     This is what stopped the story looking like a slideshow. Nineteen
+     drawings held for eight to nineteen seconds each is a slideshow however
+     prettily the camera drifts across them; the same nineteen drawings cut
+     into forty-eight shots is a film. It also means the artwork can be read
+     close up - the wide shot of the classroom and the shot of the single bent
+     latch are the same drawing.
+
+     Framings are clamped in frame() so the edge of the picture can never walk
+     into shot, which is also why nothing has to be positioned defensively. */
+  var SHOTS = {
+    room: [
+      { z: 1.06, x: 640, y: 340, to: { z: 1.14 } },          /* the room, Thursday */
+      { z: 1.9, x: 420, y: 230 }                             /* the board: 6 B */
+    ],
+    cupboard: [
+      { z: 2.2, x: 660, y: 190 },                            /* the gap on the shelf */
+      { z: 2.2, x: 610, y: 340 },                            /* and the second gap */
+      { z: 1.08, x: 700, y: 300 }                            /* out: four Thursdays */
+    ],
+    accuse: [
+      { z: 1.9, x: 300, y: 400 },                            /* Yash, not waiting */
+      { z: 1.45, x: 620, y: 290 },                           /* what he says */
+      { z: 1.7, x: 1050, y: 420 }                            /* every head turns */
+    ],
+    imran: [
+      { z: 1.9, x: 900, y: 400 },                            /* he says nothing */
+      { z: 1.1, x: 640, y: 380 }                             /* out: the whole room */
+    ],
+    lunch: [
+      { z: 1.8, x: 990, y: 380 },                            /* him, by himself */
+      { z: 1.8, x: 300, y: 380 },                            /* her, three tables away */
+      { z: 1.45, x: 340, y: 300 }                            /* she thought so too */
+    ],
+    list: [
+      { z: 1.1, x: 640, y: 300 },                            /* the page */
+      { z: 1.7, x: 400, y: 250, to: { x: 900 } },            /* along the five things */
+      { z: 1.6, x: 640, y: 380 },                            /* and not one book */
+      { z: 1.06, x: 640, y: 300, to: { z: 1.12 } }           /* every one of them shiny */
+    ],
+    window: [
+      { z: 1.08, x: 640, y: 320 },                           /* early, at the cupboard */
+      { z: 2.3, x: 545, y: 300 },                            /* the bent latch */
+      { z: 2.2, x: 390, y: 400 }                             /* one black feather */
+    ],
+    calendar: [
+      /* the whole page first - a column only means something once you can see
+         the five columns it is not */
+      { z: 1.15, x: 640, y: 300, to: { z: 1.24, x: 660, y: 322 } },
+      { z: 1.6, x: 640, y: 430 }                             /* Thursday is games */
+    ],
+    memory: [
+      { z: 1.7, x: 420, y: 240 },                            /* June */
+      { z: 1.8, x: 620, y: 250 },                            /* the whistle, on the roof */
+      { z: 1.06, x: 640, y: 340 }                            /* and nobody asked how */
+    ],
+    ask: [
+      { z: 1.5, x: 450, y: 320 },                            /* may I stay back */
+      { z: 1.6, x: 930, y: 330 }                             /* she said yes */
+    ],
+    wait: [
+      { z: 1.08, x: 640, y: 360 },                           /* an empty room */
+      { z: 2.0, x: 1050, y: 250, to: { z: 2.2 } }            /* in on the clock */
+    ],
+    crow: [
+      { z: 2.4, x: 700, y: 290 },                            /* the latch swings */
+      { z: 1.8, x: 620, y: 360 },                            /* something black */
+      { z: 2.8, x: 560, y: 350 }                             /* one bright yellow eye */
+    ],
+    steal: [
+      { z: 1.9, x: 360, y: 430 },                            /* it takes the foil */
+      { z: 1.15, x: 700, y: 330 }                            /* and out of the window */
+    ],
+    ledge: [
+      { z: 1.08, x: 640, y: 380 },                           /* she stands on the chair */
+      { z: 1.5, x: 700, y: 240 },                            /* up under the water tank */
+      { z: 1.6, x: 640, y: 470 },                            /* the wet green wall */
+      { z: 1.06, x: 640, y: 360 }                            /* she goes to find Miss Rao */
+    ],
+    ladder: [
+      { z: 1.4, x: 560, y: 450 },                            /* the long ladder */
+      { z: 2.0, x: 820, y: 300 },                            /* the nest */
+      { z: 2.4, x: 850, y: 290 },                            /* and what is in it */
+      { z: 1.06, x: 640, y: 360 }                            /* forty pieces of foil */
+    ],
+    sorry: [
+      { z: 1.12, x: 640, y: 380 },                           /* the water cooler */
+      { z: 1.5, x: 400, y: 300 },                            /* I thought it was you too */
+      { z: 1.8, x: 700, y: 420 }                             /* he moves over */
+    ],
+    assembly: [
+      { z: 1.08, x: 640, y: 380 },                           /* assembly */
+      { z: 1.7, x: 640, y: 360 }                             /* she stands up */
+    ],
+    finale: [
+      { z: 1.9, x: 320, y: 280 },                            /* everyone, looking at him */
+      { z: 1.9, x: 960, y: 280 }                             /* one of them, at the window */
+    ],
+    crowend: [
+      { z: 1.7, x: 470, y: 380 },                            /* the foil left out on purpose */
+      { z: 1.06, x: 640, y: 320, to: { z: 1.13 } }           /* they named it Thursday */
+    ]
   };
+
+  /* Where the camera stands, as a CSS transform on the <svg>. The framing is
+     clamped so that the visible rectangle always lies inside the 1280x720
+     picture - which is why no shot can ever show the edge of the drawing, and
+     why a framing can be written down as "what I want in the middle" without
+     also having to work out whether it fits. */
+  function frame(z, cx, cy) {
+    z = Math.max(1.02, z);
+    var hw = 640 / z, hh = 360 / z;
+    cx = Math.min(1280 - hw, Math.max(hw, cx));
+    cy = Math.min(720 - hh, Math.max(hh, cy));
+    return 'scale(' + z.toFixed(3) + ') translate(' +
+      (-(cx - 640) / 1280 * 100).toFixed(3) + '%,' +
+      (-(cy - 360) / 720 * 100).toFixed(3) + '%)';
+  }
+
+  /* One @keyframes per scene. Each shot drifts a little across its own line
+     and then the camera cuts: the outgoing framing is held to within a
+     hundredth of a percent of the next line's start, so the change happens
+     inside a millisecond and reads as a cut rather than a swoop. */
+  function cameraCSS(duration) {
+    var t = timing(duration), out = [], i, j;
+    for (i = 0; i < t.length; i++) {
+      var sc = t[i], shots = SHOTS[sc.scene] || [{ z: 1.1, x: 640, y: 360 }];
+      var keys = [];
+      for (j = 0; j < sc.beats.length; j++) {
+        var sh = shots[Math.min(j, shots.length - 1)];
+        var to = sh.to || {};
+        var from = sc.beats[j];
+        var till = (j + 1 < sc.beats.length) ? sc.beats[j + 1] : sc.hold;
+        var p0 = from / sc.hold * 100;
+        var p1 = till / sc.hold * 100;
+        keys.push(p0.toFixed(3) + '%{transform:' + frame(sh.z, sh.x, sh.y) + '}');
+        keys.push(Math.max(p0, p1 - 0.01).toFixed(3) + '%{transform:' +
+          frame(to.z || sh.z * 1.05, to.x || sh.x, to.y || sh.y) + '}');
+      }
+      out.push('@keyframes cam_' + sc.scene + '{' + keys.join('') + '}');
+    }
+    return out.join('\n');
+  }
 
   /* Where each scene starts, how long it holds, and the second every caption
      line inside it lands. All of it comes out of LINES, so retiming the story
@@ -977,14 +1139,21 @@
     return css.join('\n');
   }
 
+  /* the one stylesheet app.js rewrites whenever the length of the story
+     changes: the camera moves and the beat delays, which both come out of the
+     same caption track */
+  function timingCSS(duration) {
+    return cameraCSS(duration) + '\n' + beatCSS(duration);
+  }
+
   /* build the stage markup once; scene svgs are reused across repeated lines */
   function build() {
     var t = timing(0), i, k;
-    var html = '<style>' + CSS + '</style>' + '<style id="beats">' + beatCSS(0) + '</style>';
+    var html = '<style>' + CSS + '</style>' + '<style id="beats">' + timingCSS(0) + '</style>';
     for (i = 0; i < t.length; i++) {
       k = t[i].scene;
       html += '<svg class="scene" data-scene="' + k + '" viewBox="0 0 ' + W + ' ' + H +
-        '" preserveAspectRatio="xMidYMid slice" style="--cam:' + (CAM[k] || 'camdrift') +
+        '" preserveAspectRatio="xMidYMid slice" style="--cam:cam_' + k +
         ';--hold:' + t[i].hold.toFixed(2) + 's">' + S[k](i) + '</svg>';
     }
     return html;
@@ -1001,7 +1170,8 @@
   }
 
   window.STORY = {
-    build: build, track: track, timing: timing, beatCSS: beatCSS,
+    build: build, track: track, timing: timing,
+    timingCSS: timingCSS, shots: SHOTS, frame: frame,
     lines: LINES, runtime: RUNTIME
   };
 })();

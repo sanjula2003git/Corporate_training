@@ -202,14 +202,30 @@ python -X utf8 bundle.py
 The story is nineteen still drawings, and three things stop it looking like
 nineteen still drawings.
 
-**The camera moves.** Each scene runs one slow move for exactly as long as it
-is on screen — in on a discovery, out on a memory, across the room on an
-accusation, up the wall on a climb. The move is named per scene in `CAM` in
-`scenes.js` and runs on the `<svg>` element itself, never on a group inside the
-art, so it can never collide with a `transform` attribute. `--hold` is the
-length of the move and `--tin` is how far into the scene the story already is,
-both written by `app.js`; `--tin` is what makes dragging the bar land in the
-middle of a move instead of restarting it.
+**The camera cuts.** Nineteen drawings held for eight to nineteen seconds each
+is a slideshow, however prettily the camera drifts across them. `SHOTS` in
+`scenes.js` gives one framing per caption line — `z` is how far in, `(x, y)` is
+what sits in the middle of the frame — so the same nineteen drawings become
+**51 shots**: the wide classroom, then the empty shelf where the compass was,
+then the bent latch, then the crow's eye filling the screen. Between one line
+and the next the camera cuts; inside a line it drifts.
+
+`cameraCSS()` generates one `@keyframes` per scene from that list, and `frame()`
+clamps every framing so the edge of the drawing can never walk into shot. The
+move runs on the `<svg>` element itself, never on a group inside the art, so it
+can never collide with a `transform` attribute. `--hold` is the length of the
+move and `--tin` is how far into the scene the story already is, both written by
+`app.js`; `--tin` is what makes dragging the bar land in the middle of a move
+instead of restarting it.
+
+**The children act.** Arms hinge at the shoulder, heads turn on the neck, eyes
+blink out of step with each other, and a mouth drawn open is a mouth in the
+middle of saying something rather than one hanging open for nineteen seconds.
+The pivot for each part is a corner of its own bounding box — an arm that hangs
+down has its shoulder at the TOP of its box, one that is raised or pointing has
+it at the BOTTOM — and getting that backwards makes an arm swing from the hand.
+Plaits are deliberately left outside the turning head group, because their
+bounding box would drag the pivot down to the hair tips.
 
 **Reveals are hung on sentences, not on a stopwatch.** A `.pop` element carries
 a beat class: `b0` is the second the scene opens, `b1` the next caption line of
@@ -240,10 +256,17 @@ still reads back as one plain sentence, which is what the tests check.
   `transform:none` on `.scene *` to freeze a frame.
 - **Nothing readable goes below about `y=560`** in the 1280x720 scene. The
   caption band covers the bottom of the stage.
-- **The camera crops the frame.** At the end of a push-in only about
-  `x=93..1187, y=52..668` of the scene is still visible, so a label that looks
-  comfortably inside on the first frame can be cut in half on the last one.
-  `tests/story.mjs` measures every piece of text at both ends of every move.
+- **A label has to be inside the shot it was written for.** Once the camera
+  cuts to a close-up, most of the drawing is off screen — that is the point —
+  but a caption label stranded outside its own shot is simply never seen, and
+  nothing about watching the story tells you it is missing. `tests/story.mjs`
+  drives every scene to both ends of every one of its shots and measures the
+  text belonging to that shot against the edge of the stage. It caught six
+  labels the first time it ran.
+- **A regex inside a JS template literal needs its backslashes doubled.**
+  `/^b\d+$/` written inside a `` ` `` string arrives in the browser as
+  `/^bd+$/`, matches nothing, and reports no error — which is how the shot
+  sheet quietly kept showing every label at once.
 - **Keep teaching words out of the scenes.** The pictures say "MISSING" and
   "ALL FOUR. SAME DAY.", never "observation" or "pattern". If the vocabulary
   appears before Part 1, the assessment stops measuring anything.

@@ -15,7 +15,7 @@ node tests/serve.mjs . 8899
 | `node tests/e2e.mjs [url] [w] [h]` | a whole student run with real mouse input. Also asserts no button, card, option or slot is ever off screen |
 | `node tests/slack.mjs` | how much vertical space the story screen is wasting — feeds `--stage-chrome` in `index.html` |
 | `node tests/shots.mjs [url] [outdir] [w] [h]` | screenshots every screen, and fails if the stage is no longer 16:9 |
-| `node tests/story.mjs [url] [outdir]` | the story picture: every art beat is checked against the caption line behind it, the camera is driven for real and measured, nothing is cropped by a push-in, and all nineteen scenes are rendered to `shots-story/` |
+| `node tests/story.mjs [url] [outdir]` | the story picture: every art beat is checked against the caption line behind it, the camera is driven for real and measured, every label is checked against the frame of its own shot, the children are checked to be actually acting, and all 51 shots are rendered to `shots-story/` |
 
 `Thursday-Thief-Assessment.html` is the file students actually get, so run the
 e2e against it too after `python -X utf8 bundle.py`:
