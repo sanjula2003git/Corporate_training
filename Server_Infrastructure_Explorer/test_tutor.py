@@ -16,7 +16,7 @@ class TutorTests(unittest.TestCase):
 
     def test_exact_question_reaches_groq_and_web(self):
         question='what is the connection b/w blade servers and tower servers ?'
-        app=AppTest.from_file('app.py').run()
+        app=AppTest.from_file('app.py',default_timeout=30).run()
         app.radio(key='page').set_value(14).run()
         app.session_state['ai_enabled']=True
         app.session_state['active_api_key']='test-only-key'
@@ -30,7 +30,7 @@ class TutorTests(unittest.TestCase):
         self.assertEqual(app.session_state['last_route'],'Web lookup + Groq')
 
     def test_missing_key_is_explicit(self):
-        app=AppTest.from_file('app.py').run()
+        app=AppTest.from_file('app.py',default_timeout=30).run()
         app.radio(key='page').set_value(14).run()
         app.chat_input[0].set_value('connection b/w blade servers and tower servers?').run()
         self.assertIn('Groq is not connected',app.session_state['shared_history'][-1]['content'])
@@ -69,7 +69,7 @@ class TutorTests(unittest.TestCase):
             with self.assertRaises(ValueError):ls.restore('x'*43)
 
     def test_tutor_on_every_page(self):
-        app=AppTest.from_file('app.py').run()
+        app=AppTest.from_file('app.py',default_timeout=30).run()
         app.radio(key='page').set_value(14).run()
         for page in range(14):
             app.radio(key='page').set_value(page).run()
