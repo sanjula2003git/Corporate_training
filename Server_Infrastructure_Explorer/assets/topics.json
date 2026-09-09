@@ -1,0 +1,132 @@
+[
+  {
+    "number": 1,
+    "id": "server_purpose",
+    "title": "Server Purpose",
+    "anchor_blender": [
+      -2.08,
+      -0.37,
+      0.59
+    ]
+  },
+  {
+    "number": 2,
+    "id": "server_architecture",
+    "title": "Server Architecture",
+    "anchor_blender": [
+      1.8,
+      -0.42,
+      0.2
+    ]
+  },
+  {
+    "number": 3,
+    "id": "rack_servers",
+    "title": "Rack Servers",
+    "anchor_blender": [
+      -1.68,
+      0.848,
+      1.0
+    ]
+  },
+  {
+    "number": 4,
+    "id": "blade_servers",
+    "title": "Blade Servers",
+    "anchor_blender": [
+      0,
+      1.205,
+      0.63
+    ]
+  },
+  {
+    "number": 5,
+    "id": "tower_servers",
+    "title": "Tower Servers",
+    "anchor_blender": [
+      1.75,
+      0.78,
+      0.91
+    ]
+  },
+  {
+    "number": 6,
+    "id": "cpu",
+    "title": "CPU",
+    "anchor_blender": [
+      -0.24374999105930328,
+      -0.16874998807907104,
+      0.16500000655651093
+    ]
+  },
+  {
+    "number": 7,
+    "id": "ram",
+    "title": "RAM / Memory",
+    "anchor_blender": [
+      0.10499999672174454,
+      -0.3187499940395355,
+      0.27000001072883606
+    ]
+  },
+  {
+    "number": 8,
+    "id": "motherboard",
+    "title": "Motherboard",
+    "anchor_blender": [
+      -0.29999998211860657,
+      -0.675000011920929,
+      0.10125000774860382
+    ]
+  },
+  {
+    "number": 9,
+    "id": "network",
+    "title": "Network Interface",
+    "anchor_blender": [
+      0.16875000298023224,
+      0.3187500238418579,
+      0.28125
+    ]
+  },
+  {
+    "number": 10,
+    "id": "storage_interface",
+    "title": "Storage Interface",
+    "anchor_blender": [
+      0.3375000059604645,
+      -1.4700000286102295,
+      0.2212500125169754
+    ]
+  },
+  {
+    "number": 11,
+    "id": "psu",
+    "title": "Power Supply",
+    "anchor_blender": [
+      0.6075000166893005,
+      0.15000003576278687,
+      0.2887499928474426
+    ]
+  },
+  {
+    "number": 12,
+    "id": "bmc",
+    "title": "Management Controller",
+    "anchor_blender": [
+      0.24374999105930328,
+      -0.29999998211860657,
+      0.13875000178813934
+    ]
+  },
+  {
+    "number": 13,
+    "id": "gpu",
+    "title": "GPU / Accelerators",
+    "anchor_blender": [
+      0.4012500047683716,
+      -0.75,
+      0.3149999976158142
+    ]
+  }
+]
