@@ -9,14 +9,30 @@ from streamlit.testing.v1 import AppTest
 
 def completion(text,**extra):return {'choices':[{'message':{'content':text,**extra}}]}
 
+def new_app():
+    app=AppTest.from_file('app.py',default_timeout=30)
+    app.secrets['GROQ_API_KEY']=''
+    with patch.dict('os.environ',{'GROQ_API_KEY':''}):
+        return app.run()
+
 class TutorTests(unittest.TestCase):
+    def test_learning_backup_roundtrip(self):
+        state={'profile':{**DEFAULT_PROFILE,'interests':'cricket'},'chats':{'cpu':[{'role':'user','content':'Explain cores'}]},'shared_history':[],'completed':{'cpu'},'struggles':{'ram':2},'active_api_key':'must-never-export'}
+        raw=ls.export_backup(state)
+        self.assertNotIn('must-never-export',raw)
+        restored=ls.import_backup(raw)
+        self.assertEqual(restored['profile']['interests'],'cricket')
+        self.assertEqual(restored['completed'],['cpu'])
+        self.assertEqual(restored['chats'],state['chats'])
+        with self.assertRaises(ValueError):ls.import_backup('{"version":999}')
+
     def test_relationship_retrieval(self):
         evidence=gt.gather('How are blades connected to towers?','cpu',[])
         self.assertTrue({'blade_servers','tower_servers','network'} <= {c['topic_id'] for c in evidence})
 
     def test_exact_question_reaches_groq_and_web(self):
         question='what is the connection b/w blade servers and tower servers ?'
-        app=AppTest.from_file('app.py',default_timeout=30).run()
+        app=new_app()
         app.radio(key='page').set_value(14).run()
         app.session_state['ai_enabled']=True
         app.session_state['active_api_key']='test-only-key'
@@ -30,7 +46,7 @@ class TutorTests(unittest.TestCase):
         self.assertEqual(app.session_state['last_route'],'Web lookup + Groq')
 
     def test_missing_key_is_explicit(self):
-        app=AppTest.from_file('app.py',default_timeout=30).run()
+        app=new_app()
         app.radio(key='page').set_value(14).run()
         app.chat_input[0].set_value('connection b/w blade servers and tower servers?').run()
         self.assertIn('Groq is not connected',app.session_state['shared_history'][-1]['content'])
@@ -69,7 +85,7 @@ class TutorTests(unittest.TestCase):
             with self.assertRaises(ValueError):ls.restore('x'*43)
 
     def test_tutor_on_every_page(self):
-        app=AppTest.from_file('app.py',default_timeout=30).run()
+        app=new_app()
         app.radio(key='page').set_value(14).run()
         for page in range(14):
             app.radio(key='page').set_value(page).run()

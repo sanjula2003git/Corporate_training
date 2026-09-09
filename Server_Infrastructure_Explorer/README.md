@@ -53,3 +53,7 @@ The knowledge base contains 54 reviewed notes from 13 sources. See `knowledge_ba
 Run `python -m unittest test_tutor -v` for retrieval, mocked web routing, personalization, profile separation and all 14 page checks. No Groq key is bundled; live Groq generation and web lookup require a working credential and have not yet been verified against the service.
 
 The 3D assets work locally. Internet is required for Groq and web search. The app is running locally; public deployment has not been configured.
+
+## Streamlit Cloud preparation
+
+See DEPLOYMENT.md for upload and Secrets settings. Run `python package_deploy.py` for the credential-free upload package. The extracted package passed nine automated tests with Python 3.12 and Streamlit 1.59.2 in a fresh Windows environment; its 3D scene rendered in the browser. Linux CI and the actual Streamlit Cloud deployment have not run yet. Learning backup export/import is now available in the sidebar.

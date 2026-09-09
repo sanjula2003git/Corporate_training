@@ -22,6 +22,7 @@ def request(key,payload):
                     time.sleep(delay);continue
                 if error.code==401:raise TutorError('Groq rejected this API key. Check AI connection.') from None
                 if error.code==403:raise TutorError('Groq denied access to this request. Check account access or network filtering.') from None
+                if error.code==413:raise TutorError('Groq rejected the request size. The selected service or account may not support this request.') from None
                 if error.code==429:raise TutorError('The shared Groq allowance is temporarily exhausted. Try again later; saved knowledge is still available.') from None
                 raise TutorError('Groq could not complete this request. Check the selected model and account access.') from None
             except urllib.error.URLError as error:
@@ -85,8 +86,9 @@ def reply(lesson,message,history,profile,key,web_enabled=True,struggles=None):
             searched=any('search' in str(t.get('type',t.get('name',''))).lower() or t.get('search_results') for t in executed)
             answer=content;route='Web lookup + Groq' if searched else 'Groq response · web lookup not confirmed'
             if not searched:answer+='\n\nWeb search was requested, but the service did not confirm using it.'
-        except (TutorError,KeyError,IndexError,TypeError):
-            answer+='\n\n**Web lookup was unavailable. This answer has not been checked against current web sources.**';route='Saved knowledge · web lookup unavailable'
+        except (TutorError,KeyError,IndexError,TypeError) as error:
+            detail=str(error) if isinstance(error,TutorError) else 'The web service returned an incomplete response.'
+            answer+='\n\n**Web lookup was unavailable. This answer has not been checked against current web sources.** '+detail;route='Saved knowledge · web lookup unavailable'
     elif needs_web or current:answer+='\n\nWeb lookup is disabled; I could not check additional or current sources.'
     if evidence:answer+='\n\n**Local reference material:** '+citations(evidence)
     return answer,updated,route

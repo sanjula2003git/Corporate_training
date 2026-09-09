@@ -8,6 +8,7 @@ from knowledge import load as load_knowledge, search as search_knowledge
 from tutor import DEFAULT_PROFILE, offline_reply, learn_preferences
 from groq_tutor import reply as groq_reply, check_connection, TutorError
 import learner_store
+import cloud_store
 
 ROOT=Path(__file__).resolve().parent
 st.set_page_config(page_title='Server Infrastructure Explorer',page_icon='🖥️',layout='wide')
@@ -89,6 +90,23 @@ with st.sidebar:
         if st.button('Reset learning preferences'):
             st.session_state.profile=deepcopy(DEFAULT_PROFILE);st.session_state.profile_rev+=1;persist();st.rerun()
     with st.expander('Saved learner profile'):
+        if cloud_store.enabled():
+            st.caption('Supabase storage selected: saved profiles are kept outside Streamlit and can survive app restarts and redeploys.')
+            if st.button('Check database connection'):
+                try:cloud_store.check();st.success('Supabase learner table is reachable.')
+                except cloud_store.StorageError as error:st.error(str(error))
+        else:
+            st.caption('Local storage: on cloud hosting, profiles may be lost during a restart or redeploy. Configure Supabase for durable storage, or download a learning backup.')
+        st.download_button('Download my learning backup',learner_store.export_backup(st.session_state),'learning-backup.json','application/json')
+        backup=st.file_uploader('Restore a learning backup',type=['json'])
+        if st.button('Restore uploaded learning',disabled=backup is None):
+            try:
+                data=learner_store.import_backup(backup.getvalue())
+                for field,value in data.items():st.session_state[field]=set(value) if field=='completed' else value
+                st.session_state.learner_code=None
+                st.session_state.profile_rev+=1
+                st.rerun()
+            except (ValueError,TypeError,KeyError):st.error('This is not a valid learning backup. Choose a backup downloaded from this app.')
         st.caption('Optional. Saves preferences, chats, completed lessons and topics to revisit on this server. Your private recovery code opens your profile; keep it safe. API keys are not saved here.')
         if st.session_state.learner_code:
             st.success('Your learning is being saved.')
@@ -100,7 +118,8 @@ with st.sidebar:
                     st.session_state[field]=deepcopy(defaults[field])
                 st.session_state.learner_code=None;st.session_state.profile_rev+=1;st.rerun()
         elif st.button('Create my saved profile'):
-            st.session_state.learner_code=learner_store.create(st.session_state);st.rerun()
+            try:st.session_state.learner_code=learner_store.create(st.session_state);st.rerun()
+            except (OSError,sqlite3.Error):st.error('Server storage is unavailable. You can still download a learning backup.')
         with st.form('restore_profile'):
             recovery=st.text_input('Private recovery code',type='password')
             if st.form_submit_button('Resume my learning'):

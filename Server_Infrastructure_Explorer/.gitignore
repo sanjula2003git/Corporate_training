@@ -3,3 +3,6 @@ runtime/
 .streamlit/secrets.toml
 .env
 .venv/
+
+*.zip
+.deploy-check/
