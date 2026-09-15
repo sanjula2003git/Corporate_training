@@ -1,0 +1,68 @@
+import * as THREE from './three.mjs';
+import {OrbitControls} from './controls.mjs';
+import {cardiacCycle} from './cycle.mjs';
+import {GLTFLoader} from './loader.mjs';
+const $=id=>document.getElementById(id),stage=$('stage');
+const send=(type,data={})=>parent.postMessage({isStreamlitMessage:true,type,...data},'*');
+let model=null,parts=[],running=true,labels=true,selected='',phase=0,last=performance.now(),speed=1,initialized=false;
+let opened=false,showBlood=true,teaching=null,loadingTeaching=null;
+const groups=new Map(),leaflets=[],flaps=[],teachMeshes=[];
+const interiorAnchors={right_atrium:[-.58,-.2,.65],left_atrium:[.54,-.2,.7],right_ventricle:[-.48,-.25,-.43],left_ventricle:[.65,-.25,-.65],septum:[0,-.15,-.3],vena_cava:[-.92,.27,1.75],pulmonary_artery:[-1.2,.2,1.4],pulmonary_veins:[1.4,.28,.6],aorta:[.7,.28,2.03],tricuspid:[-.58,.01,.13],mitral:[.54,.08,.15],pulmonary_valve:[-.28,-.15,.18],aortic_valve:[.38,.20,.22]};
+const vec=p=>new THREE.Vector3(p[0],p[2],-p[1]);
+const tags=new Map(),leaders=new Map();
+const anchors={vena_cava:[-.58,1.28,.12],aorta:[.13,1.04,.3],pulmonary_artery:[.62,.58,.57],right_atrium:[-.71,.18,.28],right_ventricle:[-.38,-.48,.65],left_ventricle:[.45,-.86,.45]};
+const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(38,1,.015,100);
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1;
+stage.prepend(renderer.domElement);renderer.domElement.setAttribute('aria-label','Textured human heart: drag to rotate and scroll to zoom');
+scene.add(new THREE.HemisphereLight(0xfff1e9,0x191322,1.5));
+for(const [pos,power,color] of [[[3,4,6],2.7,0xffe7dd],[[-4,1,3],1.2,0xd8e5ff],[[1,3,-4],3,0xffd5cf]]){const l=new THREE.DirectionalLight(color,power);l.position.set(...pos);scene.add(l);}
+const controls=new OrbitControls(camera,renderer.domElement);controls.autoRotate=false;controls.enableDamping=false;controls.zoomSpeed=2.7;controls.zoomToCursor=true;controls.minDistance=.3;controls.maxDistance=18;controls.maxPolarAngle=Math.PI;
+function reset(){camera.position.set(0,.15,6.2);controls.target.set(0,0,0);controls.update();}reset();
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();if(!document.fullscreenElement)send('streamlit:setFrameHeight',{height:document.body.scrollHeight+4});}new ResizeObserver(resize).observe(stage);
+function emit(ask=false){send('streamlit:setComponentValue',{value:{event_id:Date.now()+'-'+Math.random(),part:selected,ask,running,labels,bpm:Math.round(72*speed),cutaway:opened,flow:showBlood},dataType:'json'});}
+function choose(id){const p=parts.find(x=>x.id===id);if(!p)return;selected=id;$('partName').textContent=p.title;$('description').textContent=p.description;$('ask').disabled=false;for(const b of $('topics').children)b.classList.toggle('active',b.dataset.part===id);emit();}
+function populate(){if($('topics').children.length)return;for(const p of parts){const b=document.createElement('button');b.textContent=p.title;b.dataset.part=p.id;b.title=p.description;b.onclick=()=>choose(p.id);$('topics').append(b);if(anchors[p.id]||interiorAnchors[p.id]){const t=document.createElement('button');t.className='marker';t.textContent=p.title;t.title=p.description;t.onclick=()=>choose(p.id);$('markers').append(t);tags.set(p.id,t);const l=document.createElementNS('http://www.w3.org/2000/svg','line');l.setAttribute('stroke','#e5b3c2');l.setAttribute('stroke-width','1');$('leaders').append(l);leaders.set(p.id,l);}}resize();}
+function sync(){$('beat').textContent=running?'⏸ Pause beat':'▶ Play beat';$('labels').textContent='Labels: '+(labels?'on':'off');$('markers').hidden=!labels;$('leaders').style.display=labels?'block':'none';$('open').textContent=opened?'Close heart':'Open heart';$('blood').textContent='Blood flow: '+(showBlood?'on':'off');$('blood').hidden=!opened;$('cycle').hidden=!opened;$('hint').textContent=(opened?'Teaching interior · ':'')+'Double-click heart to open/close · Drag to rotate · Scroll to zoom';renderer.domElement.setAttribute('aria-label',opened?'Opened teaching heart: double-click to close, drag to rotate':'Textured human heart: double-click to open, drag to rotate');if(model)model.visible=!opened;if(teaching)teaching.visible=opened;}
+$('credit').innerHTML='<a href="https://sketchfab.com/3d-models/realistic-human-heart-3f8072336ce94d18b3d0d055a1ece089" target="_blank" rel="noopener">Realistic Human Heart</a> by neshallads · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a><br>Textured model stored with this app. Gentle surface motion added for illustration; it is not a physiological simulation. Double-click opens a simplified teaching interior, not a scan-derived interior of this asset.';
+$('beat').onclick=()=>{running=!running;sync();emit();};$('labels').onclick=()=>{labels=!labels;sync();emit();};$('reset').onclick=reset;
+$('speed').oninput=e=>{speed=+e.target.value;$('speedValue').textContent=speed+'×';};$('speed').onchange=()=>emit();
+$('full').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{$('status').textContent='Fullscreen is unavailable in this browser.';}};
+document.addEventListener('fullscreenchange',()=>{$('full').textContent=document.fullscreenElement?'Exit full screen':'Full screen';resize();});$('ask').onclick=async()=>{if(document.fullscreenElement)await document.exitFullscreen();emit(true);};
+window.addEventListener('message',e=>{if(e.source!==parent||e.data.type!=='streamlit:render')return;parts=e.data.args.parts||[];if(!initialized){running=e.data.args.running!==false;labels=e.data.args.labels!==false;speed=Math.max(.25,Math.min(2,(e.data.args.bpm||72)/72));$('speed').value=speed;$('speedValue').textContent=speed.toFixed(2).replace(/0+$/,'').replace(/\.$/,'')+'×';initialized=true;if(e.data.args.cutaway){showBlood=e.data.args.flow!==false;setOpened(true,false);}}populate();sync();});
+send('streamlit:componentReady',{apiVersion:1});resize();
+new GLTFLoader().load('./heart.glb',g=>{const box=new THREE.Box3().setFromObject(g.scene),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3()),scale=3.5/Math.max(size.x,size.y,size.z);g.scene.position.sub(center);model=new THREE.Group();model.add(g.scene);model.scale.setScalar(scale);const normalized=new THREE.Group();normalized.add(model);scene.add(normalized);model=normalized;model.updateMatrixWorld(true);$('status').textContent='';$('beat').disabled=false;$('open').disabled=false;sync();},undefined,()=>{$('status').textContent='Could not load the local heart model. Check that viewer_realistic/heart.glb was deployed.';});
+
+function loadTeaching(){if(loadingTeaching)return loadingTeaching;$('status').textContent='Loading the teaching interior…';loadingTeaching=new Promise((resolve,reject)=>{new GLTFLoader().load('./teaching-heart.glb?v=tissue3',g=>{teaching=g.scene;teaching.scale.setScalar(.79);teaching.position.y=-.3;scene.add(teaching);teaching.traverse(o=>{if(o.userData.part_id)groups.set(o.userData.part_id,o);if(o.userData.front_cover||o.userData.exterior_detail)o.visible=false;if(o.isMesh){let p=o,id='';while(p){id=id||p.userData.part_id;p=p.parent;}o.userData.owner=id;teachMeshes.push(o);}if(o.userData.valve_leaflet)leaflets.push(o);if(o.userData.valve_flap)flaps.push(o);});for(const f of [...leaflets,...flaps]){let p=f,id='';while(p){id=id||p.userData.part_id;p=p.parent;}f.userData.owner=id;}teaching.visible=opened;$('status').textContent='';resolve();},undefined,()=>{loadingTeaching=null;$('status').textContent='The interior could not load. Please retry Open heart.';reject(new Error('Interior asset unavailable'));});});return loadingTeaching;}
+async function setOpened(next,notify=true){if(next){try{await loadTeaching();}catch{return;}}opened=next;sync();if(notify)emit();}
+$('open').onclick=()=>setOpened(!opened);$('blood').onclick=()=>{showBlood=!showBlood;sync();emit();};
+const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();
+function hit(e){const r=renderer.domElement.getBoundingClientRect();mouse.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(mouse,camera);const target=opened?teaching:model;if(!target)return null;return ray.intersectObject(target,true).find(h=>{let o=h.object;while(o){if(!o.visible)return false;o=o.parent;}return true;});}
+renderer.domElement.addEventListener('dblclick',e=>{if(hit(e)){e.preventDefault();setOpened(!opened);}});
+let pointerDown=null,singleClick=null;
+renderer.domElement.addEventListener('pointerdown',e=>{pointerDown=[e.clientX,e.clientY];});
+renderer.domElement.addEventListener('click',e=>{clearTimeout(singleClick);if(!opened||e.detail>1||!pointerDown||Math.hypot(e.clientX-pointerDown[0],e.clientY-pointerDown[1])>5)return;const id=hit(e)?.object.userData.owner;if(id)singleClick=setTimeout(()=>choose(id),280);});
+renderer.domElement.addEventListener('pointermove',e=>{if(!opened||e.buttons)return;const p=parts.find(p=>p.id===hit(e)?.object.userData.owner);renderer.domElement.style.cursor=p?'pointer':'grab';renderer.domElement.title=p?p.title+': '+p.description:'';});
+const bloodDots=[],arrows=[];const flowRoot=new THREE.Group();flowRoot.scale.setScalar(.79);flowRoot.position.y=-.3;scene.add(flowRoot);
+const routes=[
+ {color:0x55baff,kind:'return',p:[[-1.3,.1,1.8],[-1.25,.1,1.05],[-.7,-.14,.65]]},
+ {color:0xff6385,kind:'return',p:[[1.8,.15,.8],[1.1,.15,.8],[.63,-.15,.65]]},
+ {color:0x55baff,kind:'fill',p:[[-.7,-.14,.65],[-.58,-.14,.13],[-.65,-.14,-.55]]},
+ {color:0xff6385,kind:'fill',p:[[.63,-.15,.65],[.54,-.15,.15],[.6,-.15,-.6]]},
+ {color:0x55baff,kind:'eject',p:[[-.65,-.14,-.55],[-.28,-.15,.18],[-.2,-.27,.95],[-.35,-.23,1.42],[-1.8,-.06,1.3]]},
+ {color:0xff6385,kind:'eject',p:[[.6,-.15,-.6],[.38,.20,.22],[.38,.23,1.4],[.66,.28,2.12],[1.32,.28,2.12],[1.5,.5,1]]}
+];
+for(const r of routes){const curve=new THREE.CatmullRomCurve3(r.p.map(vec));for(let i=0;i<5;i++){const o=new THREE.Mesh(new THREE.SphereGeometry(.046,10,8),new THREE.MeshBasicMaterial({color:r.color,depthTest:false}));o.renderOrder=7;flowRoot.add(o);bloodDots.push({o,curve,offset:i/5,kind:r.kind});}const a=new THREE.ArrowHelper(curve.getTangent(.65),curve.getPoint(.65),.22,r.color,.10,.07);a.line.material.depthTest=false;a.cone.material.depthTest=false;a.renderOrder=8;flowRoot.add(a);arrows.push(a);}
+function animate(now){requestAnimationFrame(animate);const dt=Math.min((now-last)/1000,.05);last=now;if(running)phase=(phase+dt*1.2*speed)%1;const c=cardiacCycle(phase);
+ if(model){model.scale.set(1-.026*c.ventricular,1-.018*c.ventricular,1+.012*c.ventricular);model.rotation.z=.009*c.ventricular;}
+ for(const [id,o] of groups){if(id.includes('atrium'))o.scale.setScalar(1-.025*c.atrial);if(id.includes('ventricle'))o.scale.setScalar(1-.035*c.ventricular);}
+ for(const f of leaflets){const outlet=['pulmonary_valve','aortic_valve'].includes(f.userData.owner);const i=f.morphTargetDictionary?.Open;if(i!==undefined)f.morphTargetInfluences[i]=(outlet?c.outletOpen:c.avOpen)?1:0;}
+ for(const f of flaps){const outlet=['pulmonary_valve','aortic_valve'].includes(f.userData.owner);f.rotation.z=((outlet?c.outletOpen:c.avOpen)?.65:.04)*(f.userData.flap_sign||1);}
+ $('cycleTitle').textContent=(running?'':'Paused · ')+c.title;$('cycleText').textContent=c.explanation;
+ for(const d of bloodDots){const enabled=d.kind==='return'||(d.kind==='fill'?c.avOpen:c.outletOpen);d.o.visible=opened&&showBlood&&enabled;const progress=d.kind==='return'?phase:d.kind==='fill'?c.fillProgress:c.ejectProgress;const t=(progress*.65+d.offset)%1;d.o.position.copy(d.curve.getPoint(t));}
+ for(const a of arrows)a.visible=opened&&showBlood;
+ const active=opened?teaching:model;if(active){active.updateMatrixWorld(true);let left=0,right=0;const entries=[...tags].filter(([id])=>opened||anchors[id]).sort((a,b)=>(opened?interiorAnchors[b[0]][2]-interiorAnchors[a[0]][2]:anchors[b[0]][1]-anchors[a[0]][1]));for(const [id,tag] of tags){const shown=opened||!!anchors[id];tag.hidden=!shown;leaders.get(id).style.display=shown?'block':'none';tag.textContent=!opened&&id==='vena_cava'?'Superior vena cava':parts.find(p=>p.id===id)?.title||id;}
+ for(const [id,tag] of entries){const v=active.localToWorld(opened?vec(interiorAnchors[id]):new THREE.Vector3(...anchors[id])).project(camera),isLeft=['vena_cava','right_atrium','right_ventricle','tricuspid','pulmonary_valve','pulmonary_artery'].includes(id),n=isLeft?left++:right++,w=stage.clientWidth,x=isLeft?12:w-tag.offsetWidth-12,y=30+n*(stage.clientHeight-65)/(opened?7:3);tag.style.left=x+'px';tag.style.top=y+'px';const l=leaders.get(id);l.setAttribute('x1',(v.x+1)*w/2);l.setAttribute('y1',(1-v.y)*stage.clientHeight/2);l.setAttribute('x2',isLeft?x+tag.offsetWidth:x);l.setAttribute('y2',y+tag.offsetHeight/2);}}
+ controls.update();renderer.render(scene,camera);}
+requestAnimationFrame(animate);
+if(new URLSearchParams(location.search).has('preview'))fetch('./parts.json').then(r=>r.json()).then(data=>{parts=data;populate();});

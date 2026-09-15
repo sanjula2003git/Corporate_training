@@ -1,0 +1,8 @@
+# Never commit: live Groq API key. Set GROQ_API_KEY in Streamlit Cloud Secrets instead.
+.streamlit/secrets.toml
+
+# Rebuild with `python package_app.py`. Exceeds GitHub's 100 MB per-file limit.
+*.zip
+
+__pycache__/
+.venv/
